@@ -1,0 +1,50 @@
+﻿@{
+    ViewBag.Title = "MessageView";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script type="text/javascript">
+    var ID = $.request("ID");
+    var title = $.request("tle");
+    var content = $.request("cent");
+    var dt = $.request("dt");
+    $(function () {
+        $("#msgtitle").val(title);
+        $("#content").val(content);
+        UpdateStatus(ID);
+    });
+    function UpdateStatus(ID) {
+        $.ajax({
+            type: 'POST',
+            url: '/MyMessage/UpdateStatus',
+            data: { ID: ID },
+            async: false,
+            cache: false,
+            success: function (data) {
+                
+            }
+        });
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="formd">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">主题</th>
+                    <td class="formValue">
+                        <input id="msgtitle" name="msgtitle" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">内容</th>
+                    <td class="formValue" colspan="2">
+                        <textarea id="content" class="form-control" rows="13" disabled="disabled"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+

@@ -1,0 +1,29 @@
+﻿
+/* Form表单样式调整及标签样式*/
+
+.table_tab {
+    background: #E2E2E2;
+    height: 28px;
+    line-height: 28px;
+    text-align: left;
+    color: #14a689;
+    font-size: 14px;
+}
+.table_tab .formTitle {
+        text-align: left;
+        padding-left: 10px;
+}
+.form_common .formValue {
+    position: relative;
+    padding: 5px;
+    padding-right: 8px;
+    width: auto;
+}
+.form_common .select2-container {
+    box-sizing: border-box;
+    display: inline-block;
+    margin: 0;
+    position: relative;
+    vertical-align: middle;
+    width: 103% !important;
+}

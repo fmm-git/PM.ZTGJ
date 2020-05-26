@@ -1,0 +1,266 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{60F0E685-B80F-4898-AFA2-DA8232EBFD23}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PM.DataEntity</RootNamespace>
+    <AssemblyName>PM.DataEntity</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Dos.ORM, Version=1.10.7.3, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Dos.ORM.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Article\TbArticle.cs" />
+    <Compile Include="Article\TbArticleCollect.cs" />
+    <Compile Include="Article\TbArticleComment.cs" />
+    <Compile Include="Article\ViewModel\ArticleModel.cs" />
+    <Compile Include="Base\BaseEntity.cs" />
+    <Compile Include="Base\PageSearchRequest.cs" />
+    <Compile Include="Common\FPiCiXQPlan.cs" />
+    <Compile Include="CostManage\EquipmentType.cs" />
+    <Compile Include="CostManage\TbDistributionDeclare.cs" />
+    <Compile Include="CostManage\TbDistributionDeclareItem.cs" />
+    <Compile Include="CostManage\TbEquipmentRegister.cs" />
+    <Compile Include="CostManage\TbMachineCost.cs" />
+    <Compile Include="CostManage\TbMachineCostItem.cs" />
+    <Compile Include="CostManage\TbMonthCostHeSuan.cs" />
+    <Compile Include="CostManage\TbMonthCostHeSuanCost.cs" />
+    <Compile Include="CostManage\TbMonthCostHeSuanIncome.cs" />
+    <Compile Include="CostManage\TbMonthCostHeSuanOtherCost.cs" />
+    <Compile Include="CostManage\TbUserCost.cs" />
+    <Compile Include="CostManage\TbUserCostItem.cs" />
+    <Compile Include="CostManage\TbValuationDeclare.cs" />
+    <Compile Include="CostManage\TbValuationDeclareItem.cs" />
+    <Compile Include="CostManage\ViewModel\MonthCostHeSuanRequest.cs" />
+    <Compile Include="CostManage\ViewModel\ValuationDeclareModel.cs" />
+    <Compile Include="DataManage\TbDataManage.cs" />
+    <Compile Include="DataManage\ViewModel\TbDataClassRequest.cs" />
+    <Compile Include="DataManage\ViewModel\TbDataManageRequest.cs" />
+    <Compile Include="Distribution\TbDistributionEnt.cs" />
+    <Compile Include="Distribution\TbDistributionEntItem.cs" />
+    <Compile Include="Distribution\TbDistributionEntOrder.cs" />
+    <Compile Include="Distribution\TbDistributionPlanDetailInfo.cs" />
+    <Compile Include="Distribution\TbDistributionPlanInfo.cs" />
+    <Compile Include="Distribution\TbSemiFinishedSign.cs" />
+    <Compile Include="Distribution\TbSiteDischargeCargo.cs" />
+    <Compile Include="Distribution\TbSiteDischargeCargoDetail.cs" />
+    <Compile Include="Distribution\TbTransportCarReport.cs" />
+    <Compile Include="Distribution\TbTransportFlow.cs" />
+    <Compile Include="Distribution\TbTransportLine.cs" />
+    <Compile Include="Distribution\ViewModel\SemiFinishedSignRequest.cs" />
+    <Compile Include="Distribution\ViewModel\SiteDischargeCargoRequest.cs" />
+    <Compile Include="Distribution\ViewModel\DistributionPlanRequest.cs" />
+    <Compile Include="Distribution\ViewModel\TbDistributionPlanInfoRequest.cs" />
+    <Compile Include="EarlyWarning\TbFormEarlyWarningBegTime.cs" />
+    <Compile Include="EarlyWarning\TbFormEarlyWarningNode.cs" />
+    <Compile Include="EarlyWarning\TbFormEarlyWarningNodeInfo.cs" />
+    <Compile Include="EarlyWarning\TbFormEarlyWarningNodePersonnel.cs" />
+    <Compile Include="EarlyWarning\ViewModel\EarlyWarningModel.cs" />
+    <Compile Include="Flow\OrgEntity.cs" />
+    <Compile Include="Flow\TbFlowCategory.cs" />
+    <Compile Include="Flow\TbFlowCode.cs" />
+    <Compile Include="Flow\TbFlowEarlyWarningCondition.cs" />
+    <Compile Include="Flow\TbFlowEarlyWarningInfo.cs" />
+    <Compile Include="Flow\TbFlowEarlyWarningOtherInfo.cs" />
+    <Compile Include="Flow\TbFlowEvent.cs" />
+    <Compile Include="Flow\TbFlowNode.cs" />
+    <Compile Include="Flow\TbFlowNodeEarlyWarningPersonnel.cs" />
+    <Compile Include="Flow\TbFlowNodeEvent.cs" />
+    <Compile Include="Flow\TbFlowNodeFormPart.cs" />
+    <Compile Include="Flow\TbFlowNodeJudgeCriteria.cs" />
+    <Compile Include="Flow\TbFlowNodePersonnel.cs" />
+    <Compile Include="Flow\TbFlowNodeRelation.cs" />
+    <Compile Include="Flow\TbFlowNodeUI.cs" />
+    <Compile Include="Flow\TbFlowPerform.cs" />
+    <Compile Include="Flow\TbFlowPerformEvent.cs" />
+    <Compile Include="Flow\TbFlowPerformMessage.cs" />
+    <Compile Include="Flow\TbFlowPerformMsgReceive.cs" />
+    <Compile Include="Flow\TbFlowPerformNode.cs" />
+    <Compile Include="Flow\TbFlowPerformNodeColor.cs" />
+    <Compile Include="Flow\TbFlowPerformNodeEvent.cs" />
+    <Compile Include="Flow\TbFlowPerformNodeFormPart.cs" />
+    <Compile Include="Flow\TbFlowPerformNodeJudgeCriteria.cs" />
+    <Compile Include="Flow\TbFlowPerformNodePersonnel.cs" />
+    <Compile Include="Flow\TbFlowPerformNodeRelation.cs" />
+    <Compile Include="Flow\TbFlowPerformNodeUI.cs" />
+    <Compile Include="Flow\TbFlowPerformOpinions.cs" />
+    <Compile Include="Flow\TbFlowState.cs" />
+    <Compile Include="Flow\ViewModel\FlowRequest.cs" />
+    <Compile Include="Flow\ViewModel\InitFlowPerformModel.cs" />
+    <Compile Include="OA\TbEarlyWarningSetUp.cs" />
+    <Compile Include="OA\TbFlowDefine.cs" />
+    <Compile Include="OA\TbNoticeNewsOrg.cs" />
+    <Compile Include="OA\TbNoticeNewsSetUp.cs" />
+    <Compile Include="OA\ViewModel\TbFlowDefineResponse.cs" />
+    <Compile Include="Production\TbCapacityFilling.cs" />
+    <Compile Include="Production\TbOrderProgress.cs" />
+    <Compile Include="Production\TbOrderProgressDetail.cs" />
+    <Compile Include="Production\TbPersonnelWorkDayConsume.cs" />
+    <Compile Include="Production\TbPersonnelWorkDayConsumeItem.cs" />
+    <Compile Include="Production\TbProcessingTechnology.cs" />
+    <Compile Include="Production\TbWastagerReportForm.cs" />
+    <Compile Include="Production\TbWorkOrder.cs" />
+    <Compile Include="Production\TbWorkOrderDeliveryOverItem.cs" />
+    <Compile Include="Production\TbWorkOrderDetail.cs" />
+    <Compile Include="Production\ViewModel\OrderProgressRequest.cs" />
+    <Compile Include="Production\ViewModel\ProblemOrderModel.cs" />
+    <Compile Include="Production\ViewModel\ProcessingTechnologyRequest.cs" />
+    <Compile Include="Production\ViewModel\WorkOrderRequest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RawMaterial\TbCarInfo.cs" />
+    <Compile Include="RawMaterial\TbCarInfoDetail.cs" />
+    <Compile Include="RawMaterial\TbCloutStock.cs" />
+    <Compile Include="RawMaterial\TbCloutStockPlace.cs" />
+    <Compile Include="RawMaterial\TbFactoryBatchNeedPlan.cs" />
+    <Compile Include="RawMaterial\TbFactoryBatchNeedPlanItem.cs" />
+    <Compile Include="RawMaterial\TbInOrder.cs" />
+    <Compile Include="RawMaterial\TbInOrderDeductionRecord.cs" />
+    <Compile Include="RawMaterial\TbInOrderItem.cs" />
+    <Compile Include="Production\TbProblemOrder.cs" />
+    <Compile Include="Production\TbProblemOrderItem.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialArchives.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialMonthDemandPlan.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialMonthDemandPlanDetail.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialMonthDemandSupplyPlan.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialMonthDemandSupplyPlanDetail.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialStock.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialStockRecord.cs" />
+    <Compile Include="RawMaterial\TbRMProductionMaterial.cs" />
+    <Compile Include="RawMaterial\TbRMProductionMaterialDetail.cs" />
+    <Compile Include="RawMaterial\TbRMProductionMaterialLockCount.cs" />
+    <Compile Include="RawMaterial\TbRMProductionMaterialPlan.cs" />
+    <Compile Include="RawMaterial\TbRubbishStock.cs" />
+    <Compile Include="RawMaterial\TbSampleOrder.cs" />
+    <Compile Include="RawMaterial\TbSampleOrderItem.cs" />
+    <Compile Include="RawMaterial\TbStockTaking.cs" />
+    <Compile Include="RawMaterial\TbStockTakingItem.cs" />
+    <Compile Include="RawMaterial\TbStorage.cs" />
+    <Compile Include="RawMaterial\TbSupplier.cs" />
+    <Compile Include="RawMaterial\TbSupplyList.cs" />
+    <Compile Include="RawMaterial\TbSupplyListDetail.cs" />
+    <Compile Include="RawMaterial\TbSupplyListDetailHistory.cs" />
+    <Compile Include="RawMaterial\ViewModel\FactoryBatchNeedPlanRequest.cs.cs" />
+    <Compile Include="RawMaterial\ViewModel\RawMarchivesRequest.cs" />
+    <Compile Include="RawMaterial\ViewModel\RawMaterialMonthDemandPlanRequest.cs" />
+    <Compile Include="RawMaterial\ViewModel\RawMaterialStockModel.cs" />
+    <Compile Include="RawMaterial\ViewModel\RawMonthDemPlanRequest.cs" />
+    <Compile Include="RawMaterial\ViewModel\RawMonthDemSupplyPlanRequest.cs" />
+    <Compile Include="RawMaterial\ViewModel\StatisticsReportFormRequest.cs" />
+    <Compile Include="RawMaterial\ViewModel\StockTakingModel.cs" />
+    <Compile Include="RawMaterial\ViewModel\TbRMProductionMaterialRequest.cs" />
+    <Compile Include="Production\ViewModel\WastagerReportFormRequest.cs" />
+    <Compile Include="RawMaterial\ViewModel\TSupplyListRequest.cs" />
+    <Compile Include="Safe\TbFireInspection.cs" />
+    <Compile Include="Safe\TbHoistingSafety.cs" />
+    <Compile Include="Safe\TbInterimUseElectricCheck.cs" />
+    <Compile Include="Safe\TbSafeAccidentReport.cs" />
+    <Compile Include="Safe\TbSafeCheck.cs" />
+    <Compile Include="Safe\TbSafeCheckItem.cs" />
+    <Compile Include="Safe\TbSafeDatumManage.cs" />
+    <Compile Include="Safe\ViewModel\FireInspectionRequest.cs" />
+    <Compile Include="Safe\ViewModel\HoistingSafetyRequest.cs" />
+    <Compile Include="Safe\ViewModel\InterimUseElectricCheckRequest.cs" />
+    <Compile Include="Safe\ViewModel\SafeCheckModel.cs" />
+    <Compile Include="SettlementManage\TbSettlementOrder.cs" />
+    <Compile Include="SettlementManage\TbSettlementOrderDetail.cs" />
+    <Compile Include="SettlementManage\TbSignforDuiZhang.cs" />
+    <Compile Include="SettlementManage\TbSignforDuiZhangDetail.cs" />
+    <Compile Include="System\ClassData.cs" />
+    <Compile Include="System\ClassState.cs" />
+    <Compile Include="System\ShortMess.cs" />
+    <Compile Include="System\TbModuleBindingTemplate .cs" />
+    <Compile Include="System\TbProjectCompany.cs" />
+    <Compile Include="System\TbProjectInfo.cs" />
+    <Compile Include="System\TbSMSAlert.cs" />
+    <Compile Include="System\TbTransportShortMessageWarn.cs" />
+    <Compile Include="System\ViewModel\Department.cs" />
+    <Compile Include="System\TbAreaAdministration.cs" />
+    <Compile Include="System\TbAttachment.cs" />
+    <Compile Include="System\TbAuthorization.cs" />
+    <Compile Include="System\TbCompany.cs" />
+    <Compile Include="System\TbDepartment.cs" />
+    <Compile Include="System\TbFormWindowsShowFields.cs" />
+    <Compile Include="System\TbPermissionsTeam.cs" />
+    <Compile Include="System\TbPermissionsTeamMember.cs" />
+    <Compile Include="System\TbPosition.cs" />
+    <Compile Include="System\TbPositionMenu.cs" />
+    <Compile Include="System\TbPositionUser.cs" />
+    <Compile Include="System\TbRole.cs" />
+    <Compile Include="System\TbRoleMenu.cs" />
+    <Compile Include="System\TbSysDictionaryData.cs" />
+    <Compile Include="System\TbSysDictionaryType.cs" />
+    <Compile Include="System\TbSysLog.cs" />
+    <Compile Include="System\TbSysMenu.cs" />
+    <Compile Include="System\TbSysMenuTable.cs" />
+    <Compile Include="System\TbUser.cs" />
+    <Compile Include="System\TbUserAndDepRelevance.cs" />
+    <Compile Include="System\TbUserMenu.cs" />
+    <Compile Include="System\TbUserRole.cs" />
+    <Compile Include="System\ViewModel\AuthorizeActionModel.cs" />
+    <Compile Include="System\ViewModel\AuthorizeUserModel.cs" />
+    <Compile Include="System\ViewModel\GetRoleResponse.cs" />
+    <Compile Include="System\ViewModel\HomeModel.cs" />
+    <Compile Include="System\ViewModel\PermissionsTeamModel.cs" />
+    <Compile Include="System\ViewModel\PositionRequest.cs" />
+    <Compile Include="System\ViewModel\PositionResponse.cs" />
+    <Compile Include="System\ViewModel\TbAreaAdministrationReauset.cs" />
+    <Compile Include="System\ViewModel\TbCompanyRequest.cs" />
+    <Compile Include="System\ViewModel\TbFormWindowsShowFieldsRequset.cs" />
+    <Compile Include="System\ViewModel\TbRoleRequset.cs" />
+    <Compile Include="System\ViewModel\TbSysMenuRequset.cs" />
+    <Compile Include="System\ViewModel\TbSysMenuTableRequset.cs" />
+    <Compile Include="System\ViewModel\TbUserRoleRequset.cs" />
+    <Compile Include="System\ViewModel\UserRequest.cs" />
+    <Compile Include="System\TbShortMessageTemplate.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PM.Common\PM.Common.csproj">
+      <Project>{50ae6597-24eb-44e6-93c4-944faf2a76ea}</Project>
+      <Name>PM.Common</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "耗材管理查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+
+<div style="margin-top: 10px;">
+    @*<ul class="nav nav-tabs">
+            <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+            <li id="FJXX" onclick="selectTab($(this))"><a href="javascript:void(0);">附件信息</a></li>
+        </ul>*@
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 20px;">
+        <form id="formd">
+            <input id="ID" name="ID" type="hidden" />
+            @*<input id="Examinestatus" name="Examinestatus" type="hidden" />*@
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">物资名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="MaterialName" name="MaterialName" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">规格型号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SpecificationType" name="SpecificationType" type="text" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">计量单位<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="MeasureUnit" name="MeasureUnit" class="form-control">
+                            @* <option value=""></option>*@
+                        </select>
+                    </td>
+                    <th class="formTitle">进场时间</th>
+                    <td class="formValue">
+                        <input id="ApproachTime" name="ApproachTime" type="text" class="form-control input-wdatepicker" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">初期数量<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="InitialNumber" name="InitialNumber" type="text" class="form-control number required" />
+                    </td>
+                    <th class="formTitle">进场数量<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ApproachNumber" name="ApproachNumber" type="text" class="form-control number required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">使用数量<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="UsageQuantity" name="UsageQuantity" type="text" class="form-control number required">
+                    </td>
+                    <th class="formTitle">库存数量<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="RepertoryQuantity" name="RepertoryQuantity" disabled="disabled" class="form-control number required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">使用时间</th>
+                    <td class="formValue">
+                        <input id="UsageTime" name="UsageTime" type="text" class="form-control input-wdatepicker" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserCode" name="InsertUserCode" type="hidden" class="form-control" />
+                        <input id="UserName" name="UserName" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+
+            </table>
+        </form>
+    </div>
+
+    @*<div id="FJXXInfo" style="padding-top: 5px; display: none; margin: 10px; overflow-x: scroll; ">
+            <div class="toolbar">
+                <div class="btn-group">
+                    <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()"><i class="fa fa-arrow-down"></i>下载</a>
+                </div>
+            </div>
+            <div class="gridPanel" style="margin-top:1px;">
+                <table id="AttachmentList"></table>
+            </div>
+        </div>*@
+</div>
+
+<script>
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "WastagerReportForm")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    //$("[name='UserName']").val(data.Item1[0].UserName);
+                }
+            });
+        }
+    });
+
+    function initControl() {
+        $("#MeasureUnit").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "Unit" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+    }
+
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "detail", "WastagerReportForm");
+    }
+    @* $(function () {
+            //加载附件列表
+            AttachmentList();
+        });
+
+        //加载附件列表
+        function AttachmentList() {
+            $("#AttachmentList").dataGrid({
+                url: "/Attachment/GetAttachmentJson?FileID=" + $("#Enclosure").val(),
+                height: $(window).height() - 160,
+                colModel: [
+                    { label: "附件名称", name: "FileName", width: 250, align: 'left', formatter: defaultformatterNameC },
+                    { label: '附件大小', name: 'FileSize', width: 150, align: 'left', sortable: false },
+                    { label: '上传人', name: 'UserName', width: 120, align: 'left', sortable: false },
+                    { label: '上传时间', name: 'LastTime', width: 120, align: 'left', sortable: false },
+                    { label: '地址', name: 'FileStoragePath', width: 150, align: 'left', hidden: true, sortable: false },
+                    { label: '操作', name: 'FileID', width: 100, align: 'left', sortable: false, formatter: defaultformatterC },
+                    { label: "主键", name: "FileID", hidden: true, key: true }
+                ],
+                multiselect: true,
+                gridComplete: function (id) {
+                    $("#AttachmentList>tbody").find("input:checkbox").each(function () {
+                        $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                    });
+                    $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                }
+            });
+        }
+
+        function selectTab(v) {
+            var id = v.attr('id');
+            $("#" + id + "").addClass("active").siblings().removeClass("active");
+            $("#" + id + "Info").show();
+            $("#" + id + "Info").siblings('div').hide();
+        }*@
+</script>
+
+
+
+

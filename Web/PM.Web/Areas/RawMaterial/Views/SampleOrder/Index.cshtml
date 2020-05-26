@@ -1,0 +1,370 @@
+﻿@{
+    ViewBag.Title = "原材料取样订单列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script type="text/javascript">
+    var SiteCode = "";
+    //获取从原材料月度需求计划页面传递过来的月度需求计划编号
+    var DemandPlanCode = $.request("DemandPlanCode");
+    //获取从批次需求计划页面传递过来的批次度需求计划编号
+    var BatchPlanNum = $.request("BatchPlanNum");
+    $(function () {
+        $.LodeMenuBtn("/RawMaterial/SampleOrder/Index");
+        $('#layout').layout();
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 128;
+        if (Number(whN[0]) < whN[1]-50) {
+            Height = 178;
+        } else {
+            Height = 128;
+        }
+        gridList(Height);
+        leftList();
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+            });
+        });
+    });
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "SampleOrder")",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '工区', name: 'BranchName', width: 120, align: 'left', sortable: false, formatter: BranchNameFM },
+                { label: '取样单号', name: 'SampleOrderCode', width: 120, align: 'left', sortable: false, formatter: SampleOrderCodeOrRebarType },
+                { label: "入库单号", name: "InOrderCode", width: 120, align: 'left', sortable: false },
+                { label: '订单状态', name: 'ExaminestatusShow', width: 120, align: 'left', sortable: false, formatter: ExaminestatusFM },
+                { label: '检测状态', name: 'CheckStatus', width: 120, align: 'left', sortable: false, formatter: CheckStatusFM },
+                { label: '重量合计(kg)', name: 'WeightSum', width: 120, align: 'left', sortable: false },
+                { label: '取样日期', name: 'SampleTime', width: 100, align: 'left', sortable: false, formatter: formatDatebox },
+                //{ label: '联系人', name: 'ContactUser', width: 100, align: 'left', sortable: false, formatter: ContactUserFM },
+                { label: '录入时间', name: 'InsertTime', hidden: true, formatter: formatDatebox },
+                { label: '录入人及日期', name: 'UserName', width: 120, align: 'left', sortable: false, formatter: UserNameFM },
+                //{ label: "加工厂", name: "ProcessFactoryName", width: 100, align: 'left', sortable: false },
+                { label: '工区名称', name: 'WorkAreaName', hidden: true },
+                { label: '站点名称', name: 'SiteName', hidden: true },
+                { label: '联系方式', name: 'Tel', hidden: true },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: "加工状态", name: "ProcessingState", hidden: true },
+                { label: "检测结果", name: "ChackResult", hidden: true },
+                { label: "审核状态", name: "Examinestatus", hidden: true },
+                { label: "是否待传附件", name: "IsUpLoad", hidden: true },
+                { label: "钢筋类型", name: "RebarTypeName", hidden: true },
+            ],
+            beforeRequest: function () {
+                var postData = $gridList.jqGrid("getGridParam", "postData");
+                if (DemandPlanCode != null && DemandPlanCode != "" && DemandPlanCode != undefined) {
+                    postData.DemandPlanCode = DemandPlanCode;
+                }
+                if (BatchPlanNum!=null&&BatchPlanNum!=""&&BatchPlanNum!=undefined) {
+                    postData.BatchPlanNum = BatchPlanNum;
+                }
+            },
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 46,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,
+            treeGridModel: 'adjacency',
+            ExpandColumn: 'CompanyFullName',
+            rownumbers: false,
+            onCellSelect: function (ucode) {//单击
+                SiteCode = getOrganizationalCode(ucode);
+            }
+        });
+    }
+    //分部工区
+    function BranchNameFM(cellValue, options, rowObject) {
+        var tdhtml = cellValue + rowObject.WorkAreaName;
+        return tdhtml;
+    }
+    //取样单号、钢筋类型
+    function SampleOrderCodeOrRebarType(cellValue, options, rowObject) {
+        var tdhtml = cellValue + '<br/>' + rowObject.RebarTypeName;
+        return tdhtml;
+    }
+    //订单状态
+    function ExaminestatusFM(cellValue, options, rowObject) {
+        var tdhtml = rowObject.Examinestatus + "</br>"
+        if (rowObject.Examinestatus == "审核完成") {
+            tdhtml = "<span style='color:green;'>" + rowObject.Examinestatus + "</span></br>";
+        }
+        if (rowObject.ProcessingState == "2") {
+            tdhtml += "<span style='color:green;'>加工完成</span></br>";
+        } else if (rowObject.ProcessingState == "1") {
+            tdhtml += "加工中";
+        }
+        return tdhtml;
+    }
+    //检测状态
+    function CheckStatusFM(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (cellValue != "未检测") {
+            if (cellValue == "检测中") {
+                tdhtml = cellValue;
+            }
+            else if (cellValue == "检测完成") {
+                tdhtml = "<span style='color:green;'>" + cellValue + "</span>";
+            }
+            if (rowObject.IsUpLoad == "0") {
+                tdhtml += "<span style='color:red;'>&nbsp;&nbsp;待传附件</span>";
+            }
+            tdhtml += "</br>";
+        }
+        if (rowObject.ChackResult == "1") {
+            tdhtml += "<span style='color:green;'>合格</span></br>";
+        } else if (rowObject.ChackResult == "2") {
+            tdhtml += "<span style='color:red;'>不合格</span></br>";
+        } else if (rowObject.ChackResult == "3") {
+            tdhtml += "<span style='color:#FF8C00;'>部分合格</span></br>";
+        } else if (rowObject.ChackResult == "4") {
+            tdhtml += "<span style='color:#FF8C00;'>部分不合格</span></br>";
+        }
+        return tdhtml;
+    }
+    //联系人
+    function ContactUserFM(cellValue, options, rowObject) {
+        var tdhtml = cellValue + "</br>" + rowObject.Tel;
+        return tdhtml;
+    }
+    //录入人
+    function UserNameFM(cellValue, options, rowObject) {
+        var tdhtml = cellValue + "</br>" + rowObject.InsertTime;
+        return tdhtml;
+    }
+    function btn_add() {
+        var where = "?type=add&CompanyCode=" + SiteCode;
+        @*CommonOpen("Form", "新增取样订单信息", "@Url.Action("Form", "SampleOrder")" + where, true, true);*@
+        CommonOpenAdd({
+            id: "Form",
+            title: "新增取样订单信息",
+            url: "@Url.Action("Form", "SampleOrder")" + where,
+        });
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改取样订单",
+            url: "@Url.Action("Form", "SampleOrder")",
+            anyUrl: "@Url.Action("AnyInfo", "SampleOrder")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "SampleOrder")",
+            anyUrl: "@Url.Action("AnyInfo", "SampleOrder")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看取样订单",
+            url: "@Url.Action("Details", "SampleOrder")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+    //上传检验文件
+    function btn_other2() {
+        var keyValue = $("#gridList").getGridParam("selrow");
+        if (keyValue == "" || keyValue == null || keyValue == undefined) {
+            $.modalMsg("请选择数据", "warning"); return false;
+        }
+        var processingState = $("#gridList").jqGridRowValue().ProcessingState;
+        if (processingState != "2") {
+            $.modalMsg("订单未加工完成,不能进行此操作", "warning"); return false;
+        }
+        CommonOpen("Form", "检测结果确认", "@Url.Action("TestReport", "SampleOrder")" + "?keyValue=" + keyValue, true, true);
+    }
+    //加工完成
+    function btn_other1() {
+        var keyValue = $("#gridList").getGridParam("selrow");
+        if (keyValue == "" || keyValue == null || keyValue == undefined) {
+            $.modalMsg("请选择数据", "warning"); return false;
+        }
+        var examinestatus = $("#gridList").jqGridRowValue().Examinestatus;
+        if (examinestatus != "审核完成") {
+            $.modalMsg("信息未审核完成,不能进行此操作", "warning"); return false;
+        }
+        var processingState = $("#gridList").jqGridRowValue().ProcessingState;
+        if (processingState == "2") {
+            $.modalMsg("信息已加工完成,不能进行此操作", "warning"); return false;
+        }
+        $.deleteForm({
+            prompt: "注：您确定要加工完成吗？",
+            loading: "正在提交数据...",
+            url: "@Url.Action("ProcessingOver", "SampleOrder")",
+            param: { keyValue: keyValue },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "500px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        //var rowData = $("#gridList").jqGridRowValue();
+        //if (rowData.length > 1) {
+        //    $.modalMsg("只能选择一条数据发起流程", "warning");
+        //    return false;
+        //}
+        //var id = rowData.ID;
+        //if (id != "" && id != null && id != undefined) {
+        //    examination(id, 'SampleOrder', rowData.Examinestatus, rowData.SampleOrderCode);
+        //}
+        //else {
+        //    $.modalMsg("请选择要发起流程的信息", "warning");
+        //    return false;
+        //}
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var DataId = rowData.ID;
+        if (DataId) {
+            if (rowData.Examinestatus != "未发起") {
+                SeeApproval("SampleOrder", DataId);
+            }
+            else {
+                @*var LoginUserCode = '@ViewBag.LoginUserCode';*@
+                examination(DataId, 'SampleOrder', rowData.Examinestatus, rowData.SampleOrderCode, rowData.ProjectId, rowData.InsertUserCode, "");
+            }
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "SampleOrder")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div class="topPanel-btn divwidth2" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="Code">取样/入库单号</option>
+                                    <option value="CheckStatus">检测状态</option>
+                                    <option value="ProcessingState">加工状态</option>
+                                    <option value="ChackResult">检测结果</option>
+                                    <option value="HistoryMonth">历史月份</option>
+                                </select>
+                                <input id="Code" name="Code" type="text" class="form-control SearchContent hidSearchContent" placeholder="取样/入库单号">
+                                <select id="CheckStatus" name="CheckStatus" class="form-control SearchContent hidSearchContent" style="width: 120px;">
+                                    <option value="">请选择</option>
+                                    <option value="检测中">检测中</option>
+                                    <option value="检测完成">检测完成</option>
+                                </select>
+                                <select id="ProcessingState" name="ProcessingState" class="form-control SearchContent hidSearchContent" style="width: 120px;">
+                                    <option value="-1">请选择</option>
+                                    <option value="1">加工中</option>
+                                    <option value="2">加工完成</option>
+                                </select>
+                                <select id="ChackResult" name="ChackResult" class="form-control SearchContent hidSearchContent" style="width: 120px;">
+                                    <option value="-1">请选择</option>
+                                    <option value="1">合格</option>
+                                    <option value="3">部分合格</option>
+                                    <option value="2">不合格</option>
+                                    <option value="4">部分不合格</option>
+                                </select>
+                                <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

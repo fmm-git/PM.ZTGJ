@@ -1,0 +1,84 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        //$.LodeMenuBtn("/SystemManage/Area/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: true,
+            treeGridModel: "adjacency",
+            rownumbers: false,
+            url: "/SystemManage/Area/GetTreeGridJson",
+            height: $(window).height() - 96,
+            colModel: [
+                { label: '区域名称', name: 'AreaName', width: 200, align: 'left', sortable: false },
+                { label: "区域编号", name: "AreaCode", width: 150, align: 'left', key: true, sortable: false },
+                { label: '上级区域编号', name: 'FK_AreaCode', width: 150, align: 'left', sortable: false },
+                { label: "区域编号", name: "code", hidden: true },
+                { label: '区域名称', name: 'name', hidden: true },
+                { label: '所有父级编号', name: 'FK_AreaCode_F', hidden: true },
+                { label: "排序", name: "Sort", hidden: true },
+
+            ]
+
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { keyword: $("#txt_keyword").val() },
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    //区域选择（公共弹框）
+    function submitForm() {
+        var rowData = $("#gridList").jqGridRowValue();//获取选中行
+        if (!rowData) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        var AreaData = {};//初始化一个区域对象
+        AreaData.AreaCode = rowData.AreaCode;
+        AreaData.AreaName = rowData.name;
+        AreaData.FK_AreaCode_F = rowData.FK_AreaCode_F;
+        return AreaData;
+    }
+</script>
+<div class="topPanel">
+    <div class="toolbar" id="toolbar">
+        <div class="btn-group">
+            <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+        </div>
+    </div>
+    <div class="search">
+        <table>
+            <tr>
+                <td>
+                    <div class="input-group">
+                        <input id="txt_keyword" type="text" class="form-control" placeholder="区域编号/区域名称" style="width: 200px;">
+                        <span class="input-group-btn">
+                            <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridList"></table>
+</div>

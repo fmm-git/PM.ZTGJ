@@ -1,0 +1,100 @@
+﻿@{
+    ViewBag.Title = "FlowDesign";
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>流程图设计</title>
+    <link href="/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="navbar navbar-fixed-top">
+        <div id="toolbar" class="navbar-inner">
+            <div class="container-fluid">
+                <div class="pull-right right" id="BtnDesign">
+                    <button class="btn btn-info" type="button" id="leipi_save">保存设计</button>
+                    <button class="btn btn-danger" type="button" id="leipi_clear">清空连接</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input type="hidden" id="FlowCode" value="@ViewBag.FlowCode" />
+    <input type="hidden" id="FormCode" value="@ViewBag.FormCode" />
+    <!--节点名-->
+
+    
+    <!--confirm-->
+    <div id="confirm" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3>删除确认</h3>
+        </div>
+        <div class="modal-body">
+            <p>您确定要删除该节点吗？</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            <button id="cancelOK" class="btn btn-primary">确定</button>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div id="alertModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3>消息提示</h3>
+        </div>
+        <div class="modal-body">
+            <p>提示内容</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">确定</button>
+        </div>
+    </div>
+    <!--页面加载-->
+    <div id="Loading" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-body">
+            <img src="~/Content/img/loading.gif" /><p>数据加载中请稍后...</p>
+        </div>
+    </div>
+
+    <div id="processMenu" style="display: none;">
+        <ul>
+            <li id="addson"><i class="icon-plus"></i>&nbsp;<span class="_label">添加节点</span></li>
+            <li id="delete"><i class="icon-trash"></i>&nbsp;<span class="_label">删除节点</span></li>
+            <li id="attribute"><i class="icon-cog"></i>&nbsp;<span class="_label">节点定义</span></li>
+            @*<li id="where"><i class="icon-share-alt"></i>&nbsp;<span class="_label">执行条件</span></li>*@
+            <li id="error"><i class="icon-wrench"></i>&nbsp;<span class="_label">预警设置</span></li>
+        </ul>
+    </div>
+    <div id="canvasMenu" style="display: none;">
+        <ul>
+            <li id="fresh"><i class="icon-refresh"></i>&nbsp;<span class="_label">刷新</span></li>
+        </ul>
+    </div>
+    <!--内容DIV-->
+    <div class="container col bg-white" id="flowdesign_canvas" style="width:100%;height:100%;"></div>
+    
+    <script src="/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jsPlumb/jquery.jsPlumb-1.3.16-all-min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jquery.contextmenu.r2.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/flowdesign/leipi.flowdesign.v2.js"></script>
+    <script src="/UiFrame/FlowChartTool/jquery.window.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/flowdesign/FlowDesign.js"></script>
+
+    <link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+    <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+    <script src="~/Content/js/layer/layer.js"></script>
+    <script>
+        $(function () {
+            $("[data-toggle='popover']").popover();
+        });
+    </script>
+</body>
+</html>
+

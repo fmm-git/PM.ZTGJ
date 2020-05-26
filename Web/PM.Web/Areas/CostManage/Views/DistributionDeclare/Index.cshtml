@@ -1,0 +1,143 @@
+﻿@{
+    ViewBag.Title = "配送费用申报列表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        $.LodeMenuBtn("/CostManage/DistributionDeclare/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "DistributionDeclare")",
+            height: $(window).height() - 178,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false },
+                { label: "申报编号", name: "DistributionDeclareCode", width: 100, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 150, align: 'left', sortable: false },
+                { label: "申报人", name: "DeclareUserName", width: 80, align: 'left', sortable: false },
+                { label: '申报时间', name: 'DeclareTime', width: 150, align: 'left', sortable: false },
+                { label: "金额合计（元）", name: "TotalAmount", width: 100, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增配送费用申报信息", "@Url.Action("Form", "DistributionDeclare")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改配送费用申报",
+            url: "@Url.Action("Form", "DistributionDeclare")",
+            anyUrl: "@Url.Action("AnyInfo", "DistributionDeclare")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "DistributionDeclare")",
+            anyUrl: "@Url.Action("AnyInfo", "DistributionDeclare")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看配送费用申报",
+            url: "@Url.Action("Details", "DistributionDeclare")",
+            isbtn: false,
+            isAny: false,
+            isBack:false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "500px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'DistributionDeclare', rowData.Examinestatus, rowData.DistributionDeclareCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+    </div>
+    <div class="topPanel">
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <input id="DistributionDeclareCode" type="text" class="form-control" placeholder="申报编号">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_search">查询</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

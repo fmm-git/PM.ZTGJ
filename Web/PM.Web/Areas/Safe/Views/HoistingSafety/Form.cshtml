@@ -1,0 +1,303 @@
+﻿@{
+    ViewBag.Title = "吊装安全编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = $.request("ProjectId");
+    var CompanyCode = $.request("CompanyCode");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "HoistingSafety")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                }
+            });
+        }
+    });
+
+    function initControl() {
+        //特种作业资格证
+        $("#TzWorkZgz").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "TzWorkZgz" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        //机械是否正常
+        $("#MechanicsIsNormal").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "MechanicsIsNormal" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        //捆扎是否牢固
+        $("#KzIsSolid").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "KzIsSolid" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        //有无禁止行为
+        $("#IsProhibition").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "IsProhibition" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        //吊装令归属
+        if (ProjectId != "") {
+            $("#ProjectId").val(ProjectId);
+            GetParnetCompany();
+        }
+    }
+    function GetParnetCompany() {
+        $.ajax({
+            url: "@Url.Action("GetParentCompany", "RawMonthDemandPlan", new { area = "RawMaterial" })",
+            data: { CompanyCode: CompanyCode },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                var comName = [];
+                $.each(data, function (index, item) {
+                    comName.push(item.CompanyFullName);
+                });
+                var comNameStr = comName.join("/");
+                $("#ProjectIdStr").val(comNameStr);
+            }
+        });
+    }
+    //选择加工厂
+    function selectCompanyProcessFactory(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+        });
+    }
+    //选择监管人员
+    function selectSuperviseUser() {
+        var str = "SuperviseUser=UserCode,SuperviseUserName=UserName";
+        var ret = selectClickNew(str, '75%', '75%', function (row) { }, false)
+
+    }
+    //选择施工人员
+    function selectConstructionUser() {
+        var str = "ConstructionUser=UserCode,ConstructionUserName=UserName";
+        var ret = selectClickNew(str, '75%', '75%', function (row) {
+            var ConstructionUser = '';
+            var ConstructionUserName = '';
+            for (var i = 0; i < row.length; i++) {
+                if (i == row.length - 1) {
+                    ConstructionUser += row[i]["UserCode"];
+                    ConstructionUserName += row[i]["UserName"];
+                } else {
+                    ConstructionUser += row[i]["UserCode"] + ",";
+                    ConstructionUserName += row[i]["UserName"] + ",";
+                }
+            }
+
+            $("#ConstructionUser").val(ConstructionUser);
+            $("#ConstructionUserName").val(ConstructionUserName);
+        }, true)
+    }
+    //选择吊令文件
+    function selectHoistFile() {
+        if ($("#ProcessFactoryCode").val() == "" || $("#ProcessFactoryCode").val() == undefined || $("#ProcessFactoryCode").val() == null) {
+            $.modalMsg("请先选择加工厂信息", "warning");
+        } else {
+            var url = "/DataManage/FileType/GetGridJson&keyValue=ProcessFactoryCode/" + $("#ProcessFactoryCode").val();
+            var str = "HoistFileCode=FileCode,HoistFileName=DataName";
+            var ret = selectClick('win_FileType', url, 'Grid', '', '', str, '550px', '450px', function (row) { })
+        }
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "HoistingSafety")" + "?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "HoistingSafety");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "HoistingSafety");
+    }
+</script>
+
+<div style="margin-top: 10px;margin-right:20px;">
+    <form id="form1">
+        <input id="ID" name="ID" type="hidden" />
+        <input id="Examinestatus" name="Examinestatus" type="hidden" />
+        <input id="Enclosure" name="Enclosure" type="hidden" />
+        <table class="form">
+            <tr>
+                <th class="formTitle">吊装安全管理编号<span class="required1">*</span></th>
+                <td class="formValue">
+                    <input id="HoistingCode" name="HoistingCode" type="text" disabled="disabled" value="@ViewBag.HoistingCode" class="form-control required" />
+                </td>
+                <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                <td class="formValue">
+                    <input type="hidden" id="ProcessFactoryCode" name="ProcessFactoryCode" value="@ViewBag.FactoryCode" />
+                    <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" readonly="readonly" value="@ViewBag.FactoryName" class="form-control required" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">监管人员<span class="required1">*</span></th>
+                <td class="formValue">
+                    <div class="input-group input-group-with">
+                        <input id="SuperviseUser" name="SuperviseUser" hidden="hidden" />
+                        <input id="SuperviseUserName" name="SuperviseUserName" type="text" readonly="readonly" class="form-control required" />
+                        <span class="input-group-btn" onclick="selectSuperviseUser()">
+                            <a style="padding:0px;" class=" btn btn-primary">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </span>
+                    </div>
+                </td>
+                <th class="formTitle">施工人员<span class="required1">*</span></th>
+                <td class="formValue">
+                    <div class="input-group input-group-with">
+                        <input id="ConstructionUser" name="ConstructionUser" hidden="hidden" />
+                        <input id="ConstructionUserName" name="ConstructionUserName" type="text" readonly="readonly" class="form-control required" />
+                        <span class="input-group-btn" onclick="selectConstructionUser()">
+                            <a style="padding:0px;" class=" btn btn-primary">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">特种作业资格证<span class="required1">*</span></th>
+                <td class="formValue">
+                    <select id="TzWorkZgz" name="TzWorkZgz" class="form-control required">
+                        @*<option value=""></option>*@
+                    </select>
+                </td>
+                <th class="formTitle">机械是否正常<span class="required1">*</span></th>
+                <td class="formValue">
+                    <select id="MechanicsIsNormal" name="MechanicsIsNormal" class="form-control required">
+                        @*<option value=""></option>*@
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">捆扎是否牢固<span class="required1">*</span></th>
+                <td class="formValue">
+                    <select id="KzIsSolid" name="KzIsSolid" class="form-control required">
+                        @*<option value=""></option>*@
+                    </select>
+                </td>
+                <th class="formTitle">有无禁止行为<span class="required1">*</span></th>
+                <td class="formValue">
+                    <select id="IsProhibition" name="IsProhibition" class="form-control required">
+                        @*<option value=""></option>*@
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">开始时间<span class="required1">*</span></th>
+                <td class="formValue">
+                    <input id="BeginTime" name="BeginTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" class="form-control required input-wdatepicker" onfocus="WdatePicker()" />
+                </td>
+                <th class="formTitle">吊装令文件<span class="required1">*</span></th>
+                <td class="formValue">
+                    <div class="input-group input-group-with">
+                        <input id="HoistFileCode" name="HoistFileCode" hidden="hidden" />
+                        <input id="HoistFileName" name="HoistFileName" type="text" readonly="readonly" class="form-control required" />
+                        <span class="input-group-btn" onclick="selectHoistFile()">
+                            <a style="padding:0px;" class=" btn btn-primary">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">附件</th>
+                <td class="formValue">
+                    <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                    <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                    <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                </td>
+                <th class="formTitle">吊装令归属</th>
+                <td class="formValue">
+                    <input id="ProjectId" name="ProjectId" hidden="hidden" />
+                    <input id="ProjectIdStr" name="ProjectIdStr" type="text" class="form-control" disabled="disabled" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">吊装内容<span class="required1">*</span></th>
+                <td class="formValue" colspan="3">
+                    <textarea id="HoistContent" name="HoistContent" class="form-control required" style="height: 60px; padding-right: 1px;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">备注</th>
+                <td class="formValue" colspan="3">
+                    <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 1px;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">录入人</th>
+                <td class="formValue">
+                    <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                </td>
+                <th class="formTitle">录入时间</th>
+                <td class="formValue">
+                    <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+

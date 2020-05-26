@@ -1,0 +1,167 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/SystemManage/WinDisplayField/Index");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        $('#layout').layout();
+        RoleView();
+        gridList();
+    });
+
+    function RoleView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/WinDisplayField/GetNoPageGridJson",
+            height: $(window).height() - 46,
+            colModel: [
+                //{ label: "主键", name: "ID", hidden: true, key: true },
+                { label: '弹窗编号', name: 'PhysicalTableName', key: true, hidden:true },
+                { label: '弹窗名称', name: 'FormWindowsTableName', width: 120, align: 'left', sortable: false }
+            
+            ],
+            sortname: 'PhysicalTableName',
+            onCellSelect: function (id) {//单击
+                $("#txt_keyword").val('');
+                clickPhysicalTableName(id);
+            }
+        });
+    }
+    function clickPhysicalTableName(id) {
+        var PhysicalTable = $("#leftgridList").jqGrid('getRowData', id);
+        $("#gridList").jqGrid('setGridParam', {
+            url: "/SystemManage/WinDisplayField/GetGridJson?PhysicalTable=" + PhysicalTable.PhysicalTableName,
+            postData: { keyword: $("#txt_keyword").val() },
+        }).trigger('reloadGrid');
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/WinDisplayField/GetGridJson",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "id", hidden: true, key: true },
+                { label: "弹窗编号", name: "PhysicalTableName", width: 120, align: 'left', sortable: false },
+                { label: "弹窗名称", name: "FormWindowsTableName", width: 150, align: 'left', sortable: false },
+                { label: "字段编号", name: "FieldCode", width: 150, align: 'left', sortable: false },
+                { label: '字段名称', name: 'FieldName', width: 150, align: 'left', sortable: false },
+                { label: '字段排序', name: 'FieldShowOrder', width: 80, align: 'left', sortable: false },
+                { label: '是否显示', name: 'FieldIsShow', width: 80, align: 'left', sortable: false, formatter: NewCellFieldIsShow },
+                { label: '字段长度', name: 'FieldWidth', width: 80, align: 'left', sortable: false }
+            ],
+            pager: "#gridPager",
+            sortname: 'FieldShowOrder',
+            viewrecords: true
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { keyword: $("#txt_keyword").val() },
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    //是否显示
+    function NewCellFieldIsShow(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.FieldIsShow == "0") {
+            tdhtml += "是";
+        } else {
+            tdhtml += "否";
+            
+        }
+        return tdhtml;
+    }
+
+    function btn_add() {
+        $.modalOpen({
+            id: "Form",
+            title: "新增弹窗字段配置",
+            url: "/SystemManage/WinDisplayField/Form?type=add",
+            width: "550px",
+            height: "400px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().PhysicalTableName;
+        var keyValue1 = $("#gridList").jqGridRowValue().FieldCode;
+        if ((keyValue != "" && keyValue != null && keyValue != undefined) && (keyValue1 != "" && keyValue1 != null && keyValue1 != undefined)) {
+            $.modalOpen({
+                id: "Form",
+                title: "修改弹窗字段配置",
+                url: "/SystemManage/WinDisplayField/Form?keyValue="+keyValue +"&keyValue1=" +keyValue1+"&type=edit",
+                width: "550px",
+                height: "400px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].submitForm();
+                }
+            });
+        }
+        else {
+            $.modalMsg("请选择要修改的信息", "warning");
+            return false;
+        }
+    }
+    function btn_delete() {
+        var keyValue = $("#gridList").jqGridRowValue().PhysicalTableName;
+        var keyValue1 = $("#gridList").jqGridRowValue().FieldCode;
+        if ((keyValue != "" && keyValue != null && keyValue != undefined) && (keyValue1 != "" && keyValue1 != null && keyValue1 != undefined)) {
+            $.deleteForm({
+                url: "/SystemManage/WinDisplayField/DeleteForm?keyValue=" + keyValue + "&keyValue1=" + keyValue1,
+                param: { keyValue: keyValue, keyValue1: keyValue1 },
+                success: function () {
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            });
+        } else {
+            $.modalMsg("请选择要删除的信息", "warning");
+            return false;
+        }
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="toolbar" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="txt_keyword" type="text" class="form-control" placeholder="表名/字段编码/字段名称" style="width: 200px;">
+                                <span class="input-group-btn">
+                                    <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,398 @@
+﻿@{
+    /*
+     * 首页
+     * 安全周例会
+     */
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    //获取当前登录人是否是加工厂的人员
+    var orgType = '@ViewBag.OrgType';
+    $(function () {
+        var date = new Date();
+        var year = date.getFullYear();
+        var firstDay = new Date(date.getFullYear(), 0, 1);
+        var dayOfWeek = firstDay.getDay();
+        var spendDay = 1;
+        if (dayOfWeek != 0) {
+            spendDay = 7 - dayOfWeek + 1;
+        }
+        firstDay = new Date(date.getFullYear(), 0, 1 + spendDay);
+        var d = Math.ceil((date.valueOf() - firstDay.valueOf()) / 86400000);
+        var result = (Math.ceil(d / 7)) + 1;
+        var dateRange = getXDate(year, result);
+        $("#year").html(year + "年");
+        $("#month").html("第" + result + "周" + "(" + dateRange + ")");
+        var WCount = GetSumWeek(year)
+        $.ajax({
+            url: "@Url.Action("GetAllWeekAccidentReport", "SafeAccidentReport")",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                var daydiv = "";
+                for (var i = 0; i < WCount; i++) {
+                    if ((i + 1) == result) {
+                        daydiv += "<div class='onck' style='border: 1px solid; border-radius: 8px;color:white;background-color:rgb(0, 148, 255);width: 70px; height: 70px; font-size: 20px; text-align: center;line-height:70px;  float: left; cursor: pointer;'>第" + (i + 1) + "周</div>";
+                    } else if ((i + 1) > result) {
+                        daydiv += "<div class='onck' style='border: 1px solid; border-radius: 8px;color:white;background-color:#bab7b7;width: 70px; height: 70px; font-size: 20px; text-align: center;line-height:70px;  float: left;cursor: pointer; '>第" + (i + 1) + "周</div>";
+                    } else {
+                        var fl = true;
+                        for (var j = 0; j < data.length; j++) {
+                            if ((i + 1) == data[j].Week) {
+                                daydiv += "<div class='onck' style='border: 1px solid; border-radius: 8px;color:white;background-color:#28e131;width: 70px; height: 70px; font-size: 20px; text-align: center;line-height:70px;  float: left; cursor: pointer;'>第" + (i + 1) + "周</div>";
+                                fl = false;
+                                break;
+                            }
+                        }
+                        if (fl) {
+                            daydiv += "<div class='onck' style='border: 1px solid; border-radius: 8px;color:white;background-color:red;width: 70px; height: 70px; font-size: 20px; text-align: center;line-height:70px;  float: left;cursor: pointer; '>第" + (i + 1) + "周</div>";
+                        }
+                    }
+                }
+                $("#days").html(daydiv);
+                pinjie(data);
+            }
+        });
+        var ht = parseInt($("#Zhou").height());
+        var lb = document.getElementById("LieBiao");
+        lb.style.height = "" + (ht + 25) + "px";
+        $(".onck").click(function () {
+            var wk = $(this).html()
+            var number = parseInt(wk.substring(1, wk.length - 1));
+            var wRange = getXDate(year, number);
+            var wdts = wRange.split("-");
+            var wsdate = year + "-" + (wdts[0].replace(/月/g, "-").replace(/日/g, ""));
+            var wedate = year + "-" + (wdts[2].replace(/月/g, "-").replace(/日/g, ""));
+            selectWWeek(wsdate, wedate, 1, this);
+        });
+    });
+    function pinjie(data) {
+        var htmllb = "";
+        for (var i = 0; i < data.length; i++) {
+            htmllb += '<div class="col-lg-10"><div class="ibox"><div class="ibox-content"><div class="ibox-title-h"><input type="hidden" id="ID" value="' + data[i].ID + '" /><a href="/Safe/SafeAccidentReport/Details?keyValue=' + data[i].ID + '" class="btn-link"><h2>' + showText(data[i].MeetingTheme, 20) + '</h2></a></div><div class="small m-b-xs"><p>' + showText(data[i].MeetingContent.replace(/<.*?>/ig, ""), 20) + '</p></div><div class="row"><div class="col-md-4"><h5>编辑人：</h5><button class="btn btn-primary btn-xs" type="button"><strong>' + data[i].InsertUserName + '</strong></button></div><div class="col-md-4"><div class="small text-right"><h5>统计：</h5><div><i class="fa fa-eye"> </i> ' + data[i].BrowseCount + ' 浏览 </div></div></div></div></div></div></div>';
+        }
+        $("#row-content1").html(htmllb);
+    }
+    function selectWWeek(sdate, edate, num, id) {
+        $.ajax({
+            url: "@Url.Action("GetWWeek", "SafeAccidentReport")",
+            data: { sdate: sdate, edate: edate, num: num },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length != 0) {
+                    if (id == undefined) {
+                    } else if (id.style.backgroundColor == "rgb(0, 148, 255)") {
+                        $("#row-content1").html('');
+                        pinjie(data);
+                        if (orgType == "1") {
+                            btn_edit(data[0].ID);
+                        }
+                    } else if (id.style.backgroundColor == "rgb(186, 183, 183)") {
+
+                    } else {
+                        $("#row-content1").html('');
+                        pinjie(data);
+                    }
+                } else {
+                    if (id == undefined) {
+                    } else if (id.style.backgroundColor == "rgb(0, 148, 255)") {
+                        if (orgType == "1") {
+                            btn_add(id);
+                        }
+                    } else if (id.style.backgroundColor == "rgb(186, 183, 183)") {
+
+                    } else {
+                        $("#row-content1").html('<div class="col-lg-10"><div class="ibox"><div class="ibox-content"><div class="ibox-title-h"><input type="hidden" id="ID" value="" /><a href="" class="btn-link"><h2></h2></a></div><div class="small m-b-xs"><p></p></div><div class="row"><div class="col-md-4"><h5>编辑人：</h5><button class="btn btn-primary btn-xs" type="button"><strong></strong></button></div><div class="col-md-4"><div class="small text-right"><h5>统计：</h5><div><i class="fa fa-eye"> </i>  浏览 </div></div></div></div></div></div></div>');
+                    }
+                }
+            }
+        });
+    }
+    function btn_add(id) {
+        var wk = $(id).html()
+        var number = parseInt(wk.substring(1, wk.length - 1));
+        var where = "?type=add&Week=" + number;
+        CommonOpen("Form", "新增周例会", "@Url.Action("Form", "SafeAccidentReport")" + where, true, true)
+    }
+    function btn_edit(id) {
+        $.modalOpen({
+            id: "Form",
+            title: "修改周例会",
+            url: "/Safe/SafeAccidentReport/Form?keyValue=" + id + "&type=edit",
+            width: "68%",
+            height: "610px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "68%",
+            height: "600px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //截取字符串
+    function showText(text, numSub) {
+        if (text == null) {
+            return "";
+        }
+        if (text.length > numSub) {
+            return text.substring(0, numSub - 1) + "...";
+        }
+        return text;
+    }
+    //转换日期格式
+    function getNowFormatDate(theDate) {
+        var day = theDate;
+        var Year = 0;
+        var Month = 0;
+        var Day = 0;
+        var CurrentDate = "";
+        // 初始化时间
+        Year = day.getFullYear();// ie火狐下都可以
+        Month = day.getMonth() + 1;
+        Day = day.getDate();
+        //CurrentDate += Year + "年";
+        if (Month >= 10) {
+            CurrentDate += Month + "月";
+        } else {
+            CurrentDate += "0" + Month + "月";
+        }
+        if (Day >= 10) {
+            CurrentDate += Day + "日";
+        } else {
+            CurrentDate += "0" + Day + "日";
+        }
+        return CurrentDate;
+    }
+    //根据周次计算周次日期范围
+    function getXDate(year, weeks) {
+        var date = new Date(year, "0", "1");
+        var time = date.getTime();
+        // 获取当前星期几，0：星期一 。。。。
+        var _week = date.getDay();
+        //当这一年的1月1日为周日时则本年有54周，否则没有54周，没有则去除第54周的提示
+        if (_week != 0) {//一年53周情况
+            if (weeks == 54) {
+                return '今年没有54周';
+            }
+            var cnt = 0;// 获取距离周末的天数
+            if (_week == 0) {
+                cnt = 7;
+            } else if (_week == 1) {
+                cnt = 6;
+            } else if (_week == 2) {
+                cnt = 5;
+            } else if (_week == 3) {
+                cnt = 4;
+            } else if (_week == 4) {
+                cnt = 3;
+            } else if (_week == 5) {
+                cnt = 2;
+            } else if (_week == 6) {
+                cnt = 1;
+            }
+            cnt += 1;//加1表示以星期一为一周的第一天
+            // 将这个长整形时间加上第N周的时间偏移
+            time += cnt * 24 * 3600000; //第2周开始时间
+
+            var nextYear = new Date(parseInt(year, 10) + 1, "0", "1");
+            var nextWeek = nextYear.getDay();
+            var lastcnt = 0;//获取最后一周开始时间到周末的天数
+            if (nextWeek == 0) {
+                lastcnt = 6;
+            } else if (nextWeek == 1) {
+                lastcnt = 0;
+            } else if (nextWeek == 2) {
+                lastcnt = 1;
+            } else if (nextWeek == 3) {
+                lastcnt = 2;
+            } else if (nextWeek == 4) {
+                lastcnt = 3;
+            } else if (nextWeek == 5) {
+                lastcnt = 4;
+            } else if (nextWeek == 6) {
+                lastcnt = 5;
+            }
+            if (weeks == 1) {//第1周特殊处理
+                // 为日期对象 date 重新设置成时间 time
+                var start = getNowFormatDate(date);//date.format("yyyy年MM月dd日");
+                date.setTime(time - 24 * 3600000);
+                return start + '-至-' + getNowFormatDate(date);//date.format("yyyy年MM月dd日");
+            } else if (weeks == 53) {//第53周特殊处理
+                var start = time + (weeks - 2) * 7 * 24 * 3600000; //第53周开始时间
+                var end = time + (weeks - 2) * 7 * 24 * 3600000 + lastcnt * 24 * 3600000 - 24 * 3600000; //第53周结束时间
+                // 为日期对象 date 重新设置成时间 time
+                date.setTime(start);
+                var _start = getNowFormatDate(date);//date.format("yyyy年MM月dd日");
+                date.setTime(end);
+                var _end = getNowFormatDate(date);//date.format("yyyy年MM月dd日");
+                return _start + '-至-' + _end;
+            } else {
+                var start = time + (weeks - 2) * 7 * 24 * 3600000; //第n周开始时间
+                var end = time + (weeks - 1) * 7 * 24 * 3600000 - 24 * 3600000; //第n周结束时间
+                // 为日期对象 date 重新设置成时间 time
+                date.setTime(start);
+                var _start = getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+                date.setTime(end);
+                var _end = getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+                return _start + '-至-' + _end;
+            }
+        } else {//一年54周情况
+            var cnt = 0;// 获取距离周末的天数
+            if (_week == 0 && weeks == 1) {//第一周
+                cnt = 0;
+            } else if (_week == 0) {
+                cnt = 7;
+            } else if (_week == 1) {
+                cnt = 6;
+            } else if (_week == 2) {
+                cnt = 5;
+            } else if (_week == 3) {
+                cnt = 4;
+            } else if (_week == 4) {
+                cnt = 3;
+            } else if (_week == 5) {
+                cnt = 2;
+            } else if (_week == 6) {
+                cnt = 1;
+            }
+            cnt += 1;//加1表示以星期一为一周的第一天
+            // 将这个长整形时间加上第N周的时间偏移
+            time += 24 * 3600000; //第2周开始时间
+
+            var nextYear = new Date(parseInt(year, 10) + 1, "0", "1");
+            var nextWeek = nextYear.getDay();
+            var lastcnt = 0;//获取最后一周开始时间到周末的天数
+            if (nextWeek == 0) {
+                lastcnt = 6;
+            } else if (nextWeek == 1) {
+                lastcnt = 0;
+            } else if (nextWeek == 2) {
+                lastcnt = 1;
+            } else if (nextWeek == 3) {
+                lastcnt = 2;
+            } else if (nextWeek == 4) {
+                lastcnt = 3;
+            } else if (nextWeek == 5) {
+                lastcnt = 4;
+            } else if (nextWeek == 6) {
+                lastcnt = 5;
+            }
+            if (weeks == 1) {//第1周特殊处理
+                // 为日期对象 date 重新设置成时间 time
+                var start = getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+                date.setTime(time - 24 * 3600000);
+                return start + '-至-' + getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+            } else if (weeks == 54) {//第54周特殊处理
+                var start = time + (weeks - 2) * 7 * 24 * 3600000; //第54周开始时间
+                var end = time + (weeks - 2) * 7 * 24 * 3600000 + lastcnt * 24 * 3600000 - 24 * 3600000; //第53周结束时间
+                // 为日期对象 date 重新设置成时间 time
+                date.setTime(start);
+                var _start = getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+                date.setTime(end);
+                var _end = getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+                return _start + '-至-' + _end;
+            } else {
+                var start = time + (weeks - 2) * 7 * 24 * 3600000; //第n周开始时间
+                var end = time + (weeks - 1) * 7 * 24 * 3600000 - 24 * 3600000; //第n周结束时间
+                // 为日期对象 date 重新设置成时间 time
+                date.setTime(start);
+                var _start = getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+                date.setTime(end);
+                var _end = getNowFormatDate(date); //date.format("yyyy年MM月dd日");
+                return _start + '-至-' + _end;
+            }
+        }
+
+    }
+    function GetSumWeek(year) {
+        var dt = new Date(year, "0", "1");
+        var wk = dt.getDay();
+        if (wk != 0) {
+            return 53;
+        } else {
+            return 54;
+        }
+    }
+    //function addtype()
+    //{
+    //        var a = new Object();
+    //        a.type = "add";
+    //        a.model = '{"MeetingCode":"SAR201900001","ProcessFactoryCode":"6386683214299275264","MeetingTheme":"具体","StartTime":"2019-01-04 14:30","MeetingContent":"布鲁克林 ","Participants":"陈志强,李万紫","InsertUserCode":"100000","InsertTime":"2019-01-04 14:30:43","BrowseCount":"0","Remarks":"","Week":1}'
+    //    $.ajax({
+    //        url: "/api/SafeAccidentReport/SubmitForm",
+    //        data: a,
+    //        type: "post",
+    //        dataType: "json",
+    //        success: function (data) {
+
+    //        }
+    //    });
+    //}
+</script>
+<style>
+    .year-month {
+        padding-left: 10px;
+    }
+</style>
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar" style="float:left;">
+                <div class="btn-group">
+                    <a style="margin-top: -18px;margin-left:12px" class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div id="toolbar" class="toolbar" style="float: left;">
+                <table>
+                    <tr>
+                        <td class="year-month">当前年份：</td>
+                        <td id="year"></td>
+                        <td class="year-month"></td>
+                        <td id="month"></td>
+                        <td id="zhushi" style="color:red">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注：红色表示时间已过未填报，绿色表示已填报，蓝色表示本周，灰色表示时间未到</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="Myue" class="gridPanel">
+            <div id="Zhou" style="width: 67%; float: left;">
+                <table style="margin-bottom:20px;">
+                    <tr>
+                        <td id="days" class="year-month"></td>
+                    </tr>
+                </table>
+            </div>
+            <div id="LieBiao" style="width: 31%; float: left; border-radius: 8px; margin-left: 5px; overflow-x: hidden; overflow-y: visible; margin-top: -4px; ">
+                <div class="ui-layout-center">
+                    <div class="tabs-container">
+                        <div class="tab-content">
+                            <div id="tab-1" class="tab-pane active">
+                                <div class="panel-body" style="padding: 5px;">
+                                    <div class="wrapper wrapper-content  animated fadeInRight blog" style="padding: 5px;">
+                                        <div class="row" id="row-content1" style="padding: 5px;">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

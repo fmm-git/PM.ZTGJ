@@ -1,0 +1,527 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<link href="~/Content/css/app.v2.css" rel="stylesheet" />
+<link href="~/Content/js/datepicker/skin/WdatePicker.css" rel="stylesheet" />
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+
+<script>
+    var ProjectId = $.request("ProjectId");
+    var OrgType = $.request("OrgType");
+    $(function () {
+        $("#HistoryMonth1").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var HistoryMonth1 = dp.cal.getNewDateStr();
+                    JGCYCLArrival(HistoryMonth1);
+                }
+            });
+        });
+        $("#HistoryMonth2").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var HistoryMonth2 = dp.cal.getNewDateStr();
+                    JGCPSXHAnalysis(HistoryMonth2);
+                }
+            });
+        });
+        if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+            $("header").css("background-color", "#1491e4");
+            $("header").css("color", "#ffffff");
+            $(".panel-default").css("border-bottom", "2px solid #dcd260");
+        }
+        //加工厂当月原材料到货分析
+        JGCYCLArrival("");
+        JGCPSXHAnalysis("");
+        gridList("一号加工厂", "等待卸货超时次数");
+        JGCLSOrderAnalysis();
+    })
+
+    function JGCYCLArrival(HistoryMonth1) {
+        var TypeNum = [];
+        $.ajax({
+            url: "@Url.Action("JGCYCLArrival", "QualityIndex")",
+            data: { ProjectId: ProjectId, OrgType: OrgType, HistoryMonth1: HistoryMonth1 },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < 4; i++) {
+                    if (i == 0) {
+                        TypeNum.push({
+                            name: "到货总量",
+                            data: [{ y: data[0].dhzl, total: data[0].dhzl }, { y: data[1].dhzl, total: data[1].dhzl }, { y: data[2].dhzl, total: data[2].dhzl }]
+                        });
+                    } else if (i == 1) {
+                        TypeNum.push({
+                            name: "按时供货量",
+                            data: [{ y: data[0].tqdh, total: data[0].dhzl }, { y: data[1].tqdh, total: data[1].dhzl }, { y: data[2].tqdh, total: data[2].dhzl }]
+                        });
+                    } else if (i == 2) {
+                        TypeNum.push({
+                            name: "延迟供货量",
+                            data: [{ y: data[0].ycdh, total: data[0].dhzl }, { y: data[1].ycdh, total: data[1].dhzl }, { y: data[2].ycdh, total: data[2].dhzl }]
+                        });
+                    } else if (i == 3) {
+                        TypeNum.push({
+                            name: "未供货量",
+                            data: [{ y: data[0].asdh, total: data[0].dhzl }, { y: data[1].asdh, total: data[1].dhzl }, { y: data[2].asdh, total: data[2].dhzl }]
+                        });
+                    }
+                }
+            }
+        });
+        var chart = Highcharts.chart('YclDh', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: '原材料供货情况统计'
+            },
+            xAxis: {
+                categories: ['一号加工厂', '二号加工厂', '三号加工厂'],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '到货量(kg)'
+                }
+            },
+            tooltip: {
+                // head + 每个 point + footer 拼接成完整的 table
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormatter: function () {
+                    var a = (this.y / this.total * 100).toFixed(2);
+                    if (isNaN(a)) {
+                        a = 0;
+                    }
+                    return '<tr><td style="color:' + this.series.color + ';padding:0"> ' +
+                           this.series.name + ': </td>' +
+                '<td style="padding:0"><b>' + this.y.toFixed(5) + 'kg</b><br/><b>' + a + '%</b></td></tr>'
+                },
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0,
+                    events: {
+                        click: function (e) {
+                            //e.point.x 表示的x轴的下标从0开始
+                            //e.point.y 表示当前点击y轴的值
+                            //this.name 表示当前分类的值
+                            var a = e.point.x;//加工厂
+                            var b = this.name;//到货量分类
+                        }
+                    }
+                }
+            },
+            series: TypeNum,
+            colors: ['#95CEFF','#90ED7D','#FFED75','#FF9285']
+        });
+    }
+    function JGCPSXHAnalysis(HistoryMonth2) {
+        var TypeNum = [];
+        $.ajax({
+            url: "@Url.Action("JGCPSXHAnalysis", "QualityIndex")",
+            data: { ProjectId: ProjectId, OrgType: OrgType, HistoryMonth2: HistoryMonth2 },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < 4; i++) {
+                    if (i == 0) {
+                        TypeNum.push({
+                            name: "等待卸货超时次数",
+                            data: [{ y: data[0].ddxhcscs }, { y: data[1].ddxhcscs }, { y: data[2].ddxhcscs }],
+                            dataLabels: {
+                                enabled: true,
+                                rotation: -90,
+                                color: '#FFFFFF',
+                                align: 'right',
+                                format: '{point.y}',
+                                y: 10
+                            }
+                        });
+                    } else if (i == 1) {
+                        TypeNum.push({
+                            name: "卸货超时次数",
+                            data: [{ y: data[0].xhcscs }, { y: data[1].xhcscs }, { y: data[2].xhcscs }],
+                            dataLabels: {
+                                enabled: true,
+                                rotation: -90,
+                                color: '#FFFFFF',
+                                align: 'right',
+                                format: '{point.y}',
+                                y: 10
+                            }
+                        });
+                    } else if (i == 2) {
+                        TypeNum.push({
+                            name: "签收超时次数",
+                            data: [{ y: data[0].qscscs }, { y: data[1].qscscs }, { y: data[2].qscscs }],
+                            dataLabels: {
+                                enabled: true,
+                                rotation: -90,
+                                color: '#FFFFFF',
+                                align: 'right',
+                                format: '{point.y}',
+                                y: 10
+                            }
+                        });
+                    } else if (i == 3) {
+                        TypeNum.push({
+                            name: "卸货过程中问题次数",
+                            data: [{ y: data[0].xhgczwtcs }, { y: data[1].xhgczwtcs }, { y: data[2].xhgczwtcs }],
+                            dataLabels: {
+                                enabled: true,
+                                rotation: -90,
+                                color: '#FFFFFF',
+                                align: 'right',
+                                format: '{point.y}',
+                                y: 10
+                            }
+                        });
+                    }
+                }
+            }
+        });
+        var chart = Highcharts.chart('PsDzWt', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: '配送到站各类问题次数统计'
+            },
+            xAxis: {
+                categories: ['一号加工厂', '二号加工厂', '三号加工厂'],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '次数'
+                }
+            },
+            tooltip: {
+                // head + 每个 point + footer 拼接成完整的 table
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormatter: function () {
+                    return '<tr><td style="color:' + this.series.color + ';padding:0"> ' +
+                           this.series.name + ': </td>' +
+                '<td style="padding:0"><b>' + this.y + '</b></td></tr>'
+                },
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0,
+                    events: {
+                        click: function (e) {
+                            //e.point.x 表示的x轴的下标从0开始
+                            //e.point.y 表示当前点击y轴的值
+                            //this.name 表示当前分类的值
+                            var a = e.point.category;//加工厂
+                            var b = this.name;//到货量分类
+                            GetPsZdMx(a, b);
+                        }
+                    }
+                }
+            },
+            series: TypeNum
+        });
+    }
+    //获取配送到站明细
+    function GetPsZdMx(a, b) {
+        $("#Jgc").html(a);
+        $("#PsType").html(b);
+        GetChangeDateType(a, b);
+
+    }
+    function gridList(a, b) {
+        $("#Jgc").html(a);
+        $("#PsType").html(b);
+        $("#gridListPsDzWtMx").dataGrid({
+            url: "/QualityIndex/GetPsDzWtMxList",
+            postData: { Jgc: a, PsType: b, ProjectId: ProjectId, OrgType: OrgType },
+            height: $("#PsDzWtMx").height() - 35,
+            colModel: [
+                { label: "站点名称", name: "SiteName", width: 140, align: 'left', sortable: false },
+                { label: '订单编号', name: 'OrderCode', width: 140, align: 'left', sortable: false },
+                { label: '配送装车编号', name: 'DistributionCode', width: 140, align: 'left', sortable: false },
+                { label: '配送时间', name: 'LoadCompleteTime', width: 140, align: 'left', sortable: false }
+            ],
+            sortname: 'DistributionCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+        });
+    }
+    //重新加载预警列表信息
+    function GetChangeDateType(a, b) {
+        $("#gridListPsDzWtMx").jqGrid('setGridParam', {
+            postData: { Jgc: a, PsType: b, ProjectId: ProjectId, OrgType: OrgType },
+        }).trigger('reloadGrid');
+    }
+    function JGCLSOrderAnalysis() {
+        GetOneJgc();
+        GetTwoJgc();
+        GetThreeJgc();
+    }
+
+    function GetOneJgc() {
+        $.ajax({
+            url: "@Url.Action("GetOneJgc", "QualityIndex")",
+            data: { ProjectId: ProjectId, OrgType: OrgType },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                var data1 = [];
+                var data2 = [];
+                var yuedata = [];
+                var json = data;
+                if (json.length > 0) {
+                    for (var i = 0; i < json.length; i++) {
+                        data1.push(parseInt(json[i]["Count1"]));
+                        data2.push(parseInt(json[i]["Count2"]));
+                        yuedata.push(json[i]["months"] + '月');
+                    }
+                }
+                var chart = Highcharts.chart('OneJgc', {
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: '构件加工厂历史订单分析'
+                    }, credits: {
+                        enabled: false//是否显示版权信息
+                    },
+                    xAxis: {
+                        categories: yuedata
+                    }, yAxis: {
+                        title: {
+                            text: '次数'
+                        }
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                // 开启数据标签
+                                enabled: true
+                            },
+                            // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+                            enableMouseTracking: false
+                        }
+                    },
+                    series: [{
+                        name: '订单退回次数',
+                        data: data1
+                    }, {
+                        name: '订单更改次数',
+                        data: data2
+                    }]
+                });
+            }
+        })
+    }
+
+    function GetTwoJgc() {
+        $.ajax({
+            url: "@Url.Action("GetTwoJgc", "QualityIndex")",
+            data: { ProjectId: ProjectId, OrgType: OrgType },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                var data1 = [];
+                var data2 = [];
+                var yuedata = [];
+                var json = data;
+                if (json.length > 0) {
+                    for (var i = 0; i < json.length; i++) {
+                        data1.push(parseInt(json[i]["Count1"]));
+                        data2.push(parseInt(json[i]["Count2"]));
+                        yuedata.push(json[i]["months"] + '月');
+                    }
+                }
+                var chart = Highcharts.chart('TwoJgc', {
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: '构件加工厂历史订单分析'
+                    }, credits: {
+                        enabled: false//是否显示版权信息
+                    },
+                    xAxis: {
+                        categories: yuedata
+                    }, yAxis: {
+                        title: {
+                            text: '次数'
+                        }
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                // 开启数据标签
+                                enabled: true
+                            },
+                            // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+                            enableMouseTracking: false
+                        }
+                    },
+                    series: [{
+                        name: '订单退回次数',
+                        data: data1
+                    }, {
+                        name: '订单更改次数',
+                        data: data2
+                    }]
+                });
+            }
+        })
+    }
+
+    function GetThreeJgc() {
+        $.ajax({
+            url: "@Url.Action("GetThreeJgc", "QualityIndex")",
+            data: { ProjectId: ProjectId, OrgType: OrgType },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                var data1 = [];
+                var data2 = [];
+                var yuedata = [];
+                var json = data;
+                if (json.length > 0) {
+                    for (var i = 0; i < json.length; i++) {
+                        data1.push(parseInt(json[i]["Count1"]));
+                        data2.push(parseInt(json[i]["Count2"]));
+                        yuedata.push(json[i]["months"] + '月');
+                    }
+                }
+                var chart = Highcharts.chart('ThreeJgc', {
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: '构件加工厂历史订单分析'
+                    }, credits: {
+                        enabled: false//是否显示版权信息
+                    },
+                    xAxis: {
+                        categories: yuedata
+                    }, yAxis: {
+                        title: {
+                            text: '次数'
+                        }
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                // 开启数据标签
+                                enabled: true
+                            },
+                            // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+                            enableMouseTracking: false
+                        }
+                    },
+                    series: [{
+                        name: '订单退回次数',
+                        data: data1
+                    }, {
+                        name: '订单更改次数',
+                        data: data2
+                    }]
+                });
+            }
+        })
+    }
+</script>
+
+<div class="row">
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                原材料供货情况统计
+                <div class="input-group input-group-with" style="float: right; margin-top: -8px;">
+                    <input id="HistoryMonth1" name="HistoryMonth1" type="text" class="form-control required input-wdatepicker" placeholder="历史月份" />
+                </div>
+            </header>
+            <div class="panel-body">
+                <div id="YclDh" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                配送到站各类问题次数统计
+                <div class="input-group input-group-with" style="float: right; margin-top: -8px;">
+                    <input id="HistoryMonth2" name="HistoryMonth2" type="text" class="form-control required input-wdatepicker" placeholder="历史月份" />
+                </div>
+            </header>
+            <div class="panel-body">
+                <div id="PsDzWt" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                <spna id="Jgc"></spna><span id="PsType"></span>
+            </header>
+            <div class="panel-body">
+                <div id="PsDzWtMx" style="height: 300px;">
+                    <div class=" gridpanel">
+                        <table id="gridListPsDzWtMx"></table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                一号加工厂历史问题订单统计
+            </header>
+            <div class="panel-body">
+                <div id="OneJgc" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                二号加工厂历史问题订单统计
+            </header>
+            <div class="panel-body">
+                <div id="TwoJgc" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                三号加工厂历史问题订单统计
+            </header>
+            <div class="panel-body">
+                <div id="ThreeJgc" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+</div>

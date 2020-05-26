@@ -1,0 +1,343 @@
+﻿@{
+    ViewBag.Title = "供应清单";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<style type="text/css">
+    .SelectOvertime {
+        background-color: #f35050;
+        color: #104159;
+    }
+
+    .SelectFuture {
+        background-color: #fbe641;
+        color: #104159;
+    }
+
+    .SelectDone {
+        background-color: #d7d7d7;
+        color: #262d30;
+    }
+
+    .StateCodeYes {
+        color: #FFF;
+        padding: 15px;
+        background: #999;
+    }
+
+    .StateCodeNOMark {
+        color: #FFF;
+        padding: 15px;
+        background: #1ABC9C;
+        cursor: pointer;
+    }
+</style>
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    //获取从原材料月度需求计划页面传递过来的月度需求计划编号
+    var DemandPlanCode = $.request("DemandPlanCode");
+    //获取从批次需求计划页面传递过来的批次度需求计划编号
+    var BatchPlanNum = $.request("BatchPlanNum");
+    $(function () {
+        $.LodeMenuBtn("/RawMaterial/SupplyList/Index");
+        $('#layout').layout();
+        $('#NF-edit').remove();
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 130;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 180;
+        } else {
+            Height = 130;
+        }
+        leftList();
+        gridList(Height);
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+            });
+        });
+    });
+
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetAllOrBySearch", "SupplyList")",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "批次计划编号", name: "BatchPlanNum", width: 120, align: 'left', sortable: false },
+                { label: '状态', name: 'StateCode', hidden: true },
+                { label: '状态', name: 'StateCodeNew', width: 70, align: 'left', sortable: false, formatter: CustomState },
+                { label: "分部名称", name: "BranchName", width: 80, align: 'left', sortable: false },
+                { label: '工区名称', name: 'WorkAreaName', width: 80, align: 'left', sortable: false },
+                { label: '应供货日期', name: 'SupplyDate', width: 85, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: "批次计划总量(kg)", name: "BatchPlanTotal", width: 100, align: 'left', sortable: false },
+                { label: "已供应总量(kg)", name: "HasSupplierTotal", width: 100, align: 'left', sortable: false },
+                { label: "供货次数", name: "GhCount", width: 100, align: 'left', sortable: false },
+                { label: "不合格数量(kg)", name: "UnqualifiedTotal", width: 100, align: 'left', sortable: false },
+                { label: '供货完成日期', name: 'SupplyCompleteTime', width: 85, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: '验收人', name: 'AcceptorName', width: 65, align: 'left', sortable: false },
+                { label: '联系电话', name: 'ContactWay', width: 80, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '交货地点', name: 'DeliveryPlace', width: 150, align: 'left', sortable: false },
+                { label: '备注', name: 'Remarks', width: 120, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', hidden: true },
+                { label: '录入时间', name: 'InsertTime', hidden: true },
+            ],
+            beforeRequest: function () {
+                var postData = $gridList.jqGrid("getGridParam", "postData");
+                if (DemandPlanCode != null && DemandPlanCode != "" && DemandPlanCode != undefined) {
+                    postData.DemandPlanCode = DemandPlanCode;
+                }
+                if (!BatchPlanNum) {
+                    postData.BatchPlanNum = BatchPlanNum;
+                }
+            },
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                $('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    }
+    //-----------gridList--END---------
+
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompanyNoSite",
+            height: $(window).height() - 46,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,
+            treeGridModel: 'adjacency',
+            ExpandColumn: 'CompanyFullName',
+            rownumbers: false,
+            onCellSelect: function (ucode) {//单击
+                var siteCode = getOrganizationalCode(ucode);
+            }
+        });
+    }
+
+    //供货日期（工厂InsertTime+4天）
+    function CustomFmatter(cellvalue, options, rowObject) {
+        //var treeDate = new Date(cellvalue);
+        //treeDate.setDate(treeDate.getDate() + 3);
+        //var time = treeDate.Format("yyyy-MM-dd");
+        //return time;
+        var formatDa = new Date(rowObject.InsertTime.replace(/-/g, "/"));
+        formatDa.setDate(formatDa.getDate() + 4);
+        var time = formatDa.Format("yyyy/MM/dd");
+        return time;
+    }
+    //状态
+    var CustomState = function (cellvalue, options, rowObject) {
+        var getNow = Date.parse(getNowFormatDate());
+        var supply = rowObject.SupplyDate.substring(0, 10);
+        var supplyDate = new Date(Date.parse(supply));
+        var Daynow = new Date(getNow);
+        var Diff = Daynow.diff(supplyDate);
+        var color = "black";
+        var tdhtml = rowObject.StateCode;
+        if (rowObject.StateCode == '未供货') {
+            if (Diff > 0) {
+                if (Diff == 1) {
+                    tdhtml = '即将供货';
+                }
+                tdhtml = '供货超时';
+                color = "red";
+            }
+        }
+        if (rowObject.StateCode == "部分供货") {
+            color = "#FF8000";
+        }
+        else if (rowObject.StateCode == "已供货") {
+            color = "green";
+        }
+        return "<span style='color:" + color + ";'>" + tdhtml + "</span>";
+    }
+
+    var CustomButton = function (cellvalue, options, rowObject) {
+        var StateCode = rowObject.StateCode;
+        var BatchPlanTotal = rowObject.BatchPlanTotal;//批次计划总量
+        var HasSupplierTotal = rowObject.HasSupplierTotal;//已供应量
+        if (StateCode == "已供货") {
+            var butHtm = '<span  id=A' + rowObject.ID + ' class="StateCodeYes">供货</span> ';
+            butHtm += '<span id=B' + rowObject.ID + ' class="StateCodeYes">供货完成</span>';
+            return butHtm;
+        } else {
+            var rowJson = JSON.stringify(rowObject).replace(/\"/g, "'");
+            var butHtm = '<span  id=A' + rowObject.ID + ' onclick="onButClick(' + rowObject.ID + ')" class="StateCodeNOMark">供货</span> ';
+            butHtm += '<span id=B' + rowObject.ID + ' onclick="DoneClick(' + rowObject.ID + ',' + rowJson + ')" class="StateCodeNOMark">供货完成</span>';
+            return butHtm;
+        }
+    }
+
+    var onButClick = function (rowid) {
+        jQuery("#gridList").jqGrid('setSelection', rowid);
+        btn_other1();
+    }
+
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看供货清单",
+            url: "@Url.Action("Details", "SupplyList")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function btn_other1() {
+        var rowID = $("#gridList").getGridParam("selrow");
+        var rowData = $("#gridList").getRowData(rowID);
+        //if (rowData.StateCode == '已供货') {
+        //    $.modalMsg("该订单已供货完成", "warning");
+        //    return;
+        //}
+        CommonView({
+            id: "Form",
+            title: "修改供货清单",
+            url: "@Url.Action("Form", "SupplyList")",
+            anyUrl: "@Url.Action("AnyInfo", "SupplyList")",
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //扩展日期 比较
+    Date.prototype.diff = function (date) {
+        return (this.getTime() - date.getTime()) / (24 * 60 * 60 * 1000);
+    }
+    //供货完成
+    function btn_other2() {
+        var keyValue = $("#gridList").getGridParam("selrow");
+        if (keyValue == "" || keyValue == null || keyValue == undefined) {
+            $.modalMsg("请选择数据", "warning"); return false;
+        }
+        var rowData = $("#gridList").getRowData(keyValue);
+        if (rowData.StateCode == '已供货') {
+            $.modalMsg("该订单已供货完成", "warning");
+            return;
+        }
+        var where = "?type=pl&keyValue=" + keyValue;
+        CommonOpen("Form", "供货完成", "@Url.Action("Form", "SupplyList")" + where, true, true);
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "SupplyList")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+<script type="text/html" id="rek">
+    <table class="form" style="margin-top:-20px;">
+        <tr>
+            <th class="formTitle" style="width:20px;">备注</th>
+            <td class="formValue">
+                <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;width:98%; padding-right: 2px;"></textarea>
+            </td>
+        </tr>
+    </table>
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div class="topPanel-btn divwidth2" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="BatchPlanNum">批次计划编号</option>
+                                    <option value="StateCode">状态</option>
+                                    <option value="HistoryMonth">历史月份</option>
+                                </select>
+                                <input id="BatchPlanNum" name="BatchPlanNum" type="text" class="form-control SearchContent hidSearchContent" placeholder="批次计划编号">
+                                <select id="StateCode" name="StateCode" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="供货超时">供货超时</option>
+                                    <option value="未供货">未供货</option>
+                                    <option value="部分供货">部分供货</option>
+                                    <option value="已供货">已供货</option>
+                                </select>
+                                <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

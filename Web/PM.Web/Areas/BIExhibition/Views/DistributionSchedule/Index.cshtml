@@ -1,0 +1,446 @@
+﻿@{
+    /*
+     * 首页
+     * 配送进度展示
+     **/
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<link href="~/Content/css/app.v2.css" rel="stylesheet" />
+<script>
+    var ProjectId = $.request("ProjectId");
+    var OrgType = $.request("OrgType");
+    $(function () {
+        if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+            $("header").css("background-color", "#1491e4");
+            $("header").css("color", "#ffffff");
+            $(".panel-default").css("border-bottom", "2px solid #dcd260");
+        }
+        //构件加工厂当月配送情况分析
+        GJCDYPSAnalysis();
+        GetOneJia();
+        GetTwoJia();
+        GetThreeJia();
+    })
+
+    function GJCDYPSAnalysis() {
+        //$.get('/BIExhibition/DistributionSchedule/GetGJCDYPSAnalysis?ProjectId=' + ProjectId, {}, function (data) {
+        //    var name = [];
+        //    var pszlhtml = [];
+        //    var zcpshtml = [];
+        //    var tqpshtml = [];
+        //    var yhpshtml = [];
+        //    var json = eval('(' + data + ')');
+        //    if (data.length > 0) {
+        //        for (var i = 0; i < json.length; i++) {
+        //            name.push([json[i]["CompanyFullName"]]);
+        //            pszlhtml.push([parseFloat(json[i]["TotalAggregate"])]);
+        //            zcpshtml.push([parseFloat(json[i]["ZCDis"])]);
+        //            tqpshtml.push([parseFloat(json[i]["TQDis"])]);
+        //            yhpshtml.push([parseFloat(json[i]["YHDis"])]);
+        //        }
+        //    }
+        //    if (!!keyValue) {
+        //        var chart = Highcharts.chart('GJCDYPSAnalysis', {
+        //            chart: {
+        //                type: 'column'
+        //            },
+        //            title: {
+        //                text: '构件加工厂当月配送情况分析'
+        //            },
+        //            legend: {
+        //                align: 'right',
+        //                verticalAlign: 'middle',
+        //                layout: 'vertical'
+        //            },
+        //            xAxis: {
+        //                categories: name,
+        //                labels: {
+        //                    x: -10
+        //                }
+        //            },
+        //            yAxis: {
+        //                allowDecimals: false,
+        //                title: {
+        //                    text: '总量 (kg)'
+        //                }
+        //            },
+        //            credits: {
+        //                enabled: false//是否显示版权信息
+        //            }
+        //        ,
+        //            series: [{
+        //                name: '配送总量(kg)',
+        //                data: pszlhtml
+        //            }, {
+        //                name: '正常配送量(kg)',
+        //                data: zcpshtml
+        //            }, {
+        //                name: '提前配送量(kg)',
+        //                data: tqpshtml
+        //            }, {
+        //                name: '延后配送量(kg)',
+        //                data: yhpshtml
+        //            }],
+        //            responsive: {
+        //                rules: [{
+        //                    condition: {
+        //                        maxWidth: 400,
+        //                        itemWidth: 300
+        //                    },
+        //                    chartOptions: {
+        //                        legend: {
+        //                            align: 'center',
+        //                            verticalAlign: 'bottom',
+        //                            layout: 'horizontal'
+        //                        },
+        //                        yAxis: {
+        //                            labels: {
+        //                                align: 'center',
+        //                                x: 0,
+        //                                y: -5
+        //                            },
+        //                            title: {
+        //                                text: null
+        //                            }
+        //                        },
+        //                        subtitle: {
+        //                            text: null
+        //                        },
+        //                        credits: {
+        //                            enabled: false
+        //                        }
+        //                    }
+        //                }]
+        //            }
+        //        });
+        //    } else
+        //    {
+        //        var chart = Highcharts.chart('GJCDYPSAnalysis', {
+        //            chart: {
+        //                type: 'bar'
+        //            },
+        //            title: {
+        //                text: '构件加工厂当月配送情况分析'
+        //            },
+        //            credits: {
+        //                enabled: false//是否显示版权信息
+        //            },
+        //            xAxis: {
+        //                categories: name,
+        //                title: {
+        //                    text: null
+        //                }
+        //            },
+        //            yAxis: {
+        //                min: 0,
+        //                title: {
+        //                    text: '总量 (kg)',
+        //                    align: 'high'
+        //                },
+        //                labels: {
+        //                    overflow: 'justify'
+        //                }
+        //            },
+        //            tooltip: {
+        //                valueSuffix: ' kg'
+        //            },
+        //            plotOptions: {
+        //                bar: {
+        //                    dataLabels: {
+        //                        enabled: true,
+        //                        allowOverlap: true // 允许数据标签重叠
+        //                    }
+        //                }
+        //            },
+        //            legend: {
+        //                layout: 'vertical',
+        //                align: 'left',
+        //                verticalAlign: 'top',
+        //                x: 80,
+        //                y: -10,
+        //                floating: true,
+        //                borderWidth: 1,
+        //                backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+        //                shadow: true
+        //            },
+        //            series: [{
+        //                name: '配送总量',
+        //                data: pszlhtml
+        //            }, {
+        //                name: '正常配送量',
+        //                data: zcpshtml
+        //            }, {
+        //                name: '提前配送量',
+        //                data: tqpshtml
+        //            }, {
+        //                name: '延后配送量',
+        //                data: yhpshtml
+        //            }]
+        //        });
+        //    }
+        //})
+        var JgcName = [];
+        var PsTypeWeightTotal = [];
+        var pszl = [];
+        var tqps = [];
+        var yhps = [];
+        var zcps = [];
+        $.ajax({
+            url: '/BIExhibition/DistributionSchedule/DisStatusTj',
+            data: { ProjectId: ProjectId, OrgType: OrgType },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                //加载第一个报表数据
+                for (var d = 0; d < data.length; d++) {
+                    if (data[d].pszl >= 0) {
+                        JgcName.push(data[d].CompanyFullName);
+                        pszl.push(data[d].pszl);
+                        tqps.push(data[d].tqps);
+                        yhps.push(data[d].yhps);
+                        zcps.push(data[d].zcps);
+                    }
+                }
+                if (JgcName.length > 0) {
+                    PsTypeWeightTotal.push({
+                        name: '配送总量',
+                        data: pszl
+                    });
+                    PsTypeWeightTotal.push({
+                        name: '提前配送',
+                        data: tqps
+                    });
+                    PsTypeWeightTotal.push({
+                        name: '延后配送',
+                        data: yhps
+                    });
+                    PsTypeWeightTotal.push({
+                        name: '正常配送',
+                        data: zcps
+                    });
+                }
+            }
+        });
+        var chart = Highcharts.chart('GJCDYPSAnalysis', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: '当月配送情况统计'
+            },
+            xAxis: {
+                categories: JgcName,
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '单位(kg)'
+                }
+            },
+            tooltip: {
+                // head + 每个 point + footer 拼接成完整的 table
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                    '<td style="padding:0"><b>{point.y:.5f}kg</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0
+                }
+            },
+            series: PsTypeWeightTotal,
+            colors: ['#53bcf2', '#53f592', '#fa796c', '#4f4d4d'],
+        });
+    }
+
+    function GetOneJia() {
+        $.get('/BIExhibition/DistributionSchedule/OneJgc?ProjectId=' + ProjectId + "&OrgType=" + OrgType, {}, function (data) {
+            var data1 = [];
+            var json = eval('(' + data + ')');
+            if (json.length > 0) {
+                for (var i = 0; i < json.length; i++) {
+                    data1.push({ name: json[i]["SiteName"], y: parseFloat(json[i]["WeightTotal"]) });
+                }
+            }
+            var chart = Highcharts.chart('one', {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie'
+                },
+                title: {
+                    text: '一号加工厂当月订单配送量分析'
+                }, credits: {
+                    enabled: false//是否显示版权信息
+                },
+                tooltip: {
+                    pointFormat: '<b>{series.name}:{point.percentage:.1f}%<br>{point.y:.5f}Kg</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}: {point.percentage:.1f}%<br>{point.y:.5f}Kg</b>',
+                            style: {
+                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    name: '配送量',
+                    colorByPoint: true,
+                    data: data1
+                }]
+            });
+        })
+    }
+    function GetTwoJia() {
+        $.get('/BIExhibition/DistributionSchedule/TwoJgc?ProjectId=' + ProjectId + "&OrgType=" + OrgType, {}, function (data) {
+            var data1 = [];
+            var json = eval('(' + data + ')');
+            if (json.length > 0) {
+                for (var i = 0; i < json.length; i++) {
+                    data1.push({ name: json[i]["SiteName"], y: parseFloat(json[i]["WeightTotal"]) });
+                }
+            }
+            var chart = Highcharts.chart('two', {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie'
+                },
+                title: {
+                    text: '二号加工厂当月订单配送量分析'
+                }, credits: {
+                    enabled: false//是否显示版权信息
+                },
+                tooltip: {
+                    pointFormat: '<b>{series.name}:{point.percentage:.1f}%<br>{point.y:.5f}Kg</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}: {point.percentage:.1f}%<br>{point.y:.5f}Kg</b>',
+                            style: {
+                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    name: '配送量',
+                    colorByPoint: true,
+                    data: data1
+                }]
+            });
+        })
+    }
+    function GetThreeJia() {
+        $.get('/BIExhibition/DistributionSchedule/ThreeJgc?ProjectId=' + ProjectId + "&OrgType=" + OrgType, {}, function (data) {
+            var data1 = [];
+            var json = eval('(' + data + ')');
+            if (json.length > 0) {
+                for (var i = 0; i < json.length; i++) {
+                    data1.push({ name: json[i]["SiteName"], y: parseFloat(json[i]["WeightTotal"]) });
+                }
+            }
+            var chart = Highcharts.chart('three', {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie'
+                },
+                title: {
+                    text: '三号加工厂当月订单配送量分析'
+                }, credits: {
+                    enabled: false//是否显示版权信息
+                },
+                tooltip: {
+                    pointFormat: '<b>{series.name}:{point.percentage:.1f}%<br>{point.y:.5f}Kg</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}: {point.percentage:.1f}%<br>{point.y:.5f}Kg</b>',
+                            style: {
+                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    name: '配送量',
+                    colorByPoint: true,
+                    data: data1
+                }]
+            });
+        })
+    }
+</script>
+
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                构件加工厂当月配送情况分析
+            </header>
+            <div class="panel-body">
+                <div id="GJCDYPSAnalysis" style="width:95%;height: 450px;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6" style="padding-right:6px;">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                一号加工厂当月订单配送量分析
+            </header>
+            <div class="panel-body">
+                <div id="one" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6" style="padding-left:6px;">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                二号加工厂当月订单配送量分析
+            </header>
+            <div class="panel-body">
+                <div id="two" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6" style="padding-right: 6px;">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                三号加工厂当月订单配送量分析
+            </header>
+            <div class="panel-body">
+                <div id="three" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+</div>

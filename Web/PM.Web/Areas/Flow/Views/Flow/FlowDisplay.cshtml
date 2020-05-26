@@ -1,0 +1,469 @@
+﻿@{
+    ViewBag.Title = "流程图展示";
+}
+
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>流程图展示</title>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/css/site.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/default/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+
+    <script src="~/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/jsPlumb/jquery.jsPlumb-1.3.16-all-min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/jquery.contextmenu.r2.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/flowdesign/leipi.flowdesign.v2_Preview.js"></script>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="navbar navbar-fixed-top" id="saveDiv">
+        <div class="navbar-inner">
+            <div class="container">
+                <div style="float: left;">@Html.Raw(ViewBag.ColorDescription)</div>
+                <div class="pull-right">
+                    <button class="btn btn-info" type="button" id="leipi_save" style="display: none">保存设计</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    @*<%--鼠标右键空白对话框--%>
+    <%--<div id="canvasMenu" style="display: none;">
+        <ul>
+            <li id="add"><i class="icon-plus"></i>&nbsp;<span class="_label">添加步骤</span></li>
+        </ul>
+    </div>--%>*@
+
+    @*<%if (Request["Jurisdiction"] == "true")
+    { %>*@
+    <div id="processMenu" style="display: none;">
+        <ul>
+            <li id="addson"><i class="icon-plus"></i>&nbsp;<span class="_label">添加步骤</span></li>
+            <li id="delete"><i class="icon-trash"></i>&nbsp;<span class="_label">删除</span></li>
+            <li id="attribute"><i class="icon-cog"></i>&nbsp;<span class="_label">属性</span></li>
+            @*<%--
+            <li id="event"><i class="icon-wrench"></i>&nbsp;<span class="_label">事件</span></li>--%>*@
+        </ul>
+    </div>
+    <%} %>
+
+
+
+    <div id="winMenu" class="easyui-window" data-options="width: 102,height: 152,title:'菜单',modal: true,shadow: false,collapsible: false,minimizable: false,maximizable: false,draggable: false,closed:true">
+        <a id="btnAdd" href="#" class="easyui-linkbutton" style="width: 100%; margin-top: 4px;" onclick="btnAddChildNodes()">新增节点</a>
+        <a id="btnDelete" href="#" class="easyui-linkbutton" style="width: 100%; margin-top: 4px;" onclick="btnDeleteLine()">删除连线</a>
+    </div>
+    <!--end div-->
+
+    <div class="container" id="flowdesign_canvas" style="width: 3000px; height: 2000px;">
+        <!--div class="process-step btn" style="left: 189px; top: 340px;"><span class="process-num badge badge-inverse"><i class="icon-star icon-white"></i>3</span> 步骤3</div-->
+    </div>
+
+    <div id="winNode" class="easyui-window" title="节点属性" width="610" height="436" data-options="iconCls:'icon-save',modal:true,closed:true,shadow:false">
+        <iframe frameborder="no" scrolling="no" id="Nodeiframe" style="width: 100%; height: 100%"></iframe>
+    </div>
+    <!--设置事件div-->
+    <div id="winEvent" class="easyui-window" title="设置事件" style="width: 300px; height: 280px" data-options="modal:true,closed:true,shadow:false">
+        <iframe frameborder="no" scrolling="no" id="Eventiframe" style="width: 100%; height: 97%"></iframe>
+    </div>
+
+
+
+    <script type="text/javascript">
+        var _lineInfo;//存储连线信息
+        var _globalcanvas;//存储设计器对象
+        var _processData;
+        var _FlowCode;
+        $(function () {
+            //获取_FlowCode
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowPerformID_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID" }, function (data) {
+                _FlowCode = $.parseJSON(data)[0].FlowCode;
+            });
+        var alertModal = $('#alertModal'), attributeModal = $("#attributeModal");
+        //消息提示
+        mAlert = function (messages, s) {
+            if (!messages) messages = "";
+            if (!s) s = 2000;
+            alertModal.find(".modal-body").html(messages);
+            alertModal.modal('toggle');
+            setTimeout(function () { alertModal.modal("hide") }, s);
+        }
+        //属性设置
+        attributeModal.on("hidden", function () {
+            $(this).removeData("modal");//移除数据，防止缓存
+        });
+        ajaxModal = function (url, fn) {
+            url += url.indexOf('?') ? '&' : '?';
+            url += '_t=' + new Date().getTime();
+            attributeModal.modal({
+                remote: url
+            })
+            //加载完成执行
+            if (fn) {
+                attributeModal.on('shown', fn);
+            }
+
+
+        }
+
+        function page_reload() {
+            location.reload();
+        }
+
+
+
+        /*
+        php 命名习惯 单词用下划线_隔开
+        js 命名习惯：首字母小写 + 其它首字线大写
+        */
+        /*步骤数据*/
+        var processData = getFlowJson();
+
+        /*创建流程设计器*/
+        var _canvas = $("#flowdesign_canvas").Flowdesign({
+            "processData": processData,
+            canvasMenus: {
+                "add": function (t) {
+                    var count = 0;
+                    for (var i in processData["list"]) {
+                        count++;
+                    }
+                    count++;
+                    while (processData["list"][count] != undefined) {
+                        ++count;
+                    }
+                    var mLeft = $("#jqContextMenu").css("left"), mTop = $("#jqContextMenu").css("top");
+                    $("#Nodeiframe").attr("src", '@Url.Action("ProcessDefinition", "Flow")'+"?action=add_Display&FlowPerformID='@ViewBag.FlowPerformID'" + "&FlowNodeCode=" + count + "&Left=" + mLeft + "&Top=" + mTop + "&FlowCode=" + _FlowCode);
+                    $('#winNode').window('open');
+                }
+            },
+            processMenus: {
+                "attribute": function (t) {
+
+                    var activeId = _canvas.getActiveId();//右键当前的ID
+                    alert("属性:" + activeId);
+                },
+
+                "addson": function (t) {
+                    var activeId = _canvas.getActiveId();//右键当前的ID
+                    if (activeId != '9999') {
+                        SaveNodeInfo(_canvas, false);//保存一下节点的位置
+                        var count = 0;
+                        for (var i in processData["list"]) {
+                            count++;
+                        }
+                        count++;
+                        while (processData["list"][count] != undefined) {
+                            ++count;
+                        }
+                        count = count - 2;
+                        var mLeft = t.offsetLeft, mTop = t.offsetTop + 160;
+                        $("#Nodeiframe").attr("src", '@Url.Action("ProcessDefinition", "Flow")'+"?action=add_Display&FlowPerformID='@ViewBag.FlowPerformID'&FlowCode='@ViewBag.FlowCode'" + "&FlowNodeCode=" + count + "&Left=" + mLeft + "&Top=" + mTop + "&sourceId=" + activeId);
+                        $('#winNode').window('open');
+                    }
+                },
+                "delete": function (t) {
+                    SaveNodeInfo(_canvas, false);//保存一下节点的位置
+                    var activeId = _canvas.getActiveId();//右键当前的ID
+                    if (activeId == 0 || activeId == 9999) {
+                        $.messager.show({
+                            title: '提示',
+                            msg: '不允许删除该节点',
+                            showType: 'show',
+                            style: {
+                                right: '',
+                                top: document.body.scrollTop + document.documentElement.scrollTop,
+                                bottom: ''
+                            }
+                        });
+                    }
+                    else {
+                        //删除时获取上级节点
+                        $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetLastNodeInfo_Display" })', { FlowPerformID: '@ViewBag.FlowPerformID', ChildNodeCode: activeId }, function (data) {
+                            //删除节点后更新他的上级节点关系
+                            for (var n = 0; n < eval(data).length; n++) {
+                                var processData = "";
+                                var s = eval(data)[n].processData.split(',');
+                                for (var i = 0; i < s.length; i++) {
+                                    if (s[i] != activeId) {
+                                        processData += s[i] + ",";
+                                    }
+                                }
+                                processData = processData.substring(0, processData.length - 1);
+                                //更新删除节点上级
+                                $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "UpdateDeleteNode_Display" })', { FlowPerformID: eval(data)[n].FlowPerformID, FlowNodeCode: eval(data)[n].FlowNodeCode, processData: processData }, function (data) {
+
+                                });
+                            }
+
+                            //清理删除节点相关的数据
+                            $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "DeleteNode_Display" })', { FlowPerformID: '@ViewBag.FlowPerformID', ChildNodeCode: activeId, FlowNodeCode: activeId, ParentNodeCode: activeId }, function (data) {
+                                if ($.parseJSON(data).success) {
+                                    Refresh();
+                                }
+                            });
+
+                });
+        }
+        },
+        "event": function (t) {
+            var activeId = _canvas.getActiveId();//右键当前的ID
+            if (activeId != "0") {
+                $("#Eventiframe").attr("src",'@Url.Action("FlowEvent", "Flow")'+"?action=display&FlowPerformID='@ViewBag.FlowPerformID'&FlowCode='@ViewBag.FlowCode'" + "&FlowNodeCode=" + activeId);
+                $("#winEvent").window('open');
+            }
+        }
+        }
+        //双击处理事件
+                , fnDbClick: function (nodeid) {
+                    //<%--if ("<%=Request["Jurisdiction"]%>" == "true") {--%>
+                    nodeid = nodeid.replace("window", "");
+                    $("#Nodeiframe").attr("src",'@Url.Action("ProcessDefinition", "Flow")'+"?action=edit_Display&FlowPerformID='@ViewBag.FlowPerformID'" + "&FlowNodeCode=" + nodeid + "&FlowCode=" + _FlowCode + "&Jurisdiction='@ViewBag.Jurisdiction'");
+                        $('#winNode').window('open');
+                        //}
+                    }
+                });
+        _globalcanvas = _canvas;
+        _processData = processData;
+        /*保存*/
+        $("#leipi_save").bind('click', function () {
+            SaveNodeInfo(_canvas, true);
+        });
+
+
+        DisableLine();
+        });
+
+        //获取流程图JSON字符串
+        function getFlowJson() {
+            var flowjson = "";
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetStartFlowUI" })',
+                data: { FlowPerformID: "@ViewBag.FlowPerformID" },
+                async: false, //设为false就是同步请求
+            cache: false,
+            success: function (data) {
+                var json = eval(data);
+                //对获取的字段进行拼接
+                for (var i in json) {
+                    if (json.length == 1) {
+                        flowjson += '"list": {"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" }}';
+                    }
+                    else if (i == 0) {
+                        flowjson += '"list": {"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" },';
+                    }
+                        //如果是最后一个
+                    else if (i == json.length - 1) {
+                        flowjson += '"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" }}';
+                    }
+                    else {
+                        flowjson += '"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" },';
+                    }
+                }
+                //json = $.parseJSON("{" + flowjson + "}");
+            }
+        });
+        if (flowjson == "") {
+            return null;
+        } else {
+            return $.parseJSON("{" + flowjson + "}");
+        }
+        }
+        //如果有相应的权限，则有对流程图的控制
+        function DisableLine() {
+            if ("@ViewBag.Jurisdiction" == "true") {
+                jsPlumb.draggable(jsPlumb.getSelector(".process-step"));
+                jsPlumb.bind("contextmenu", function (c) {
+                    _lineInfo = c;
+                    $('#winMenu').window({
+                        left: $(this)[0].arguments[1].pageX,
+                        top: $(this)[0].arguments[1].pageY
+                    }).window('open');
+
+                    //if (confirm("你确定取消连接吗?")) {
+                    //    FlowNodeDelete(c.sourceId, c.targetId);   //更新数据库连线关系
+                    //    jsPlumb.detach(c);
+                    //}
+                });
+                $("#leipi_save").css("display", "block");//如果有权限可以使用保存按钮
+
+                //绑定添加连接操作。画线-input text值
+                jsPlumb.bind("jsPlumbConnection", function (info) {
+                    if (info.sourceId == "window9999") {
+                        alert("结束节点不能作为连线起点");
+                        jsPlumb.detach(info);//操作不正确删除连线
+                    }
+                    else if (info.sourceId == info.targetId) {
+                        alert("起始节点和结束节点不能相同");
+                        jsPlumb.detach(info);//操作不正确删除连线
+                    }
+                    else {
+
+                        stratNode = info.sourceId.replace("window", "");
+                        endNode = info.targetId.replace("window", "");
+                        var processData = "";
+                        //获取起始节点信息，取出当前节点的下级数据用于更新
+                        $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowLineStart_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID", FlowNodeCode: stratNode }, function (data) {
+                            if (eval(data)[0].processData == "") {
+                                processData = endNode;
+                            } else {
+                                processData = eval(data)[0].processData + "," + endNode;
+                            }
+                            //更新起始节点下级关系，添加关系表对应关系
+                            $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "FlowLineAdd_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID", FlowCode: eval(data)[0].FlowCode, ParentNodeCode: stratNode, ChildNodeCode: endNode, processData: processData, FlowNodeCode: stratNode }, function (data) {
+                                if (!$.parseJSON(data).success) {
+                                    jsPlumb.detach(info);//操作不正确删除连线
+                                }
+                                alert($.parseJSON(data).message);
+                            });
+                });
+                //if (Complete) {
+                //    //这里写连线完成后处理事件
+                //    FlowLineAdd(info.sourceId, info.targetId);
+                //}
+                //setConnections(info.connection);
+            }
+        });
+        }
+        else {
+            $("span").each(function () {
+                $(this).removeAttr("id");
+            })
+            $("#canvasMenu").remove();
+        }
+        }
+
+        //删除连线后，删除连线关系数据
+        function FlowNodeDelete(stratNode, endNode) {
+            var processData = "";
+            //获取起始节点信息，取出当前节点的下级数据用于更新
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowLineStart_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID", FlowNodeCode: stratNode.replace("window", "") }, function (data) {
+                var s = eval(data)[0].processData.split(',');
+                for (var i = 0; i < s.length; i++) {
+                    if (s[i] != endNode.replace("window", "")) {
+                        processData += s[i] + ",";
+                    }
+                }
+                processData = processData.substring(0, processData.length - 1);
+                //更新起始节点下级关系，删除关系表对应关系
+                $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "FlowLineDelete_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID", ParentNodeCode: stratNode.replace("window", ""), ChildNodeCode: endNode.replace("window", ""), processData: processData, FlowNodeCode: stratNode.replace("window", "") }, function (data) {
+                    alert(data);
+                });
+        });
+        }
+        //刷新界面方法
+        function Refresh() {
+            location.reload();
+        }
+
+        //新增子节点处理方法
+        function btnAddChildNodes() {
+            //判断是否满足添加条件    判断依据为节点的背景色
+            //var background = _lineInfo.source[0].style.background;
+            $("#winMenu").window('close');
+            var _sourceId = _lineInfo.sourceId.replace("window", "");//连线起始节点id
+            var _targetId = _lineInfo.targetId.replace("window", "");//连线结束节点id
+
+            var stratabscissa = _lineInfo.source[0].offsetLeft;//起始节点横坐标
+            var stratordinate = _lineInfo.source[0].offsetTop;//起始节点纵坐标
+
+            var endabscissa = _lineInfo.target[0].offsetLeft;//结束节点横坐标
+            var endordinate = _lineInfo.target[0].offsetTop;//结束节点纵坐标
+
+            var _sourceLeft;
+            var _sourceTop;
+            var Coordinate = 0;
+            //处理节点添加的位置
+            if (stratabscissa == endabscissa) {
+                _sourceLeft = stratabscissa;//起始节点的横坐标
+                _sourceTop = parseInt(endordinate) + 160;//起始节点的纵坐标
+            } else {
+                _sourceLeft = parseInt(stratabscissa) + 160;//起始节点的横坐标
+                _sourceTop = stratordinate;//起始节点的纵坐标
+                Coordinate = 1;
+            }
+            //alert("新增子节点" + _lineInfo);
+            SaveNodeInfo(_globalcanvas, false);//保存一下节点的位置
+            var count = 0;
+            for (var i in _processData["list"]) {
+                count++;
+            }
+            count++;
+            count = count - 2;
+            while (_processData["list"][count] != undefined) {
+                ++count;
+            }
+            $("#Nodeiframe").attr("src",'@Url.Action("ProcessDefinition", "Flow")'+"?action=add_Display&FlowPerformID='@ViewBag.FlowPerformID'&FlowCode=" + _FlowCode + "&FlowNodeCode=" + count + "&Left=" + _sourceLeft + "&Top=" + _sourceTop + "&sourceId=" + _sourceId + "&targetId=" + _targetId + "&Coordinate=" + Coordinate);
+            $('#winNode').window('open');
+        }
+
+        //删除连线处理方法
+        function btnDeleteLine() {
+            $("#winMenu").window('close');
+            $.messager.confirm('确认', '你确定删除连接吗？', function (r) {
+                if (r) {
+                    FlowNodeDelete(_lineInfo.sourceId, _lineInfo.targetId);
+                    jsPlumb.detach(_lineInfo);
+                }
+            });
+        }
+        //保存节点信息
+        function SaveNodeInfo(_canvas, _flag) {
+            var processInfo = $.parseJSON(_canvas.getProcessInfo());//连接信息
+            var str = "";
+            var flag = "";
+            //保存节点之间的关系
+            for (var flowcode in processInfo) {
+                //更新NodeUI表的下级节点  (改为更新节点位置)
+                $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "UpdataFlowNodeUI_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID", FlowNodeCode: flowcode, NodeLeft: processInfo[flowcode].left, NodeTop: processInfo[flowcode].top }, function (data) {
+                    flag = '{ "success": ' + $.parseJSON(data).success + ', "message": "' + $.parseJSON(data).message + '" }';
+                });
+        }
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetNoNextLine_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID" }, function (data) {
+            if (eval(data).length == 0 && _flag) {
+                $.messager.show({
+                    title: '提示',
+                    msg: '保存成功',
+                    timeout: 2000,
+                    showType: 'show',
+                    style: {
+                        right: '',
+                        top: document.body.scrollTop + document.documentElement.scrollTop,
+                        bottom: ''
+                    }
+                });
+            } else if (_flag) {
+                var s = "";
+                for (var i = 0; i < eval(data).length; i++) {
+                    s += eval(data)[i]["FlowNodeName"] + ",";
+                }
+                s = s.substring(0, s.length - 1);
+                $.messager.show({
+                    title: '提示',
+                    msg: "步骤：" + s + "<br/> 不存在下级节点！",
+                    timeout: 2000,
+                    showType: 'show',
+                    style: {
+                        right: '',
+                        top: document.body.scrollTop + document.documentElement.scrollTop,
+                        bottom: ''
+                    }
+                });
+            }
+        });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,890 @@
+﻿@{
+    ViewBag.Title = "流程审批";
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>流程审批</title>
+    <link href="~/UiFrame/EasyUi/themes/default/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+    <link href="~/UiFrame/pmicon.css" rel="stylesheet" />
+    <script src="~/UiFrame/EasyUi/jquery.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/EasyUi/easyui-lang-zh_CN.js"></script>
+    <script src="~/UiFrame/jeasyui.extensions.js"></script>
+    <script src="~/SysConfig/genericOperate.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.form.js"></script>
+    <script src="~/SysConfig/ntkooffice/ntko.js"></script>
+
+    <script src="~/UiFrame/dhtmlxGantt/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/UiFrame/dhtmlxGantt/ext/dhtmlxgantt_critical_path.js" type="text/javascript" charset="utf-8"></script>
+    <script src="~/UiFrame/dhtmlxGantt/locale/locale_cn.js" type="text/javascript" charset="utf-8"></script>
+    <link rel="stylesheet" href="~/UiFrame/dhtmlxGantt/skins/dhtmlxgantt_terrace.css" type="text/css" media="screen" title="no title" charset="utf-8" />
+    <script src="~/UiFrame/dhtmlxGantt/testdata.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body id="examineDiv" class="easyui-layout">
+    <div data-options="region:'east',iconCls:'icon-reload',title:'审批操作栏',split:true,minWidth:220" style="width: 230px;">
+        <div id="myExamine_operation">
+            <div style="width: 100%; margin: auto; margin-top: 5px; padding: 0 5px 0 5px;">
+                <label style="margin: 0 0 5px 10px; display: inline-block;">我的意见</label>
+                <input class="easyui-textbox" id="PerformOpinions" data-options="multiline:true" style="width: 96%; height: 150px; margin-left: 5px;" />
+            </div>
+            <div style="margin-top: 10px; text-align: right; padding: 0 5px 0 5px;">
+                <a href="javascript:void(0);" id="BtnAgreed" class="easyui-linkbutton" onclick="CommitOpinion();" style="width: 60px; margin-right: 5px;">同意</a>
+                <a href="javascript:void(0)" id="menuBtn" class="easyui-menubutton" data-options="menu:'#mm',iconCls:'icon-edit'">更多</a>
+                <div id="mm" style="width: 100px;">
+                    <div data-options="name:'AddSign'" id="AddSign">加签</div>
+                    <div data-options="name:'Rollback'" id="divRollback">回退</div>
+                    <div data-options="name:'Stop'">终止</div>
+                    <div data-options="name:'Notify'">抄送</div>
+                    <div data-options="name:'MinusSign'">减签</div>
+                    @*<%--<div data-options="name:'UploadAttachment'">上传附件</div>--%>*@
+                </div>
+                @*<%--<a href="javascript:void(0);" id="BtnMsgSend" class="easyui-linkbutton" onclick="ExamineSendMsg();" style="width: 60px; margin-right: 5px;">消息推送</a>--%>*@
+                @*<%--<a href="javascript:void(0);" class="easyui-linkbutton" onclick="" style="width: 60px; margin-top: 6px;">存为草稿</a>
+                    <a href="javascript:void(0)" class="easyui-linkbutton" onclick="" style="width: 60px; margin-top: 6px;">暂存待办</a>--%>*@
+                @*<%--<br />--%>*@
+            </div>
+        </div>
+    </div>
+    <div data-options="region:'center'">
+        <div class="easyui-tabs" data-options="border:false,fit:true" id="Flowtabs">
+            <input type="hidden" id="RegProjcetCode" />
+            <div title="正文">
+            </div>
+            <div title="附件">
+                <table id="attachmentListForFlow" class="easyui-datagrid" data-options="toolbar:[{text:'下载',iconCls:'pmicon-documentmap-16',handler:downLoad},'-',{text:'删除',iconCls:'pmicon-delete-GrayScaled-16',handler:deleteFile}]">
+                    <thead>
+                        <tr>
+                            <th data-options="field:'ck',checkbox:true"></th>
+                            <th data-options="field:'FileID'" hidden="hidden">附件ID</th>
+                            <th data-options="field:'LastTime',width:150">上传日期</th>
+                            <th data-options="field:'FileName',width:200,align:'left'">附件名称</th>
+                            <th data-options="field:'UserName',width:100">上传人</th>
+                            <th data-options="field:'FileSize',width:100,formatter:function(value){
+                                        return HumanReadableFilesize(value);
+                                    }">附件大小</th>
+                            <th data-options="field:'StorageOver',width:80">完成标识</th>
+
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div title="审批意见">
+                <div style="width: 99%; height: 100%;">
+                    <form id="form_PerformInfo">
+                        <img id="imgState" alt="" src="/UiFrame/Images/completed.png" style="display: none; position: absolute; z-index: 999; margin: 30px 0 0 460px;" />
+                        <img id="imgState1" alt="" src="/UiFrame/Images/return.png" style="display: none; position: absolute; z-index: 999; margin: 30px 0 0 460px;" />
+                        <img id="imgState2" alt="" src="/UiFrame/Images/ended.png" style="display: none; position: absolute; z-index: 999; margin: 30px 0 0 460px;" />
+                        <table style="margin: 5px;">
+                            <tr>
+                                <td style="width: 60px; text-align: right;">发&nbsp;起&nbsp;人：</td>
+                                <td style="width: 200px;">
+                                    <input name="UserName" id="UserName" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">流程名称：</td>
+                                <td style="width: 200px;">
+                                    <input name="FlowName" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">流程状态：</td>
+                                <td style="width: 200px;">
+                                    <input name="FlowState" id="FlowState" readonly="true" class="easyui-textbox" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 60px; text-align: right;">发起时间：</td>
+                                <td style="width: 200px;">
+                                    <input name="BeginTime" id="BeginTime" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">结束时间：</td>
+                                <td style="width: 200px;">
+                                    <input name="EndTime" id="EndTime" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">级&nbsp;&nbsp;&nbsp;&nbsp;别：</td>
+                                <td style="width: 200px;">
+                                    <input name="FlowLevel" readonly="true" class="easyui-textbox" />
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                    <table id="opinionList" style="height: 80%;" class="easyui-datagrid" data-options="autoRowHeight:false,nowrap:false,rownumbers:true,fit:false,singleSelect:true,striped:true">
+                        <thead>
+                            <tr>
+                                <th data-options="field:'id'" hidden="hidden">ID</th>
+                                <th data-options="field:'FlowPerformID'" hidden="hidden"></th>
+                                <th data-options="field:'FlowNodeCode'" hidden="hidden"></th>
+                                <th data-options="field:'FlowNodeName',width:'10%',align:'left'">节点名称</th>
+                                <th data-options="field:'PreNodeCompleteDate',width:'10%'">发起时间</th>
+                                <th data-options="field:'UserName',width:'10%'">接收人</th>
+                                <th data-options="field:'UserType',width:'10%'">人员类型</th>
+                                <th data-options="field:'Describe',width:'10%'">审批状态</th>
+                                <th data-options="field:'PerformDate',width:'15%'">处理时间</th>
+                                <th data-options="field:'PerformOpinions',width:'35%'">审批意见</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div title="流程图">
+                <div style="width: 100%; height: 100%;">
+                    <iframe frameborder="no" id="iframeFlow" style="width: 100%; height: 99%;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="AttachmentWin" class="easyui-dialog" data-options="closed:true,width:600,height:500,title:'上传附件'">
+        <iframe frameborder="no" id="ifarme_UpLoad" scrolling="yes" style="width: 100%; height: 450px;"></iframe>
+    </div>
+
+    <div id="dlgRollback" class="easyui-dialog" title="选择回退" style="width: 350px; height: 300px;"
+         data-options="
+                buttons: [{
+                    text:'确定',
+                    iconCls:'icon-ok',
+                    handler:function(){
+                        RollbackFun(true);
+                    }
+                },{
+                    text:'取消',
+                    iconCls:'icon-cancel',
+                    handler:function(){
+                        $('#dlgRollback').dialog('close');
+                    }
+                }],closed:true
+            ">
+        <table id="dgridRollback" style="height: 100%; width: 100%;"></table>
+    </div>
+    <div id="dlgMinusSign" class="easyui-dialog" title="选择减签" style="width: 350px; height: 300px;"
+         data-options="
+                buttons: [{
+                    text:'确定',
+                    iconCls:'icon-ok',
+                    handler:function(){
+                        MinusSignFun();
+                    }
+                },{
+                    text:'取消',
+                    iconCls:'icon-cancel',
+                    handler:function(){
+                        $('#dlgMinusSign').dialog('close');
+                    }
+                }],closed:true
+            ">
+        <table id="dgridMinusSign" style="height: 100%; width: 100%;"></table>
+    </div>
+    <div id="dlgExaminationMsg" class="easyui-dialog" title="审批意见" style="width: 300px; height: 300px; padding: 12px;"
+         data-options="
+                buttons: [{
+                    text:'确定',
+                    iconCls:'icon-ok',
+                    handler:function(){
+                        RollbackFun(false);
+                    }
+                },{
+                    text:'取消',
+                    iconCls:'icon-cancel',
+                    handler:function(){
+                        $('#dlgExaminationMsg').dialog('close');
+                    }
+                }],closed:true
+            ">
+        <input id="ExaminationMsg" class="easyui-textbox" data-options="multiline:true" style="width: 260px; height: 200px;">
+    </div>
+
+    <div id="dlgNotify" class="easyui-dialog" data-options="closed:'true',buttons: [{
+                    text:'确定',
+                    iconCls:'icon-ok',
+                    handler:function(){
+                        NotifyFun();
+                    }
+                },{
+                    text:'取消',
+                    iconCls:'icon-cancel',
+                    handler:function(){
+                        $('#dlgNotify').dialog('close');
+                    }
+                }],title:'选择人员'"
+         style="height: 350px; width: 500px;">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'west',border:false,split:true" style="width: 150px;">
+                <ul id="PersonnelSource_tree" data-options="lines:'true'" class="easyui-tree"></ul>
+            </div>
+            <div data-options="region:'center',border:false" style="width: 200px;">
+                <ul id="PersonnelCode_tree" data-options="lines:'true',checkbox:true,cascadeCheck:false"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="winNode" class="easyui-window" title="节点属性" width="610" height="436" data-options="iconCls:'icon-save',modal:true,closed:true,shadow:false">
+        <iframe frameborder="no" scrolling="no" id="Nodeiframe" style="width: 100%; height: 100%"></iframe>
+    </div>
+
+    <script>
+        
+        var flowPerformId = '@ViewBag.FlowPerformID';
+        var formCode = '@ViewBag.FormCode';
+        var FlowNodeCode = '@ViewBag.FlowNodeCode';
+        var ExaminationMsg = "";//存储审批意见
+        var OfficeFlowCount = 0;
+        var FreeNodeUsers = "";
+        $.parser.onComplete = function () {
+            //加载正文
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowDataCode" })', { FlowPerFormID: flowPerformId }, function (result) {
+                if (result.length > 0) {
+                    //如果是我的发起，则删除右边操作栏
+                    var FormTitle = '@ViewBag.FormTitle';
+                    if (FormTitle == '我的发起') {
+                        $('#examineDiv').layout('remove', 'east');
+                    }
+                    //0表示单据发起流程
+                    if (formCode != "formOfficeInfo") {
+                        var FormDataID = result[0].FormDataCode;
+                        var tab = $("#Flowtabs").tabs('getTab', 0);
+                        if (formCode == "formProjectTask") {
+                            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowProjectCode" })', { FormDataID: FormDataID }, function (result) {
+                                if (result.length > 0) {
+                                    var RegProjcetCode = result.split(":");
+                                    var a = RegProjcetCode[1].split("}");
+                                    var b = a[0].replace(/\"/g, "");
+                                    $("#RegProjcetCode").val(b);
+                                    tab.panel('refresh', '@Url.Action("FlowProjectTask", "Flow")' + "?RegProjcetCode=" + b + "");
+                                }
+                            });
+                            //// tab.panel('refresh', "/page/form/" + formCode + "/list/" + FormDataID + "?flowPerformId=" + flowPerformId + "&FlowNodeCode=" + FlowNodeCode+"&sp="+1);
+                        } else {
+                            //tab.panel('refresh', "/page/form/" + formCode + "/view/" + FormDataID + "?flowPerformId=" + flowPerformId + "&FlowNodeCode=" + FlowNodeCode);
+                        }
+                    }
+                        //1表示办文发起的流程
+                    else {
+                        if (OfficeFlowCount == 0) {
+                            var tab = $("#Flowtabs").tabs('getTab', 0);
+                            tab.panel('refresh', '@Url.Action("OfficeWindow", "Flow")' + "?action=PerformFlow&FormDataID=" + result[0].FormDataCode);
+                            OfficeFlowCount = 1;
+                        } else {
+                            OfficeFlowCount = 0;
+                        }
+                    }
+
+                } else {
+                    $.messager.alert('系统提示', '获取表单数据失败', 'info');
+                }
+            }, 'json');
+
+
+            //如果选择的是流程图tabs则加载流程图。需要传入FlowPerformID
+            $("#Flowtabs").tabs({
+                onSelect: function (title, index) {
+                    if (title == "流程图") {
+                        $("#iframeFlow").attr("src", '@Url.Action("FlowDisplay", "Flow")' + "?FlowPerformID=" + flowPerformId);
+                    }
+                    if (title == "附件") {
+                        if (formCode == "formProjectTask") {
+                            //初始化进度计划附件列表数据
+                            $("#attachmentListForFlow").datagrid({
+                                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowProTaskAttachList" })', queryParams: { RegProjcetCode: $("#RegProjcetCode").val() },
+                                onDblClickRow: function (rowIndex, rowData) {
+                                    checkFile(rowData.FileID);
+                                }
+                            });
+                        } else {
+                            //初始化列表数据
+                            $("#attachmentListForFlow").datagrid({
+                                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowAttachList" })',
+                                queryParams: { FormCode: formCode, FlowPerFormID: flowPerformId },
+                                onDblClickRow: function (rowIndex, rowData) {
+                                    checkFile(rowData.FileID);
+                                }
+                            });
+                        }
+                    }
+                    if (title == "审批意见") {
+                        refreshData();
+                    }
+                }
+            });
+
+            //ShowTheam(null);
+
+            $($("#menuBtn").menubutton('options').menu).menu({
+                onClick: function (item) {
+                    switch (item.name) {
+                        case "AddSign"://加签
+                            AddSign();
+                            break;
+                        case "UploadAttachment"://上传附件
+
+                            $("#AttachmentWin").dialog('open');
+                            $("#ifarme_UpLoad").attr("src", "/WebPage/FileCenter/FileUpLoad.aspx");
+                            break;
+                        case "Stop"://终止
+                            var performOpinions = $("#PerformOpinions").textbox('getValue');
+                            if (performOpinions == "") { $.messager.alert('操作提示', '输入终止原因', 'warning'); return; }
+
+                            $.post('@Url.Action("FlowTermination", "Flow")',
+                                { PerformOpinions: performOpinions, FlowNodeCode: FlowNodeCode, FlowPerformID: flowPerformId, UserCode: '@ViewBag.USER_CODE' },
+                                function (result) {
+
+                                    if (result.success) {
+                                        $.messager.alert('操作提示', '成功终止流程', 'info');
+                                        refreshData();
+
+                                    } else {
+                                        $.messager.alert('操作提示', result.message, 'error');
+                                    }
+                                }, 'json').error(function () {
+                                    $.messager.alert('操作提示', '终止流程失败', 'error');
+                                });
+                            break;
+                        case "Rollback"://回退
+                            $("#dgridRollback").datagrid({
+                                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "getFlowPerformNode" })' + "?FlowPerformID=" + flowPerformId, //+ flowPerformId,
+                                columns: [[
+                                    { field: 'ck', checkbox: true },
+                                    { field: 'id', title: 'id', width: 100, hidden: true },
+                                    { field: 'FlowPerformID', title: 'FlowPerformID', width: 100, hidden: true },
+                                    { field: 'FlowNodeCode', title: 'FlowNodeCode', width: 100, hidden: true },
+                                    { field: 'FlowNodeName', title: '步骤名', width: 150 }
+                                ]],
+                                fitColumns: true,
+                                singleSelect: true,
+                                rownumbers: true
+                            });
+                            $("#dlgRollback").dialog('open');
+                            break;
+                        case "MinusSign"://减签
+                            $("#dgridMinusSign").datagrid({
+                                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "getMinusSignNode" })' + "?FlowPerformID=" + flowPerformId, //+ flowPerformId,
+                                columns: [[
+                                    { field: 'ck', checkbox: true },
+                                    { field: 'id', title: 'id', width: 100, hidden: true },
+                                    { field: 'FlowPerformID', title: 'FlowPerformID', width: 100, hidden: true },
+                                    { field: 'FlowNodeCode', title: 'FlowNodeCode', width: 100, hidden: true },
+                                    { field: 'FlowNodeName', title: '步骤名', width: 150 }
+                                ]],
+                                fitColumns: true,
+                                singleSelect: true,
+                                rownumbers: true
+                            });
+                            $("#dlgMinusSign").dialog('open');
+                            break;
+                        case "Notify"://知会
+                            $('#PersonnelSource_tree').tree({
+                                data: [{
+                                    id: '1',
+                                    text: '人员来源',
+                                    children: [{
+                                        id: '11',
+                                        text: '发起人'
+                                    }, {
+                                        id: '12',
+                                        text: '部门主管'
+                                    }, {
+                                        id: '13',
+                                        text: '部门副主管'
+                                    }, {
+                                        id: '14',
+                                        text: '部门'
+                                    }, {
+                                        id: '15',
+                                        text: '角色'
+                                    }, {
+                                        id: '16',
+                                        text: '职位'
+                                    }, {
+                                        id: '17',
+                                        text: '操作员'
+                                    }]
+                                }]
+                            });
+                            $('#PersonnelSource_tree').tree({
+                                onClick: function (node) {
+                                    findPersonnelCode(node);
+                                }
+                            });
+                            $("#dlgNotify").dialog('open');
+                            break;
+                        default:
+                            alert('未定义name');
+                            break;
+                    }
+                }
+            });
+
+            JudgeState();//判断是否需要移除操作面板
+
+        }
+
+        function refreshData() {
+            $("#form_PerformInfo").form('reset');
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetPerformFlowInfo" })', { FlowPerformID: flowPerformId }, function (result) {
+                if (result.length > 0) {
+                    $("#form_PerformInfo").form('load', result[0]);
+                } else {
+                    $.messager.alert('操作提示', '获取流程发起人失败', 'info');
+                }
+            }, 'json').error(function () {
+                $.messager.alert('操作提示', '获取流程发起人失败', 'info');
+            });
+            $("#opinionList").datagrid({
+                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetOpinionList" })',
+                queryParams: { FlowPerformID: flowPerformId },
+                rowStyler: function (index, row) {
+                    var backColor = 'color:black;';
+                    switch (row.PerformState) {
+                        case -1://未阅
+                        case 0://已阅
+                            if (row.UserType == '抄送人' && row.PerformState == 0) {
+                                backColor = 'color:green;';
+                                break;
+                            } else {
+                                backColor = 'color:blue;';
+                                break;
+                            }
+
+
+                            //case 0://已阅
+                            //    backColor = 'color:black;';
+                            //    break;
+                        case 1://同意
+                        case 5://系统跳过
+                        case 9://其他用户处理
+
+                            backColor = 'color:green;';
+                            break;
+                        case 2://不同意
+                            //backColor = 'color:grey;';
+                            //break;
+                        case 3://退回
+                        case 4://终止
+                            backColor = 'color:red;';
+                            break;
+                    }
+                    return backColor;
+                },
+                onLoadSuccess: function (data) {
+                    $("#opinionList").datagrid('insertRow', {
+                        index: 0,
+                        row: {
+                            FlowNodeName: '发起',
+                            PreNodeCompleteDate: $('#BeginTime').textbox('getText'),
+                            PerformState: 1
+                        }
+                    });
+                    if ($('#EndTime').textbox('getText') != null && $('#EndTime').textbox('getText') != '') {
+                        $("#opinionList").datagrid('appendRow', {
+                            FlowNodeName: '结束',
+                            PreNodeCompleteDate: $('#EndTime').textbox('getText'),
+                            PerformState: 1
+                        });
+                        $('#imgState').show();
+                    }
+                    if ($('#FlowState').textbox('getText') != null && $('#FlowState').textbox('getText') != '' && $('#FlowState').textbox('getText') == '已退回' && $('#EndTime').textbox('getText') != '') {
+                        var rows = $("#opinionList").datagrid("getRows");
+                        var rowcount = 0;
+                        for (var i = 0; i < rows.length; i++) {
+                            //获取每一行的数据
+                            if (rows[i].Describe == "未阅") {
+                                rowcount = rowcount + 1;
+                            }
+                        }
+                        if (rowcount > 0) {
+                            $('#imgState1').hide();
+                        } else {
+                            $('#imgState1').show();
+                        }
+                    }
+                }
+            });
+        }
+
+        //保存附件关联到TbSysAttachmentCenter
+        //附件上传完成时触发，token为FileID
+        function SetToken(token) {
+            var flag = { success: false, message: '' };
+            $.ajax({
+                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowDataCode" })',
+                data: { FlowPerFormID: flowPerformId },
+                async: false,
+                success: function (result) {
+                    result = eval('(' + result + ')');
+                    var FormDataID = -1;
+                    if (result.length > 0) {
+                        FormDataID = result[0].FormDataCode;
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowAttachment" })',
+                        type: 'post',
+                        data: { FileID: token, FormCode: formCode, FormDataID: FormDataID },
+                        async: false,
+                        success: function (result) {
+                            result = eval('(' + result + ')');
+                            if (result.success) {//保存附件失败
+                                flag = { success: true, message: '保存附件关联信息成功' };
+
+                                $("#attachmentListForFlow").datagrid('reload');
+                            } else {
+                                flag = { success: false, message: '保存附件失败' };
+                            }
+                        }, error: function () {
+                            flag = { success: false, message: '保存附件失败' };
+                        }
+                    });
+
+                }, error: function () {
+                    flag = { success: false, message: '保存附件失败' };
+                }
+            });
+
+            return flag;
+        }
+
+        //下载
+        function downLoad() {
+            var rows = $("#attachmentListForFlow").datagrid('getChecked');//获取选中的所有行
+            if (rows.length > 0) {
+                $.each(rows, function (i, item) {
+                    window.open('<%=ResolveUrl(GetRouteUrl("FileDownload",null))%>?FileID=' + item.FileID);
+                });
+            } else {
+                $.messager.alert("提示", "未选择下载附件", "info");
+            }
+        }
+        //删除文件
+        function deleteFile() {
+            var rows = $("#attachmentListForFlow").datagrid('getChecked');//获取选中的所有行
+
+            if (rows.length > 0) {
+                $.each(rows, function (i, item) {
+                    $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "DeleteFlowAttachment" })', { FileID: item.FileID }, function (result) {
+                        if (result.success) {
+                            //删除附件关联信息成功后，删除存档文件
+                            $.ajax({
+                                url: '<%=ResolveUrl(GetRouteUrl("FileDelete",null))%>',
+                                type: 'post',
+                                data: { FileID: item.FileID },
+                                success: function (result) {
+                                    $("#attachmentListForFlow").datagrid('reload');
+                                    result = eval('(' + result + ')');
+                                    if (!result.success) {
+                                        $.messager.alert('提示', '删除附件文件 ' + item.FileName + ' 失败；错误提示：' + result.message + '', 'info');
+                                    }
+                                }
+                            });
+                        } else {//删除档案资料附件失败
+                            $.messager.alert('提示', '删除附件信息 ' + item.FileName + ' 失败；错误提示：' + result.message + '', 'info');
+                        }
+                    }, 'json');
+                });
+            } else {
+                $.messager.alert("提示", "未选择下载附件", "info");
+            }
+        }
+        //查看文件
+        function checkFile(FileID) {
+
+            $("#checkFileWin").window({
+                href: '/page/tool/ComOffice', onLoad: function () {
+                    OpenOrCreateOffice(FileID, "1");//打开
+                }
+            }).dialog('open');
+        }
+
+        //返回适合读的文件大小
+        function HumanReadableFilesize(size) {
+            var units = new Array("B", "KB", "MB", "GB", "TB", "PB");
+            var mod = 1024;
+            var i = 0;
+            var fileSize = "0 KB";
+            try {
+                while (size >= mod) {
+                    size /= mod;
+                    i++;
+                }
+                fileSize = Math.round(size * 10) / 10 + units[i];
+            } catch (e) {
+
+                fileSize = "0 KB";
+            }
+            return fileSize;
+        }
+        //提交审批意见
+        function CommitOpinion() {
+            //if ($("#rdo_Read").prop("checked") || $("#rdo_Agreement").prop("checked") || $("#rdo_Disagreement").prop("checked")) {
+            //    ShowFreeNodeUser('', flowPerformId, FlowNodeCode, CommitOpinionAndData);
+            //} else {
+            //    $.messager.alert('操作提示', '需选择审批状态', 'info');
+            //}
+            ShowFreeNodeUser('', flowPerformId, FlowNodeCode, CommitOpinionAndData);
+        }
+        //提交审批意见处理和区域表单数据
+        function CommitOpinionAndData(FlowCode, FlowPerformID, FlowNodeCode, FreeNodeUser) {
+            //if ($("#rdo_Read").prop("checked") || $("#rdo_Agreement").prop("checked") || $("#rdo_Disagreement").prop("checked")) {
+            FreeNodeUsers = FreeNodeUser;
+            if (typeof (partSubmitFunction) != "undefined" && partSubmitFunction != '') {
+                var SaveFunction = eval(partSubmitFunction);
+                SaveFunction(SaveOpinion);//执行表单区域提交函数
+            } else {
+                SaveOpinion();
+            }
+            //} else {
+            //    $.messager.alert('操作提示', '需选择审批状态', 'info');
+            //}
+        }
+        //保存审批意见
+        function SaveOpinion(result) {
+            if (result) {
+                result = eval('(' + result + ')');
+                if (!result.success) {
+                    $.messager.progress('close');	// 如果提交成功则隐藏进度条
+                    $.messager.alert('操作提示', result.message, 'error');
+                    return false;
+                }
+            }
+            var performState = 0;
+            //if ($("#rdo_Read").prop("checked")) performState = 0;
+            //if ($("#rdo_Agreement").prop("checked")) performState = 1;
+            //if ($("#rdo_Disagreement").prop("checked")) performState = 2;
+            performState = 1;
+            var performOpinions = $("#PerformOpinions").textbox('getValue');
+            
+            $.post('@Url.Action("EditApprovalOpinion", "Flow")',
+            { PerformState: performState, PerformOpinions: performOpinions, FlowNodeCode: FlowNodeCode, FlowPerformID: flowPerformId, FreeNodeUser: FreeNodeUsers },
+            function (result) {
+                if (result.success) {
+                    try {
+                        window.parent.window.ShowMessage('审批意见提交成功');
+                        window.parent.window.reloadDataList(true);
+                        parent.$('#winExamine').window('close');
+                    } catch (e) { }
+
+                    ////$.messager.alert('操作提示', '审批意见提交成功', 'info');
+                    ////refreshData();
+                    //$("#opinionList").datagrid('reload');
+                } else {
+                    $.messager.alert('操作提示', result.message, 'error');
+                }
+            }, 'json').error(function () {
+                $.messager.alert('操作提示', '审批意见提交失败', 'error');
+            });
+            $.messager.progress('close');	// 如果提交成功则隐藏进度条
+        }
+        //回退确认方法
+        function RollbackFun(flag) {
+            var rows = $('#dgridRollback').datagrid('getSelected');
+            $("#dlgRollback").dialog('close');
+            if ($("#PerformOpinions").textbox('getText') == '' || !flag) {
+                if (flag)
+                    $("#dlgExaminationMsg").dialog('open');
+                else {
+                    ExaminationMsg = $("#ExaminationMsg").textbox('getText');
+                    //处理回退数据
+                    $.post('@Url.Action("FlowRollback", "Flow")', { OldNodeCode: FlowNodeCode, FlowPerformID: flowPerformId, NewNodeCode: rows.FlowNodeCode, PerformOpinions: ExaminationMsg }, function (data) {
+                        $("#dlgExaminationMsg").dialog('close');
+                        if (data.success) {
+                            $.messager.alert('操作提示', '回退流程成功', 'info');
+                            refreshData();
+                            // $("#opinionList").datagrid('reload');
+                        } else {
+                            $.messager.alert('操作提示', data.message, 'error');
+                        }
+                    }, 'json').error(function () {
+                        $.messager.alert('操作提示', '回退流程失败：', 'error');
+                    });
+                }
+            } else {
+                ExaminationMsg = $("#PerformOpinions").textbox('getText');
+                //处理回退数据
+                $.post('@Url.Action("FlowRollback", "Flow")', { OldNodeCode: FlowNodeCode, FlowPerformID: flowPerformId, NewNodeCode: rows.FlowNodeCode, PerformOpinions: ExaminationMsg }, function (data) {
+                    $("#dlgExaminationMsg").dialog('close');
+                    if (data.success) {
+                        $.messager.alert('操作提示', '回退流程成功', 'info');
+                        refreshData();
+                        //  $("#opinionList").datagrid('reload');
+                    } else {
+                        $.messager.alert('操作提示', data.message, 'error');
+                    }
+                }, 'json').error(function () {
+                    $.messager.alert('操作提示', '回退流程失败：', 'error');
+                });
+            }
+        }
+        //判断用户当前点击进来是否为待办事项
+        function JudgeState() {
+            if ('@ViewBag.Examination' == "true") {
+                //$('#myExamine_operation').show();
+                //parent.$('#winExamine').window('maximize');
+            }
+            else if ('@ViewBag.PerformState' != '-1' && '@ViewBag.PerformState' != '0') {
+                $('#PerformOpinions').textbox('readonly', true);
+                $('#BtnAgreed').linkbutton('disable');
+                $('#menuBtn').menubutton('disable');
+                //$('#myExamine_operation').hide();
+                //$("body").layout('remove', 'east');
+                //parent.$('#winExamine').window('maximize');
+            }
+            if (Number('@ViewBag.User_Type') == 1) {
+                $('#PerformOpinions').textbox('setValue', '抄送人无须审批！');
+                $('#PerformOpinions').textbox('readonly', true);
+                $('#BtnAgreed').linkbutton('disable');
+                $('#menuBtn').menubutton('disable');
+            }
+
+        }
+        //获取流程执行节点属性
+        function getFlowNodeAttribute() {
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "getFlowNodeAttribute" })', { FlowPerformID: "@ViewBag.FlowPerformID", FlowNodeCode: "@ViewBag.FlowNodeCode" }, function (data) {
+                var json = $.parseJSON(data);
+                if (json[0].AddSignature == '0') {
+                    $("#plusSign").linkbutton('disable');
+                }
+                if (json[0].AllowedRejected == '0') {
+                    $("#divRollback").css("display", "none");
+                }
+            });
+        }
+        //加签
+        function AddSign() {
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "getFlowNodeAttribute" })', { FlowPerformID: "@ViewBag.FlowPerformID", FlowNodeCode: "@ViewBag.FlowNodeCode" }, function (data) {
+                var json = $.parseJSON(data);
+                $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "getAddSignNumber" })', { FlowPerformID: "@ViewBag.FlowPerformID" }, function (num) {
+                    if (json[0].processData.length == 1) {
+                        $("#Nodeiframe").attr("src", '@Url.Action("ProcessDefinition", "Flow")' + "?action=add_Display&FlowPerformID='@ViewBag.FlowPerformID'&FlowCode='@ViewBag.FlowCode'&FlowNodeCode=" + $.parseJSON(num)[0].num + "&Left=" + (parseInt(json[0].NodeLeft) + 160) + "&Top=" + json[0].NodeTop + "&sourceId=" + json[0].FlowNodeCode + "&targetId=" + json[0].processData + "&Coordinate=1&Sign=true");
+                        $('#winNode').window('open');
+                    }
+                    else {
+                        $("#Nodeiframe").attr("src", '@Url.Action("ProcessDefinition", "Flow")' + "?action=add_Display&FlowPerformID='@ViewBag.FlowPerformID'&FlowCode='@ViewBag.FlowCode'&FlowNodeCode=" + $.parseJSON(num)[0].num + "&Left=" + json[0].NodeLeft + "&Top=" + json[0].NodeTop + "&sourceId=" + json[0].FlowNodeCode + "&targetId=&Coordinate=0&addSign=true&Sign=true");
+                        $('#winNode').window('open');
+                    }
+                });
+            });
+        }
+        //减签确认方法
+        function MinusSignFun() {
+            var rows = $('#dgridMinusSign').datagrid('getSelected');
+            //获取所有下级节点
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "getAllChildNodes" })', { FlowPerformID: flowPerformId, ParentNodeCode: rows.FlowNodeCode }, function (node) {
+                var childNode = "";
+                var processDataStr = "";
+                for (var n = 0; n < eval(node).length; n++) {
+                    childNode += eval(node)[n].ChildNodeCode + ",";
+                }
+                //删除时获取上级节点
+                $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetLastNodeInfo_Display" })', { FlowPerformID: flowPerformId, ChildNodeCode: rows.FlowNodeCode }, function (data) {
+                    //删除节点后更新他的上级节点关系
+                    for (var n = 0; n < eval(data).length; n++) {
+                        var processData = "";
+                        var s = eval(data)[n].processData.split(',');
+                        for (var i = 0; i < s.length; i++) {
+                            if (s[i] != rows.FlowNodeCode) {
+                                processData += s[i] + ",";
+                            }
+                        }
+                        processData = processData.substring(0, processData.length - 1);
+                        processDataStr = childNode + processData;
+                        if (processDataStr.substring(processDataStr.length - 1, processDataStr.length) == ",") {
+                            processDataStr = processDataStr.substring(0, processDataStr.length - 1);
+                        }
+                        //更新删除节点上级
+                        $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "UpdateDeleteNode_Display" })', { FlowPerformID: eval(data)[n].FlowPerformID, FlowNodeCode: eval(data)[n].FlowNodeCode, processData: processDataStr }, function (data) {
+
+                        });
+                        var strArr = childNode.substring(0, childNode.length - 1).split(',');
+                        for (var m = 0; m < strArr.length; m++) {
+                            //减签后更新关系表数据
+                            $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "addNodeRelation" })', { FlowPerformID: flowPerformId, FlowCode: eval(data)[n].FlowCode, ParentNodeCode: eval(data)[n].FlowNodeCode, ChildNodeCode: strArr[m] }, function (data) {
+
+                            });
+                        }
+                    }
+                    //清理删除节点相关的数据
+                    $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "DeleteNode_Display" })', { FlowPerformID: flowPerformId, ChildNodeCode: rows.FlowNodeCode, FlowNodeCode: rows.FlowNodeCode, ParentNodeCode: rows.FlowNodeCode }, function (data) {
+                        if ($.parseJSON(data).success) {
+                            $("#dlgMinusSign").dialog('close');
+                            $("#iframeFlow").attr("src", '@Url.Action("FlowDisplay", "Flow")' + "?FlowPerformID=" + flowPerformId);
+                            // Refresh();
+                        }
+                    });
+                });
+            })
+        }
+
+        //通过人员来源查找人员代码
+        function findPersonnelCode(node) {
+            var URL;
+            _id = node.id;
+            var code = node.id;
+            switch (code) {
+                case '11':
+                case '12':
+                case '13': URL = '@Url.Action("TreeListByDoubleAllCode", "Flow", new { FunCode = "GetOriginator" })'; break;
+                case '14': URL = '@Url.Action("TreeListByDoubleAllCode", "Flow", new { FunCode = "GetDepartmentTree" })'; break;
+                case '15': URL = '@Url.Action("TreeListByDoubleAllCode", "Flow", new { FunCode = "GetRoleTree" })'; break;
+                case '16': URL = '@Url.Action("TreeListByDoubleAllCode", "Flow", new { FunCode = "GetPositionTree" })'; break;
+                case '17': URL = '@Url.Action("TreeListByDoubleAllCode", "Flow", new { FunCode = "GetPersonnel" })'; break;
+            }
+            $('#PersonnelCode_tree').tree({
+                url: URL
+            });
+        }
+        //选择知会人确定处理方法
+        function NotifyFun() {
+            var getTreeSelect = $('#PersonnelSource_tree').tree('getSelected');
+            var Notifynodes;
+            var PersonnelSource = "";
+            var PersonnelCode = "";
+            switch (getTreeSelect.text) {
+                case "发起人": PersonnelSource = "Originator"; PersonnelCode = "0";
+                    $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowNode_TbFlowNodePersonnel_Display" })', { FlowPerformID: flowPerformId, FlowCode: "@ViewBag.FlowCode", FlowNodeCode: FlowNodeCode, ActionType: 1, PersonnelSource: PersonnelSource, PersonnelCode: PersonnelCode }, function (data) {
+
+                    });
+                    break;
+                case "部门主管": PersonnelSource = "DepartmentLeader"; PersonnelCode = "0";
+                    $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowNode_TbFlowNodePersonnel_Display" })', { FlowPerformID: flowPerformId, FlowCode: "@ViewBag.FlowCode", FlowNodeCode: FlowNodeCode, ActionType: 1, PersonnelSource: PersonnelSource, PersonnelCode: PersonnelCode }, function (data) {
+
+                    });
+                    break;
+                case "部门副主管": PersonnelSource = "DepartmentSecLeader"; PersonnelCode = "0";
+                    $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowNode_TbFlowNodePersonnel_Display" })', { FlowPerformID: flowPerformId, FlowCode: "@ViewBag.FlowCode", FlowNodeCode: FlowNodeCode, ActionType: 1, PersonnelSource: PersonnelSource, PersonnelCode: PersonnelCode }, function (data) {
+
+                    });
+                    break;
+                case "部门": PersonnelSource = "Department";
+                    Notifynodes = $('#PersonnelCode_tree').tree('getChecked');
+                    AddPersonnel(PersonnelSource, Notifynodes);
+                    break;
+                case "角色": PersonnelSource = "Role";
+                    Notifynodes = $('#PersonnelCode_tree').tree('getChecked');
+                    AddPersonnel(PersonnelSource, Notifynodes);
+                    break;
+                case "职位": PersonnelSource = "PositionCode";
+                    Notifynodes = $('#PersonnelCode_tree').tree('getChecked');
+                    AddPersonnel(PersonnelSource, Notifynodes);
+                    break;
+                case "操作员": PersonnelSource = "Personnel";
+                    Notifynodes = $('#PersonnelCode_tree').tree('getChecked');
+                    AddPersonnel(PersonnelSource, Notifynodes);
+                    break;
+            }
+            $('#dlgNotify').dialog('close');
+        }
+        //添加操作人员
+        function AddPersonnel(PersonnelSource, Notifynodes) {
+            for (var m = 0; m < Notifynodes.length; m++) {
+                PersonnelCode = Notifynodes[m].id;
+                $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowNode_TbFlowNodePersonnel_Display" })', { FlowPerformID: flowPerformId, FlowCode: "@ViewBag.FlowCode", FlowNodeCode: FlowNodeCode, ActionType: 1, PersonnelSource: PersonnelSource, PersonnelCode: PersonnelCode }, function (data) {
+
+                });
+            }
+        }
+        //消息推送
+        function ExamineSendMsg() {
+            window.parent.window.parent.Message_Test("我来了");
+        }
+    </script>
+</body>
+</html>

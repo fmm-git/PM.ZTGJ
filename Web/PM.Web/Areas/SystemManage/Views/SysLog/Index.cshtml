@@ -1,0 +1,95 @@
+﻿@{
+    ViewBag.Title = "日志Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/SystemManage/SysLog/Index");
+        gridList();
+    })
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/SystemManage/SysLog/GetAllLog",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: '标识', name: 'id', hidden: true },
+                { label: '日期', name: 'LogDate', width: 150, align: 'left', sortable: false, },
+                { label: '操作菜单', name: 'ActionMenu',hidden:true, },
+                { label: '操作菜单', name: 'ActionMenuName', width: 150, align: 'left', sortable: false, },
+                { label: '用户Code', name: 'UserCode', width: 80, align: 'left', hidden: true },
+                { label: '姓名', name: 'UserName', width: 100, align: 'left', sortable: false, },
+                { label: '操作类型', name: 'ActionType', width: 100, align: 'left', sortable: false, },
+                { label: 'IP地址', name: 'UserIP', width: 150, align: 'left', sortable: false, }
+            ],
+            pager: "#gridPager",
+            sortname: 'LogDate',
+            viewrecords: true,
+            rownumbers: true,
+            rownumWidth: 50,
+        });
+        $("#time_horizon a.btn-default").click(function () {
+            $("#time_horizon a.btn-default").removeClass("active");
+            $(this).addClass("active");
+            $('#btn_search').trigger("click");
+        });
+        $("#btn_search").click(function () {
+            var timeType = $("#time_horizon a.active").attr('data-value');
+            var queryJson = {
+                keyword: $("#txt_keyword").val(),
+                timeType: $("#time_horizon a.active").attr('data-value'),
+            }
+            $gridList.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) },
+            }).trigger('reloadGrid');
+        });
+    }
+    //function btn_removelog() {
+    //    $.modalOpen({
+    //        id: "removelog",
+    //        title: "清空日志",
+    //        url: "/SystemSecurity/Log/RemoveLog",
+    //        width: "400px",
+    //        height: "180px",
+    //        callBack: function (iframeId) {
+    //            top.frames[iframeId].submitForm();
+    //        }
+    //    });
+    //}
+</script>
+
+<div class="topPanel">
+    <div class="toolbar">
+        <div class="btn-group">
+            <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span></a>
+        </div>
+    </div>
+    <div class="search">
+        <table>
+            <tr>
+                <td>
+                    <div class="input-group">
+                        <input id="txt_keyword" type="text" class="form-control" placeholder="操作菜单/姓名/操作类型" style="width: 200px;">
+                        <span class="input-group-btn">
+                            <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+                </td>
+                <td style="padding-left: 10px;">
+                    <div id="time_horizon" class="btn-group">
+                        <a class="btn btn-default" data-value="1">今天</a>
+                        <a class="btn btn-default active" data-value="2">近7天</a>
+                        <a class="btn btn-default" data-value="3">近1个月</a>
+                        <a class="btn btn-default" data-value="4">近3个月</a>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridList"></table>
+    <div id="gridPager"></div>
+</div>

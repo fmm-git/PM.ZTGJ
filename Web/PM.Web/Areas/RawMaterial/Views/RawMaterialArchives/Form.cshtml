@@ -1,0 +1,110 @@
+﻿@{
+    ViewBag.Title = "原材料档案编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+
+<script>
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "RawMaterialArchives")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    ////给下拉列表赋值
+                    //$('#MeasurementUnit').find("option[value='" + data["MeasurementUnit"] + "']").attr("selected", true);
+                }
+            });
+        }
+    });
+
+    function initControl() {
+        $("#MeasurementUnit").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "Unit" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        $("#RebarType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "RebarType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+    }
+
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        if (parseFloat($("#MeasurementUnitZl").val()) <= 0) {
+            $.modalMsg("单位重量必须大于0", "warning");
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "RawMaterialArchives")" + "?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+        <input id="ID" name="ID" type="hidden" />
+        <div style="padding-top: 20px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">原材料编号<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="MaterialCode" name="MaterialCode" type="text" class="form-control required" disabled="disabled" value="@ViewBag.MaterialCode" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">原材料名称<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="MaterialName" name="MaterialName" type="text" class="form-control required" value="" placeholder="请输入原材料名称" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">规格型号<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="SpecificationModel" name="SpecificationModel" type="text" class="form-control required" value="" placeholder="请输入规格型号" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">钢筋类型<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <select id="RebarType" name="RebarType" class="form-control"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">单位<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <select id="MeasurementUnit" name="MeasurementUnit" class="form-control">
+                            <option value=""></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">单位重量<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="MeasurementUnitZl" name="MeasurementUnitZl" type="text" class="form-control required isNumber" placeholder="请输入单位重量" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="2">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>
+

@@ -1,0 +1,209 @@
+﻿@{
+    ViewBag.Title = "员工Details";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<link href="~/Content/css/input.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script>
+    var userCode = $.request("keyValue");
+    $(function () {
+        //bindSelect();
+        if (!!userCode) {
+            $.ajax({
+                url: "/SystemManage/User/GetFormJson",
+                data: { keyValue: userCode },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    $("#form1").find('.form-control,select,input').attr('disabled', 'disabled');
+                    $("#form1").find('div.ckbox label').attr('for', '');
+                }
+            });
+        }
+        gridList();
+        qxgridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/SystemManage/User/GetUserPosition?usercode=" + $("#UserCode").val(),
+            height: $(window).height() - 128,
+            colModel: [
+                { label: '标识', name: 'id', hidden: true },
+                { label: '岗位名称', name: 'PositionName', width: 150, align: 'left', sortable: false, },
+                { label: '所属部门', name: 'DepartmentName', width: 180, align: 'left', sortable: false, },
+                { label: '所属公司', name: 'CompanyFullName', width: 250, align: 'left', sortable: false, },
+            ],
+            pager: "#pagerlist",
+            rownumbers: false,
+        });
+    }
+    function qxgridList() {
+        var $gridList = $("#qxgridList");
+        $gridList.dataGrid({
+            url: "/SystemManage/User/GetUserRole?usercode=" + $("#UserCode").val(),
+            height: $(window).height() - 128,
+            colModel: [
+                { label: '标识', name: 'ID', hidden: true, key: true },
+                { label: '角色名称', name: 'RoleName', width: 180, align: 'left', sortable: false, },
+                { label: '角色状态', name: 'State', width: 150, align: 'left', sortable: false, },
+            ],
+            pager: "#pagerlist",
+            rownumbers: false,
+        });
+    }
+
+    //table切换
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+            <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">岗位信息</a></li>
+            <li id="QXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">角色权限信息</a></li>
+        </ul>
+        <div id="JBXXInfo" style="padding-top: 10px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">所属公司<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CompanyCodeName" name="CompanyCodeName" type="text" disabled="disabled" class="form-control required" />
+                        <input id="CompanyCode" name="CompanyCode" type="hidden" class="form-control" />
+                    </td>
+                    <th class="formTitle">所属部门<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DepartmentName" name="DepartmentName" type="text" disabled="disabled" class="form-control required" />
+                        <input id="DepartmentCode" name="DepartmentCode" type="hidden" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">员工编号</th>
+                    <td class="formValue">
+                        <input id="UserCode" name="UserCode" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">员工名称</th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">性别<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="UserSex" name="UserSex" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">员工状态<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="UserClosed" name="UserClosed" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">身份证号</th>
+                    <td class="formValue">
+                        <input id="IDNumber" name="IDNumber" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">出生日期</th>
+                    <td class="formValue">
+                        <input id="Birthday" name="Birthday" type="text" class="form-control required input-wdatepicker" onfocus="WdatePicker()" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">政治面貌</th>
+                    <td class="formValue">
+                        <input id="PoliticalLandscape" name="PoliticalLandscape" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">手机号码</th>
+                    <td class="formValue">
+                        <input id="MobilePhone" name="MobilePhone" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">固定电话</th>
+                    <td class="formValue">
+                        <input id="Tell" name="Tell" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">邮箱</th>
+                    <td class="formValue">
+                        <input id="Email" name="Email" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">QQ号</th>
+                    <td class="formValue">
+                        <input id="QQ" name="QQ" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">微信号</th>
+                    <td class="formValue">
+                        <input id="WeChat" name="WeChat" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">招聘来源</th>
+                    <td class="formValue">
+                        <input id="RecruitmentSource" name="RecruitmentSource" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">社保情况</th>
+                    <td class="formValue">
+                        <input id="PurchaseSocialSecurity" name="PurchaseSocialSecurity" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">保密合同</th>
+                    <td class="formValue">
+                        <input id="ConfidentialityContract" name="ConfidentialityContract" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">劳务合同</th>
+                    <td class="formValue">
+                        <input id="TheLaborContract" name="TheLaborContract" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">银行卡号</th>
+                    <td class="formValue">
+                        <input id="CardNumber" name="CardNumber" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">开户银行</th>
+                    <td class="formValue">
+                        <input id="CardBankName" name="CardBankName" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">开户网点</th>
+                    <td class="formValue">
+                        <input id="CardBankAdd" name="CardBankAdd" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="CreateUser" name="CreateUser" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="CreateTime" name="CreateTime" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+            </table>
+            <br />
+        </div>
+        <div id="MXXXInfo" style="padding-top: 5px; display: none;">
+            <div class="gridPanel" style="margin-top: 1px;width:100%">
+                <table id="gridList"></table>
+            </div>
+        </div>
+        <div id="QXXXInfo" style="padding-top: 5px; display: none;">
+            <div class="gridPanel" style="margin-top: 1px;width:100%">
+                <table id="qxgridList"></table>
+            </div>
+        </div>
+    </div>
+</form>

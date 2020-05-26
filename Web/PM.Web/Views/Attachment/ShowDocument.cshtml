@@ -1,0 +1,48 @@
+﻿@model PM.DataEntity.TbAttachment
+
+<html>
+<head>
+    <meta http-equiv="UserContent-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>文件查看</title>
+</head>
+<body algin="center">
+
+    @*@if (Model.FileStoragePath.ToLower().Contains(".jpg") || Model.FileStoragePath.ToLower().Contains(".png"))
+        {
+            <div style="width: 840px; height: 550px; ">
+                <img src="@Model.FileStoragePath" style="max-width: 100%;height:100%; margin: 0 auto; display: block;" />
+            </div>
+        }*@
+    @if (Model.FileStoragePath.ToLower().Contains(".txt"))
+    {
+        <div style="width: 100%; height: 100%; padding: 3px; ">
+            @foreach (string line in ViewData["c_txt"] as string[])
+            {
+                <p>@line</p>
+            }
+        </div>
+    }
+    else if (Model.FileStoragePath.ToLower().Contains(".pdf"))
+    {
+        try
+        {
+            <iframe src="@Model.FileStoragePath" width="100%" height="100%" scrolling="no" frameborder="0"></iframe>
+        }
+        catch
+        {
+            <h3>文件正在生成中</h3>
+        }
+    }
+    else
+    {
+        <div style="width:100%;text-align:center;padding-top:10px">文件为压缩包或者其他格式,请下载后查看!</div>
+        <script type="text/javascript">
+            var str = "@Model.FileStoragePath";
+            window.location.href = str;
+        </script>
+    }
+</body>
+</html>
+

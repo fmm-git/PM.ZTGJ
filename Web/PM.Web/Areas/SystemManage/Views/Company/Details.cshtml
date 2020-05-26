@@ -1,0 +1,117 @@
+﻿@{
+    ViewBag.Title = "公司Details";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<link href="~/Content/css/input.css" rel="stylesheet" />
+<script>
+    var keyValue = $.request("keyValue");
+    $(function () {
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "/SystemManage/Company/GetFormJson",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    $("#form1").find('.form-control,select,input').attr('disabled', 'disabled');
+                    $("#form1").find('div.ckbox label').attr('for', '');
+                }
+            });
+        }
+    });
+    function initControl() {
+        $("#ParentCompanyCode").bindSelect({
+            url: "/SystemManage/Company/GetSelectJson",
+        });
+        //组织机构类型
+        $("#OrgType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "OrgType" })",
+            id: "DictionaryCode",
+        text: "DictionaryText"
+    });
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li role="presentation" class="active"><a href="#">公司定义：新增</a></li>
+        </ul>
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">上级公司</th>
+                    <td class="formValue">
+                        <select id="ParentCompanyCode" name="ParentCompanyCode" class="form-control required">
+                            <option value="0">父节点</option>
+                        </select>
+                    </td>
+                    <th class="formTitle">公司编号</th>
+                    <td class="formValue">
+                        <input id="CompanyCode" name="CompanyCode" type="text" class="form-control required" placeholder="公司编码" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">公司名称</th>
+                    <td class="formValue">
+                        <input id="CompanyFullName" name="CompanyFullName" type="text" class="form-control required" placeholder="公司名称" />
+                    </td>
+                    <th class="formTitle">公司简称</th>
+                    <td class="formValue">
+                        <input id="CompanyShortName" name="CompanyShortName" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">组织机构类型<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="OrgType" name="OrgType" class="form-control required"></select>
+                    </td>
+                    <th class="formTitle"></th>
+                    <td class="formValue"></td>
+                </tr>
+                <tr>
+                    <th class="formTitle">英文名称</th>
+                    <td class="formValue">
+                        <input id="EnglishName" name="EnglishName" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">法人代表</th>
+                    <td class="formValue">
+                        <input id="LegalPerson" name="LegalPerson" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">联系电话</th>
+                    <td class="formValue">
+                        <input id="Telephone" name="Telephone" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">传真号码</th>
+                    <td class="formValue">
+                        <input id="Fax" name="Fax" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">邮政编码</th>
+                    <td class="formValue">
+                        <input id="PostalCode" name="PostalCode" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">公司主页</th>
+                    <td class="formValue">
+                        <input id="Website" name="Website" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">Email</th>
+                    <td class="formValue">
+                        <input id="Email" name="Email" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">公司地址</th>
+                    <td class="formValue">
+                        <input id="Address" name="Address" type="text" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>
+

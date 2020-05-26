@@ -1,0 +1,225 @@
+﻿@{
+    ViewBag.Title = "资料分类归档数据列表页";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/DataManage/FileType/Index");
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 128;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 178;
+        } else {
+            Height = 128;
+        }
+        gridList(Height);
+        initControl();//初始化查询
+    });
+
+    //初始化查询
+    function initControl() {
+        //资料类别下拉列表框查询
+        $("#TypeNameSelect").bindSelect({
+            url: "/SystemManage/DataDictionary/GetDicByCode?dicCode=TypeName",
+            id: "DictionaryText",
+            text: "DictionaryText"
+        });
+
+        //资料类别下拉列表框值改变事件
+        $("#TypeNameSelect").change("bind", function () {
+            var TypeNameSelectd = $(this).find("option:selected").val();
+            $("#TypeName").val(TypeNameSelectd);
+        })
+    }
+
+    //查询加工厂信息
+    function ProcessingFactory(Height) {
+        selectClick('win_ProcessingFactoryCode', '/RawMaterial/RMProductionMaterial/ProcessingFactoryNameCodeSelect', 'Grid', 'ProcessFactoryCode', '', 'ProcessFactoryCode,ProcessFactoryName', '50%', '450px')
+    }
+
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/DataManage/FileType/GetGridJson",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, frozen: true },
+                { label: '文件编号', name: 'FileCode', width: 100, align: 'left', sortable: false, frozen: true },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 100, align: 'left', frozen: true },
+                { label: '资料类别', name: 'TypeName', width: 100, align: 'left', sortable: false },
+                { label: '资料名称', name: 'DataName', width: 100, align: 'left', sortable: false },
+                { label: '归属部门', name: 'DepartmentName', width: 100, align: 'left', sortable: false },
+                { label: '录入人', name: 'UserName', width: 70, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 130, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode',hidden:true },
+                { label: '内容摘抄', name: 'DataContent', width: 150, align: 'left', sortable: false },
+                { label: '备注', name: 'Remark', width: 150, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                $('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            pager: "#gridPager",
+            sortname: 'ID',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $("#form1").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    }
+
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "资料分类归档添加", "/DataManage/FileType/Form" + where, true, true)
+    }
+    var ID = "";
+    var InsertUserCode = "";
+    var UserCode = '@ViewBag.InsertUserCode';
+    function btn_delete() {
+        ID = $("#gridList").jqGridRowValue().ID;//主键ID
+        InsertUserCode = $("#gridList").jqGridRowValue().InsertUserCode;//录入人
+        if (ID != "" && ID != null && ID != undefined) {
+            if (InsertUserCode != UserCode) {
+                $.modalMsg("该数据不属于当前登录人创建,不能进行此操作", "warning");
+                return false;
+            }
+            else
+            {
+                $.deleteForm({
+                    url: "/DataManage/FileType/DeleteForm",
+                    param: { keyValue: ID },
+                    success: function () {
+                        $.currentWindow().$("#gridList").trigger("reloadGrid");
+                    }
+                });
+            }
+        } else {
+            $.modalMsg("请选择要删除的信息", "warning");
+            return false;
+        }
+    }
+
+    function btn_details() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Details",
+                title: "资料分类归档信息查看",
+                url: "/DataManage/FileType/Details?keyValue=" + keyValue,
+                width: "60%",
+                height: "550px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要查看的信息", "warning");
+            return false;
+        }
+    }
+
+    function btn_edit() {
+        ID = $("#gridList").jqGridRowValue().ID;//主键ID
+        InsertUserCode = $("#gridList").jqGridRowValue().InsertUserCode;//录入人
+        if (ID != "" && ID != null && ID != undefined) {
+            if (InsertUserCode != UserCode) {
+                $.modalMsg("该数据不属于当前登录人创建,不能进行此操作", "warning");
+                return false;
+            }
+            else {
+                $.modalOpen({
+                    id: "Form",
+                    title: "资料分类归档信息修改",
+                    url: "/DataManage/FileType/Form?keyValue=" + ID,
+                    width: "60%",
+                    height: "550px",
+                    callBack: function (iframeId) {
+                        var $loadingpage = top.$("#loadingPage");
+                        $loadingpage.hide();
+                        top.frames[iframeId].submitForm();
+                    }
+                });
+            }
+        }
+        else {
+            $.modalMsg("请选择要修改的信息", "warning");
+            return false;
+        }
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div class="topPanel-btn divwidth2" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="ProcessFactoryCode">加工厂</option>
+                                    <option value="TypeName">资料类别</option>
+                                </select>
+                                <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                                <input id="ProcessFactoryName" name="ProcessFactoryCode" type="text" class="form-control SearchContent hidSearchContent" readonly="readonly" placeholder="加工厂">
+                                <span name="ProcessFactoryCode" class="input-group-btn input-group-btn-search SearchContent hidSearchContent">
+                                    <button type="button" class="btn  btn-primary" onclick="ProcessingFactory();"><i class="fa fa-search"></i></button>
+                                </span>
+                                <select id="TypeNameSelect" name="TypeName" class="form-control SearchContent hidSearchContent" style="width: 120px;">
+                                    <option value="">请选择</option>
+                                </select>
+                                <input id="TypeName" name="TypeName" type="hidden" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

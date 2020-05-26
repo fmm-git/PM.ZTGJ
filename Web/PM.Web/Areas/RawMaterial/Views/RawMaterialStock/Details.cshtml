@@ -1,0 +1,193 @@
+﻿@{
+    ViewBag.Title = "原材料初期库存查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = top.clients.projectId;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "RawMaterialStock")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data[0]);
+                    ProjectId = data[0].ProjectId;
+                    $("#ProjectId").val(ProjectId);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data);
+                }
+            });
+        }
+    });
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                { label: '原材料名称', name: 'MaterialName', width: 150, height: 10, align: "left", sortable: false },
+                { label: '计量单位', name: 'MeasurementUnitText', width: 80, align: "left", sortable: false },
+                { label: '规格', name: 'SpecificationModel', width: 80, align: "left", sortable: false },
+                { label: '钢筋类型', name: 'RebarTypeName', width: 80, align: "left", sortable: false },
+                { label: "重量(kg)", name: "Count", width: 100, align: "right", sortable: false},
+                { label: "动态库存重量(kg)", name: "UseCountS", width: 100, align: "right", sortable: false},
+                { label: '厂家', name: 'Factory', width: 140, align: "left", sortable: false},
+                { label: '炉批号', name: 'BatchNumber', width: 120, align: "left", sortable: false},
+                { label: '计量单位', name: 'MeasurementUnit', hidden: true },
+                { label: '钢筋类型', name: 'RebarType', hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+    }
+   
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "RawMaterialStock");
+    }
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="formd">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">工区名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="WorkAreaCode" name="WorkAreaCode" hidden="hidden" />
+                            <input id="WorkAreaName" name="WorkAreaName" type="text" readonly="readonly" class="form-control required" />
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">仓库名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="StorageCode" name="StorageCode" type="hidden" />
+                            <input id="StorageName" name="StorageName" type="text" readonly="readonly" class="form-control required" />
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    @*<th class="formTitle">站点名称</th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SiteCode" name="SiteCode" type="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" readonly="readonly" class="form-control" />
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>*@
+                </tr>
+                <tr>
+                    @*<th class="formTitle">钢筋类型<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="RebarType" name="RebarType" type="hidden" />
+                            <input id="RebarTypeName" name="RebarTypeName" type="text" disabled="disabled" class="form-control required" />
+                        </td>*@
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" type="text"  disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

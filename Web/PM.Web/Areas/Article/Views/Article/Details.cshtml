@@ -1,0 +1,251 @@
+﻿@model Tuple<PM.DataEntity.TbArticle, List<PM.DataEntity.TbArticleComment>>
+@{
+    ViewBag.Title = "交流互动查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+    var data = Model.Item1;
+    var commentList = Model.Item2;
+}
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<style type="text/css">
+    #btn_top {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        display: none;
+    }
+</style>
+<button id="btn_top" title="回到顶部" class="btn btn-primary btn-rounded">
+    回到顶部
+</button>
+<div class="row wrapper border-bottom white-bg page-heading page-heading-d">
+    <div class="col-lg-10">
+        <h3></h3>
+        <ol class="breadcrumb">
+            <li>
+                <a href="@Url.Action("Index", "Article")">列表</a>
+            </li>
+            <li class="active">
+                <strong>内容</strong>
+            </li>
+        </ol>
+    </div>
+    <div class="col-lg-2">
+
+    </div>
+</div>
+<div class="wrapper wrapper-content  animated fadeInRight article">
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <div class="pull-right">
+                    </div>
+                    <div class="text-center article-title">
+                        <span class="text-muted"><i class="fa fa-clock-o"></i>@data.InsertTime</span>
+                        <h1>
+                            @data.Title
+                        </h1>
+                    </div>
+                    <div id="Content">
+                        @Html.Raw(data.Content)
+                    </div>
+                    <script type="text/javascript">
+                        //$("#Content").attr("img")
+                        $("#Content img").css({ "width": "60%", "height": "60%" });
+
+                       
+                    </script>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>作者:</h5>
+                            <button class="btn btn-primary btn-xs" type="button">@data.UserName</button>
+                            @if (data.CollectID > 0)
+                            {
+                                <a class="btn btn-xs btn-danger star"><i class="fa fa-star"></i>已收藏</a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-xs btn-white star"><i class="fa fa-star"></i>收藏</a>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-right">
+                                <h5>统计:</h5>
+                                <div id="CollectCount"><i class="fa fa-star"> </i>@data.CollectCount 收藏</div>
+                                <div> <i class="fa fa-comments-o"> </i> @data.CommentCount 评论 </div>
+                                <div> <i class="fa fa-eye"> </i> @(data.BrowseCount + 1) 查看 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <input type="hidden" id="ID" value="@data.ID" />
+                            <input type="hidden" id="CollectCountH" value="@data.CollectCount" />
+                            <h2>评论:</h2>
+                            @{
+                                var index = 1;
+
+                                if (commentList != null && commentList.Count > 0)
+                                {
+                                    var comList = commentList.Where(p => p.Type == 1).ToList();
+                                    var comfList = commentList.Where(p => p.Type == 2).ToList();
+                                    foreach (var item in comList)
+                                    {
+                                        <div class="social-feed-box">
+                                            <div class="social-avatar">
+                                                <a class="btn btn-xs btn-primary pull-right" onclick="tigDiv(this)"><i class="fa fa-pencil"></i>回复</a>
+                                                <a href="" class="pull-left">
+                                                    <img alt="image" src="http://cn.inspinia.cn/html/inspiniaen/img/a1.jpg">
+                                                </a>
+                                                <div class="media-body">
+                                                    <a href="#">
+                                                        @item.UserName
+                                                    </a>
+                                                    <small class="text-muted">@item.InsertTime</small>
+                                                </div>
+                                            </div>
+                                            <div class="social-body">
+                                                <p>
+                                                    @item.Content
+                                                </p>
+                                                @{
+                                                    if (comfList.Count > 0)
+                                                    {
+                                                        foreach (var itemf in comfList)
+                                                        {
+                                                            if (itemf.CommentID == item.ID)
+                                                            {
+                                                                <div class="social-comment">
+                                                                    <div class="media-body">
+                                                                        <a href="#">
+                                                                            @itemf.UserName 【回复】:
+                                                                        </a>
+                                                                        @itemf.Content
+                                                                        <br>
+                                                                        <small class="text-muted">@itemf.InsertTime</small>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                            </div>
+                                            <!--     回复框   start    -->
+                                            <div class="social-body social-body-comment" style="display:none;">
+                                                <hr>
+                                                <form id="form-@index">
+                                                    <div class="chat-form">
+                                                        <input type="hidden" id="ArticleID" value="@data.ID" />
+                                                        <input type="hidden" id="CommentID" value="@item.ID" />
+                                                        <div class="form-group">
+                                                            <textarea class="form-control required" id="Content" placeholder="请输入回复信息"></textarea>
+                                                        </div>
+                                                        <div class="text-left">
+                                                            <button type="button" class="btn btn-sm btn-primary m-t-n-xs" onclick="submitForm(this)"><strong>回复</strong></button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <!--     回复框   end    -->
+                                        </div>
+                                        index++;
+                                    }
+                                }
+                                <form id="form1">
+                                    <div class="chat-form">
+                                        <input type="hidden" id="ArticleID" value="@data.ID" />
+                                        <input type="hidden" id="CommentID" />
+                                        <div class="form-group">
+                                            <textarea class="form-control required" id="Content" placeholder="请输入评论信息"></textarea>
+                                        </div>
+                                        <div class="text-right">
+                                            <button type="button" class="btn btn-sm btn-primary m-t-n-xs" onclick="submitForm(this)"><strong>发表评论</strong></button>
+                                        </div>
+                                    </div>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $(window).scroll(function () {
+            if ($(window).scrollTop() >= 50) {
+                $('#btn_top').fadeIn();
+            }
+            else {
+                $('#btn_top').fadeOut();
+            }
+        });
+        $('#btn_top').click(function () {
+            $('html,body').animate({ scrollTop: 0 }, 500);
+        });
+
+        $(".star").on("click", function () {
+            $(this).toggleClass("btn-white");
+            $(this).toggleClass("btn-danger");
+            if ($(this).hasClass('btn-white')) {
+                collect($(this), 2);
+            } else {
+                collect($(this), 1);
+            }
+        });
+    });
+
+
+    function tigDiv(e) {
+        $($(e).parents('.social-feed-box').children(".social-body-comment")).toggle(500);
+        var str = $(e).html();
+        var text = str.substr(str.length - 4, 4);
+        if (text == "取消回复") {
+            $(e).html("<i class='fa fa-pencil'></i>回复");
+        }
+        else {
+            $(e).html("取消回复");
+        }
+    }
+
+    //提交评论信息
+    function submitForm(e) {
+        var id = $($(e).parents('form')).attr('id');
+        if (!$('#' + id).formValid()) {
+            return false;
+        }
+        var formData = $('#' + id).formSerialize();
+        $.submitForm({
+            url: "@Url.Action("SubmitFormForComment", "Article")",
+            param: formData,
+            success: function () {
+                window.location.reload();
+            }
+        })
+    }
+    //收藏信息
+    function collect(e, type) {
+        //数据Id
+        var keyValue = $("#ID").val();
+        $.submitForm({
+            url: "@Url.Action("Collect", "Article")",
+            param: { keyValue: keyValue },
+            success: function () {
+                var count = $("#CollectCountH").val();
+                if (type == 1) {
+                    count = parseInt(count) + 1;
+                    $(this).html('<i class="fa fa-star"></i>已收藏');
+                } else {
+                    count = parseInt(count) - 1;
+                    $(this).html('<i class="fa fa-star"></i>收藏');
+                }
+                $("#CollectCount").html("<i class='fa fa-star'></i>" + count + "收藏");
+                $("#CollectCountH").val(count);
+            }
+        })
+    }
+</script>

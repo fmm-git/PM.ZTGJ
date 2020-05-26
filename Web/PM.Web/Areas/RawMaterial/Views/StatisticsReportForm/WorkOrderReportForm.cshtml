@@ -1,0 +1,434 @@
+﻿@{
+    ViewBag.Title = "订单量统计";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<link href="~/Content/css/app.v2.css" rel="stylesheet" />
+<link href="~/Content/js/datepicker/skin/WdatePicker.css" rel="stylesheet" />
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    var ProjectId = $.request("ProjectId");
+    var OrgType = $.request("OrgType");
+    var myDate = new Date();
+    var Year = myDate.getFullYear();
+    var Month = Number(myDate.getMonth()) + Number(1);
+    $(function () {
+        if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+            $("header").css("background-color", "#1491e4");
+            $("header").css("color", "#ffffff");
+            $(".panel-default").css("border-bottom", "2px solid #dcd260");
+        }
+        @*//切换年份/月份
+        $("#Year").bindSelect({
+            url: "@Url.Action("GetWorkYear", "StatisticsReportForm")",
+            id: "Year",
+            text: "YearName"
+        });
+        //默认选中当前月
+        var myDate = new Date();
+        var Month = Number(myDate.getMonth()) + Number(1);
+        $("#Month").val(Month);
+        //年份的值改变事件
+        $("#Year").change("bind", function () {
+            var Year = $(this).find("option:selected").val();
+            if (Number(myDate.getYear()) != Year) {//如果选择的不是本年那么就把月份默认当前选中年的第一个月
+                $("#Month").val(1);
+            }
+            GetForm();
+        });
+        //月份的值改变事件
+        $("#Month").change("bind", function () {
+            GetForm();
+        });*@
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var HistoryMonth = dp.cal.getNewDateStr();
+                    var a = HistoryMonth.split("-");
+                    Year = a[0];
+                    Month = a[1];
+                    GetForm();
+                }
+            });
+        });
+        GetForm();
+    });
+    function GetForm()
+    {
+        ReportForm1();//加工厂历史订单量分析
+        ReportForm2();//当月订单类型统计
+        ReportForm3("0", "订单总量", "一号加工厂", '#53bcf2');//订单类型分布情况
+        ReportForm4();
+    }
+    //加工厂历史订单量分析
+    function ReportForm1() {
+        var JgcMonthNum = [];
+        $.ajax({
+            url: "@Url.Action("WorkOrderHistoryFx", "StatisticsReportForm")",
+            data: { ProjectId: ProjectId, OrgType: OrgType, Year: Year },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < data.Item1.length; i++) {
+                    JgcMonthNum.push({
+                        name: data.Item1[i].CompanyFullName,
+                        data: [data.Item1[i].一月, data.Item1[i].二月, data.Item1[i].三月, data.Item1[i].四月, data.Item1[i].五月, data.Item1[i].六月, data.Item1[i].七月, data.Item1[i].八月, data.Item1[i].九月, data.Item1[i].十月, data.Item1[i].十一月, data.Item1[i].十二月]
+                    });
+                }
+            }
+        });
+        var chart = Highcharts.chart('WorkOrderHistoryFx', {
+            chart: {
+                type: 'line'
+            },
+            title: {
+                text: '当年各月度加工厂订单量分析'
+            },
+            xAxis: {
+                categories: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+            },
+            yAxis: {
+                title: {
+                    text: '订单量(kg)'
+                },
+                min: 0
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            tooltip: {
+                headerFormat: '<b>{series.name}</b><br>',
+                pointFormat: '{point.y:.5f}kg'
+            },
+            plotOptions: {
+                line: {
+                    dataLabels: {
+                        // 开启数据标签
+                        enabled: true,
+                       
+                    },
+                    // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+                    //enableMouseTracking: false
+                }
+            },
+            series: JgcMonthNum
+        });
+    }
+    //当月订单类型统计
+    function ReportForm2() {
+        var TypeNum = [];
+        $.ajax({
+            url: "@Url.Action("SameMonthWorkOrderTypeTj", "StatisticsReportForm")",
+            data: { ProjectId: ProjectId, OrgType: OrgType, Year: Year, Month: Month },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < 3; i++) {
+                    if (i == 0) {
+                        var ddzl=0;
+                        ddzl=parseFloat(data.Item1[0].WeightTotal+data.Item1[1].WeightTotal+data.Item1[2].WeightTotal);
+                        TypeNum.push({
+                            name: "订单总量(" + ddzl+"kg)",
+                            data: [{
+                                y: data.Item1[0].WeightTotal, total: data.Item1[0].WeightTotal
+                            }, {
+                                y: data.Item1[1].WeightTotal, total: data.Item1[1].WeightTotal
+                            }, {
+                                y: data.Item1[2].WeightTotal, total: data.Item1[2].WeightTotal
+                            }],
+                            nameNew: "订单总量"
+                        });
+                    } else if (i == 1) {
+                        var ptzl = 0;
+                        ptzl = parseFloat(data.Item1[0].ZcOrder + data.Item1[1].ZcOrder + data.Item1[2].ZcOrder);
+                        TypeNum.push({
+                            name: "普通订单量("+ptzl+"kg)",
+                            data: [{
+                                y: data.Item1[0].ZcOrder, total: data.Item1[0].WeightTotal
+                            }, {
+                                y: data.Item1[1].ZcOrder, total: data.Item1[1].WeightTotal
+                            }, {
+                                y: data.Item1[2].ZcOrder, total: data.Item1[2].WeightTotal
+                            }],
+                            nameNew: "普通订单量"
+                        });
+                    } else if (i == 2) {
+                        var jjzl = 0;
+                        jjzl = parseFloat(data.Item1[0].JjOrder + data.Item1[1].JjOrder + data.Item1[2].JjOrder);
+                        TypeNum.push({
+                            name: "加急订单量("+jjzl+"kg)",
+                            data: [{
+                                y: data.Item1[0].JjOrder, total: data.Item1[0].WeightTotal
+                            }, {
+                                y: data.Item1[1].JjOrder, total: data.Item1[1].WeightTotal
+                            }, {
+                                y: data.Item1[2].JjOrder, total: data.Item1[2].WeightTotal
+                            }],
+                            nameNew: "加急订单量"
+                        });
+                    }
+                }
+            }
+        });
+        var chart = Highcharts.chart('SameMonthWorkOrderTypeTj', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: '当月订单量统计'
+            },
+            xAxis: {
+                categories: ['一号加工厂', '二号加工厂', '三号加工厂'],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '订单量(kg)'
+                }
+            },
+            tooltip: {
+                // head + 每个 point + footer 拼接成完整的 table
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormatter: function () {
+                    var a = (this.y / this.total * 100).toFixed(2);
+                    if (isNaN(a)) {
+                        a = 0;
+                    }
+                    return '<tr><td style="color:' + this.series.color + ';padding:0"> ' +
+                           this.series.userOptions.nameNew + ': </td>' +
+                '<td style="padding:0"><b>' + this.y.toFixed(5) + 'kg</b><br/><b>' + a + '%</b></td></tr>'
+                },
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0,
+                    events: {
+                        click: function (e) {
+                            //e.point.x 表示的x轴的下标从0开始
+                            //e.point.y 表示当前点击y轴的值
+                            //this.name 表示当前分类的值
+                            var a = e.point.x;//加工厂
+                            var jgc = e.point.category;//加工厂
+                            //var b = this.name;//订单量分类
+                            var b = e.point.series.userOptions.nameNew;
+                            var color = '' + e.point.series.color+'';
+                            ReportForm3(a, b, jgc, color);
+                        }
+                    }
+                }
+            },
+            colors: ['#53bcf2', '#53f592', '#fa796c'],
+            series: TypeNum
+        });
+    }
+    //当月各个加工厂订单重量分析
+    function ReportForm3(a, b, jgc, color) {
+        $("#TypeName").html(b);
+        var SiteNum = [];
+        $.ajax({
+            url: "@Url.Action("UrgentWorkOrderFbQk", "StatisticsReportForm")",
+            data: { ProjectId: ProjectId, OrgType: OrgType, Year: Year, Month: Month, JgcCode: a, TypeName: b },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < data.Item1.length; i++) {
+                    SiteNum.push([data.Item1[i].SiteName, data.Item1[i].SiteNum]
+                    );
+                }
+            }
+        });
+        var chart = Highcharts.chart('UrgentWorkOrderFbQk', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: jgc+b + '情况'
+            },
+            xAxis: {
+                type: 'category',
+                labels: {
+                    rotation: -45  // 设置轴标签旋转角度
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '发生次数'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                pointFormat: '发生次数: <b>{point.y}</b>'
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            series: [{
+                name: '次数',
+                data: SiteNum,
+                dataLabels: {
+                    enabled: true,
+                    rotation: -90,
+                    color: '#FFFFFF',
+                    align: 'right',
+                    format: '{point.y}',
+                    y: 10
+                }
+            }],
+            colors: [color]
+        });
+    }
+    //当前年各月加工厂订单重量分析
+    function ReportForm4() {
+        var LlNum = [];
+        $.ajax({
+            url: "@Url.Action("MaterialsUsedTypeTj", "StatisticsReportForm")",
+            data: { ProjectId: ProjectId, OrgType: OrgType, Year: Year, Month: Month },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < 3; i++) {
+                    if (i == 0) {
+                        LlNum.push({
+                            name: "使用总量",
+                            data: [{ y: data.Item1[0].Total, total: data.Item1[0].Total }, { y: data.Item1[1].Total, total: data.Item1[1].Total }, { y: data.Item1[2].Total, total: data.Item1[2].Total }]
+                        });
+                    } else if (i == 1) {
+                        LlNum.push({
+                            name: "原材料使用量",
+                            data: [{ y: data.Item1[0].ycl, total: data.Item1[0].Total }, { y: data.Item1[1].ycl, total: data.Item1[1].Total }, { y: data.Item1[2].ycl, total: data.Item1[2].Total }]
+                        });
+                    } else if (i == 2) {
+                        LlNum.push({
+                            name: "余料使用量",
+                            data: [{ y: data.Item1[0].yl, total: data.Item1[0].Total }, { y: data.Item1[1].yl, total: data.Item1[1].Total }, { y: data.Item1[2].yl, total: data.Item1[2].Total }]
+                        });
+                    }
+                }
+            }
+        });
+        var chart = Highcharts.chart('MaterialsUsedTypeTj', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: '用料类型统计'
+            },
+            xAxis: {
+                categories: ['一号加工厂', '二号加工厂', '三号加工厂'],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '领料量(kg)'
+                }
+            },
+            tooltip: {
+                // head + 每个 point + footer 拼接成完整的 table
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormatter: function () {
+                    var a = (this.y / this.total * 100).toFixed(2);
+                    if (isNaN(a)) {
+                        a = 0;
+                    }
+                    return '<tr><td style="color:' + this.series.color + ';padding:0"> ' +
+                           this.series.name + ': </td>' +
+                '<td style="padding:0"><b>' + this.y.toFixed(5) + 'kg</b><br/><b>' + a + '%</b></td></tr>'
+                },
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0
+                }
+            },
+            series: LlNum
+        });
+    }
+</script>
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                图表1-加工厂历史订单量分析
+                @*<div class="input-group input-group-with" style="float: right; margin-top: -8px;">
+                    <select id="Month" name="Month" class=" form-control" style="width:70px;">
+                        <option value="1">1月</option>
+                        <option value="2">2月</option>
+                        <option value="3">3月</option>
+                        <option value="4">4月</option>
+                        <option value="5">5月</option>
+                        <option value="6">6月</option>
+                        <option value="7">7月</option>
+                        <option value="8">8月</option>
+                        <option value="9">9月</option>
+                        <option value="10">10月</option>
+                        <option value="11">11月</option>
+                        <option value="12">12月</option>
+                    </select>
+                </div>
+                <div class="input-group input-group-with" style="float:right;margin-top:-8px;">
+                    <select id="Year" name="Year" class=" form-control" style="width:80px;"></select>
+                </div>*@
+                <div class="input-group input-group-with" style="float: right; margin-top: -8px;">
+                    <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker" placeholder="历史月份" />
+                </div>
+            </header>
+            <div class="panel-body">
+                <div id="WorkOrderHistoryFx" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                图表2-当月订单量统计
+            </header>
+            <div class="panel-body">
+                <div id="SameMonthWorkOrderTypeTj" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                图表3-<label id="TypeName"></label>分布情况
+            </header>
+            <div class="panel-body">
+                <div id="UrgentWorkOrderFbQk" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                图表4-用料类型统计
+            </header>
+            <div class="panel-body">
+                <div id="MaterialsUsedTypeTj" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+

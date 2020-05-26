@@ -1,0 +1,112 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script>
+    var RoleCode = $.request("RoleId");
+    var DeptId = $.request("DeptId");
+    var CompanyId = $.request("CompanyId");
+    var ProjectId = $.request("ProjectId");
+    $(function () {
+        //加载菜单按钮
+        //$.LodeMenuBtn("/SystemManage/RoleUser/Index");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/RoleUser/GetGridJson?RoleCode=" + RoleCode + "&DeptId=" + DeptId + "&CompanyId=" + CompanyId + "&ProjectId=" + ProjectId,
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '角色编号', name: 'RoleId', hidden: true, sortable: false },
+                { label: '角色编号', name: 'RoleCode', hidden: true, sortable: false },
+                { label: '角色名称', name: 'RoleName', width: 150, align: 'left', sortable: false },
+                {
+                    label: '当前状态', name: 'Flag', width: 150, align: 'left', sortable: false, formatter: function (value, options, rowObject) {
+                        var code = rowObject.Flag;
+
+                        if (code == "0") {//加工厂
+                            return "启用"
+                        } else if (code == "1") {//经理部
+                            return "禁用"
+                        }
+                        else {
+                            return "";
+                        }
+                    }
+                },
+                { label: '人员编号', name: 'UserID', hidden: true,  sortable: false },
+                { label: '人员编号', name: 'UserCode',hidden: true, sortable: false },
+                { label: '人员名称', name: 'UserName', width: 150, align: 'left', sortable: false },
+                { label: '组织机构', name: 'CompanyFullName', width: 150, align: 'left', sortable: false },
+                {
+                    label: '组织机构类型', name: 'OrgType', width: 150, align: 'left', sortable: false, formatter: function (value, options, rowObject) {
+                        var code = rowObject.OrgType;
+                        if (code == "1") {//加工厂
+                            return "加工厂"
+                        } else if (code == "2") {//经理部
+                            return "经理部"
+                        } else if (code == "3") {//分部
+                            return "分部"
+                        } else if (code == "4") {//工区
+                            return "工区"
+                        } else if (code == "5") {//工点
+                            return "工点"
+                        }
+                    }
+                },
+                { label: '部门名称', name: 'DepartmentName', width: 150, align: 'left', sortable: false },
+                { label: '项目名称', name: 'ProjectName', width: 150, align: 'left', sortable: false }
+            ],
+            pager: "#gridPager",
+            sortname: 'UserCode',
+            viewrecords: true
+        });
+
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                url: "/SystemManage/RoleUser/GetGridJson",
+                postData: { RoleCode: roleCode },
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="toolbar" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="UserName" type="text" class="form-control" placeholder="用户名称" style="width: 200px;">
+                                <span class="input-group-btn">
+                                    <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

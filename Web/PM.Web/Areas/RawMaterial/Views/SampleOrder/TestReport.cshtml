@@ -1,0 +1,220 @@
+﻿@{
+    ViewBag.Title = "上传检验文件";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    $(function () {
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "SampleOrder")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    lodeList(data.Item2);//加载明细信息
+                }
+            });
+        }
+        $(window).resize(function () {
+            $("#gridList").setGridHeight($(window).height() - 90);
+            $("#gridList").setGridWidth($(window).width());
+        });
+    });
+    //提交数据
+    function submitForm() {
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            $.modalMsg("请完善质检报告编号信息", "warning");
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitTestReport", "SampleOrder")",
+            param: { itemModel: JSON.stringify(tableData) },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+    //--------------明细表信息----------
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 90,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true, key: true },
+                    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称', name: 'MaterialName', width: 150, height: 10, align: "left", sortable: false },
+                    { label: '规格', name: 'SpecificationModel', width: 80, align: "left", sortable: false },
+                    { label: '单位重量(kg/m;㎡)', name: 'Weight', width: 110, align: "left", sortable: false },
+                    { label: '单件用量(m;㎡)', name: 'UseCount', width: 100, align: "right", sortable: false },
+                    { label: '件数', name: 'Count', width: 80, align: "right", sortable: false },
+                    { label: '炉批号', name: 'BatchNumber', width: 120, align: "left", sortable: false },
+                    { label: '厂家', name: 'Factory', width: 140, align: "left", sortable: false },
+                    { label: '重量小计(kg)', name: 'Total', width: 140, align: "left", sortable: false },
+                    { label: '检测结果', name: 'ChackStateShow', width: 100, align: "center", sortable: false, editable: true, edittype: "select", editoptions: { value: "未检测:未检测;合格:合格;不合格:不合格" }, },
+                    { label: '检测完成时间', name: 'ChackItemTiem', width: 100},
+                    { label: '质检报告编号', name: 'TestReportNo', width: 160, align: "left", sortable: false, editable: true },
+                    { label: '检验文件', name: 'EnclosureShow', width: 80, align: "left", sortable: false, formatter: ConfirmButton },
+                    { label: '检验文件', name: 'EnclosureH', hidden: true },
+                    { label: '检验文件', name: 'Enclosure', hidden: true },
+                    { label: "取样订单编号", name: "SampleOrderCode", hidden: true },
+                    { label: "入库明细Id", name: "InOrderItemId", hidden: true },
+                    { label: "检测结果", name: "ChackState", hidden: true },
+                    { label: "检测结果", name: "ChackStateH", hidden: true },
+            ],
+            gridComplete: function () {
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+                    editRow(rowid);
+                }
+            },
+        });
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            if (item.ChackState == "2") {
+                item.ChackStateShow = "不合格";
+                item.ChackStateH = 2;
+            } else if (item.ChackState == "0") {
+                item.ChackStateShow = "未检测";
+                item.ChackStateH = 0;
+            }else {
+                item.ChackStateShow = "合格";
+                item.ChackStateH = 1;
+            }
+            if (item.Enclosure) {
+                item.EnclosureH = item.Enclosure;
+            }
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+        editRow(index);
+    }
+    //编辑行
+    function editRow(rowId) {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        $("#gridList").jqGrid('editRow', rowId, true);
+        lastsel = rowId;
+        $("#gridList>tbody").find("input:text").each(function () {
+            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+            $(this).css("height", "20px").css("width", width + "px");
+        });
+        $($("#gridList").find("tr[id='" + rowId + "']")).addClass("success").attr("editable", "1").attr("aria-selected", true);
+        //已检测数据不能进行编辑
+        var rowData = $("#gridList").jqGrid("getRowData", rowId);
+        if (rowData.ChackState != "0") {
+            $("#" + rowId + "_ChackStateShow").attr("disabled", "disabled");
+        }
+        valid(rowId);
+    }
+    function valid(rowid) {
+        var rowData = $("#gridList").jqGrid("getRowData", rowid);
+        //检测结果
+        $("#" + rowid + "_ChackStateShow").change(function () {
+            var text = $(this).find("option:selected").text();
+            var domepp = $(this).parent().parent().children();
+            if (text == "不合格") {
+                $(domepp[20]).html(2);
+            } else if (text == "未检测") {
+                $(domepp[20]).html(2);
+            }
+            else {
+                $(domepp[20]).html(1);
+            }
+        });
+        $("#" + rowid + "_EnclosureShow").click(function () {
+            onButClick(this, rowid);
+        });
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        let ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return false;
+        }
+        var columnData = [];
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+                rowData.Enclosure = rowData.EnclosureH;
+                //rowData.ChackState = rowData.ChackStateH;
+                rowData.EnclosureShow = "";
+                columnData.push(rowData);
+        });
+        return columnData;
+    }
+</script>
+<!---------附件列表------->
+<script type="text/javascript">
+
+    function ConfirmButton(cellvalue, options, rowObject) {
+        var text = "查看";
+        if (!rowObject.Enclosure) {
+            text = "上传";
+        }
+        return "<a class='btn btn-primary' id='" + rowObject.id + "_EnclosureShow'>" + text + "</a> ";
+    }
+    var celObj = null;
+    function onButClick(obj, rowid) {
+        celObj = obj;
+        var rowObject = $("#gridList").jqGrid("getRowData", rowid);
+        if (rowObject.EnclosureH) {
+            showFile(rowObject.EnclosureH, "form", "SampleOrderItem");
+        } else {
+            rowObject.EnclosureH = generateUUID();
+            UplaodFileItem(rowObject.EnclosureH, rowObject.ID, "SampleOrderItem", "qyitem");
+        }
+    }
+    function changeEnclosure(estr) {
+        $(celObj).html("查看");
+        $($(celObj).parent()).next().html(estr);
+    }
+    function delEnclosure() {
+        $(celObj).html("上传");
+        $($(celObj).parent()).next().html("");
+    }
+</script>
+<div style="margin-top: 10px;">
+    @* <input id="Enclosure" name="Enclosure" type="hidden" />*@
+    <input id="ID" name="ID" type="hidden" />
+    <div id="MXXXInfo" style="padding-top: 5px; margin:10px; ">
+        @*<div>
+                <table class="form">
+                    <tr>
+                        <th class="formTitle">检验文件</th>
+                        <td class="formValue" colspan="3">
+                            <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                            <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                            <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>*@
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

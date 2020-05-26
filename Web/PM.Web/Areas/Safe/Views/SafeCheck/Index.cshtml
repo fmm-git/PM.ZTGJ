@@ -1,0 +1,192 @@
+﻿@{
+    ViewBag.Title = "安全检查列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    $(function () {
+        $.LodeMenuBtn("/Safe/SafeCheck/Index");
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 128;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 178;
+        } else {
+            Height = 128;
+        }
+        gridList(Height);
+        $("#CheckTimeS").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd HH:mm:ss',
+                maxDate: '#F{$dp.$D(\'CheckTimeE\')}'
+            });
+        });
+        $("#CheckTimeE").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd HH:mm:ss',
+                minDate: '#F{$dp.$D(\'CheckTimeS\')}'
+            });
+        });
+    });
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "SafeCheck")",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false, hidden: true },
+                { label: "检查编号", name: "SafeCheckCode", width: 100, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 150, align: 'left', sortable: false },
+                { label: "检查类型", name: "CheckTypeName", width: 150, align: 'left', sortable: false },
+                { label: '参与人员', name: 'PartInUsers', width: 200, align: 'left', sortable: false },
+                { label: "检查人", name: "CheckUserName", width: 80, align: 'left', sortable: false },
+                { label: '检查时间', name: 'CheckTime', width: 80, align: 'left', sortable: false },
+                { label: '问题描述', name: 'Remark', width: 200, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增安全检查信息", "@Url.Action("Form", "SafeCheck")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改安全检查",
+            url: "@Url.Action("Form", "SafeCheck")",
+            anyUrl: "@Url.Action("AnyInfo", "SafeCheck")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "SafeCheck")",
+            anyUrl: "@Url.Action("AnyInfo", "SafeCheck")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看安全检查",
+            url: "@Url.Action("Details", "SafeCheck")",
+            isbtn: false,
+            isAny: false,
+            isBack:false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "500px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'SafeCheck', rowData.Examinestatus, rowData.SafeCheckCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+    //加工厂选择
+    function selectFactory() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/1";
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "SafeCheck")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel divwidth1">
+        <div class="topPanel-btn divwidth2" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search divwidth2">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="ProcessFactoryCode">加工厂</option>
+                                <option value="CheckTime">检查时间</option>
+                            </select>
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                            <input id="ProcessFactoryName" name="ProcessFactoryCode" type="text" class="form-control SearchContent hidSearchContent" readonly="readonly" placeholder="加工厂">
+                            <span name="ProcessFactoryCode" class="input-group-btn input-group-btn-search SearchContent hidSearchContent">
+                                <button type="button" class="btn  btn-primary" onclick="selectFactory();"><i class="fa fa-search"></i></button>
+                            </span>
+                            <input id="CheckTimeS" name="CheckTime" type="text" class="form-control input-wdatepicker SearchContent hidSearchContent" style="width:180px;" placeholder="开始时间">
+                            <label class="input-label SearchContent hidSearchContent" name="CheckTime">~ &nbsp;</label>
+                            <input id="CheckTimeE" name="CheckTime" type="text" class="form-control input-wdatepicker SearchContent hidSearchContent" style="width:180px;" placeholder="结束时间">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                            <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

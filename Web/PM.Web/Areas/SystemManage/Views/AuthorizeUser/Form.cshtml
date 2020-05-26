@@ -1,0 +1,261 @@
+﻿@{
+    ViewBag.Title = "单条数据授权编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script type="text/javascript">
+    var menuCode = $.request("menuCode");
+    var dataID = $.request("dataID");
+    var type = "add";
+    $(function () {
+        gridList();
+        if (menuCode != "" && dataID != "") {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "AuthorizeUser")",
+                data: { menuCode: menuCode, dataID: dataID },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    var mydata = data.AuthorizeUser;
+                    lodeList(mydata);
+                    if (mydata != null) {
+                        type = "update";
+                        menuCode = data.MenuCode;
+                        dataID = data.DataID;
+                    }
+                }
+            });
+        }
+    });
+
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 120,
+            //multiselect: true,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: "用户编码", name: "BSQR", width: 80, align: 'left', sortable: false },
+                { label: '用户名称', name: 'UserName', width: 80, align: 'left', sortable: false },
+                { label: '授权开始日期', name: 'SDT', width: 150, editable: true, formatter: formatDatebox },
+                { label: '授权结束日期', name: 'EDT', width: 150, editable: true, formatter: formatDatebox },
+                { label: '备注', name: 'Reamrk', width: 300, align: "left", editoptions: { maxlength: "200" }, editable: true },
+                { label: "授权人", name: "SQR", hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true, null, null, null, null, null, null, null, iCol);
+                    lastsel = rowid;
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                $("#" + rowid + "_SDT").focus(function () {
+                    WdatePicker({
+                        readOnly: true,
+                        dateFmt: 'yyyy-MM-dd',
+                    });
+                });
+                $("#" + rowid + "_EDT").focus(function () {
+                    WdatePicker({
+                        readOnly: true,
+                        dateFmt: 'yyyy-MM-dd',
+                    });
+                });
+            },
+            editurl: "@Url.Action("RowEditing", "TargetCostTemplet", new { area = "CostManage" })",
+        });
+    }
+
+    //新增人员
+    function btn_add() {
+        $.modalOpen({
+            id: "UserForm",
+            title: "选择人员信息",
+            url: '@Url.Action("UserList", "PositionUser")',
+            width: "60%",
+            height: "650px",
+            callBack: function (iframeId) {
+                var backData = top.frames[iframeId].submitForm();
+                if (backData.userData.length > 0) {
+                    var index = top.layer.getFrameIndex(iframeId);
+                    top.layer.close(index);
+                    var row = backData.userData;
+                    var rowData = [];
+                    for (var i = 0; i < row.length; i++) {
+                        var mydata = {
+                            id: 0,
+                            BSQR: row[i].UserCode,
+                            UserName: row[i].UserName,
+                            SDT: "",
+                            EDT: "",
+                            Reamrk: "",
+                            SQR: "",
+                        };
+                        rowData.push(mydata);
+                    }
+                    lodeList(rowData);
+                }
+            }
+        });
+
+    }
+
+    //删除行
+    function btn_delete() {
+        //var ids = $("#gridList").jqGrid('getGridParam', 'selarrrow');//获取多行的id
+        //if (!ids.length < 1) {
+        //    $.modalMsg("请选择数据", "warning");
+        //    return false;
+        //}
+        //$(ids).each(function (index, yu) {
+        //    $("#gridList").jqGrid('delRowData', yu);
+        //});
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.BSQR); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.BSQR, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var retData = {};
+        retData.isOk = true;
+        var columnData = [];
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            retData.columnData = columnData;
+            return retData;
+        }
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            if (rowData.SDT == "" || rowData.EDT == "") {
+                $.modalMsg("第" + (index + 1) + "行，请完善日期信息", "warning");
+                retData.isOk = false;
+                return false;
+            }
+            else {
+                var start = new Date(rowData.SDT.replace("-", "/").replace("-", "/"));
+                var end = new Date(rowData.EDT.replace("-", "/").replace("-", "/"));
+                if (end < start) {
+                    $.modalMsg("第" + (index + 1) + "行，结束日期不能大于开始日期", "warning");
+                    retData.isOk = false;
+                    return false;
+                }
+            }
+            rowData.ID = 0;
+            rowData.MenuCode = menuCode;
+            rowData.DataID = dataID;
+            rowData.SQR = '@ViewBag.SQR';
+            columnData.push(rowData);
+        });
+        retData.columnData = columnData;
+        return retData;
+    }
+
+    //加载列表数据
+    var mydata = [];
+    var index = 0;
+    function lodeList(data) {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+            $("#gridList").jqGrid('clearGridData');
+        }
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+
+    function submitForm() {
+        var formData = {};
+        formData.MenuCode = menuCode;
+        formData.DataID = dataID;
+        var tableData = {};
+        var tableData = GetGridRowData();
+        if (tableData.isOk) {
+            if (tableData.columnData.length < 1) {
+                if (type == "add") {
+                    $.modalMsg("请填写数据", "warning");
+                    return false;
+                }
+                $.submitForm({
+                    url: "@Url.Action("DeleteForm", "AuthorizeUser")",
+                    param: { menuCode: formData.MenuCode, dataID: formData.DataID },
+                    success: function () {
+                        $.currentWindow().$("#gridList").trigger("reloadGrid");
+                    }
+                })
+            } else {
+                formData.AuthorizeUser = tableData.columnData;
+                $.submitForm({
+                    url: "@Url.Action("SubmitForm", "AuthorizeUser")",
+                    param: { param: JSON.stringify(formData), type: type },
+                    success: function () {
+                        $.currentWindow().$("#gridList").trigger("reloadGrid");
+                    }
+                })
+            }
+        }
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <div id="FJXXInfo" style="padding-top: 5px; margin: 10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div id="LodeBtn" class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>添加</a>
+            </div>
+            <div id="LodeBtn" class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o fa-lg"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top:1px;">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+

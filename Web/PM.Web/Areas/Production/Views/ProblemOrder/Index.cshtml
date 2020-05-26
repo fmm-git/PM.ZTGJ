@@ -1,0 +1,235 @@
+﻿@{
+    ViewBag.Title = "订单变更列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script>
+    $(function () {
+        $.LodeMenuBtn("/Production/ProblemOrder/Index");
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 128;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 178;
+        } else {
+            Height = 128;
+        }
+        gridList(Height);
+    });
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "ProblemOrder")",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', hidden: true },
+                { label: '审批状态', name: 'ExaminestatusNew', width: 80, align: 'left', sortable: false, formatter: SpZt },
+                { label: "订单变更编号", name: "ProblemOrderCode", width: 100, align: 'left', sortable: false },
+                { label: "原订单编号", name: "OrderCode", width: 100, align: 'left', sortable: false },
+                { label: '站点名称', name: 'SiteName', width: 100, align: 'left', sortable: false },
+                { label: "类型编号", name: "TypeCode", width: 140, align: 'left', sortable: false },
+                { label: '类型名称', name: 'TypeName', width: 140, align: 'left', sortable: false },
+                { label: "使用部位", name: "UsePart", width: 120, align: 'left', sortable: false },
+                { label: '撤销状态', name: 'RevokeStatus', width: 70, align: 'center', sortable: false, formatter: CxZt },
+                { label: '配送时间', name: 'DistributionTime', width: 100, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: '配送地址', name: 'DistributionAddress', width: 200, align: 'left', sortable: false },
+                { label: '原总量合计(kg)', name: 'OldTotal', width: 100, align: 'center', sortable: false },
+                { label: '变更总量合计(kg)', name: 'Total', width: 100, align: 'center', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false },
+                { label: '原订单状态', name: 'OldProcessingState', hidden: true }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    function SpZt(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (cellValue == "审核完成") {
+            tdhtml += "<span style='color:green;'>" + cellValue + "</span>";
+        } else if (cellValue == "已退回") {
+            tdhtml += "<span style='color:red;'>" + cellValue + "</span>";
+        } else {
+            tdhtml += "<span>" + cellValue + "</span>";
+        }
+        return tdhtml;
+    }
+
+    function CxZt(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (cellValue == "已撤销") {
+            tdhtml += "<span style='color:green;'>" + cellValue + "</span>";
+        } else if (cellValue == "未撤销") {
+            tdhtml += "<span style='color:red;'>" + cellValue + "</span>";
+        } else {
+            tdhtml += "<span>" + cellValue + "</span>";
+        }
+        return tdhtml;
+    }
+
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增订单变更信息", "@Url.Action("Form", "ProblemOrder")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改订单变更",
+            url: "@Url.Action("Form", "ProblemOrder")",
+            anyUrl: "@Url.Action("AnyInfo", "ProblemOrder")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "ProblemOrder")",
+            anyUrl: "@Url.Action("AnyInfo", "ProblemOrder")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看订单变更",
+            url: "@Url.Action("Details", "ProblemOrder")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "560px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        if (rowData.OldProcessingState != "Received") {
+            var a="";
+            if (rowData.OldProcessingState=="AlreadyReceived") {
+                a="已领料";
+            }
+            if (rowData.OldProcessingState=="Processing") {
+                a="加工中";
+            }
+            if (rowData.OldProcessingState=="Finishing") {
+                a="加工完成";
+            }
+            $.modalMsg("此订单处于"+a+"请于加工厂联系！", "warning");
+            return false;
+        }
+        var DataId = rowData.ID;
+        if (DataId) {
+            if (rowData.Examinestatus != "未发起") {
+                SeeApproval("ProblemOrder", DataId);
+            }
+            else {
+                var LoginUserCode = rowData.InsertUserCode;
+                examination(DataId, 'ProblemOrder', rowData.Examinestatus, rowData.ProblemOrderCode, rowData.ProjectId, LoginUserCode, "");
+            }
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+    //站点选择
+    function selectSite() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/5";
+        var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "ProblemOrder")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel divwidth1">
+        <div class="topPanel-btn divwidth2" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search divwidth2">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="RevokeStatus">撤销状态</option>
+                                <option value="SiteCode">站点名称</option>
+                                <option value="OrderCode">订单编号</option>
+                                <option value="TypeCode">类型编码</option>
+                            </select>
+                            <select id="RevokeStatus" name="RevokeStatus" class=" form-control SearchContent hidSearchContent" style="width: 140px; margin-left: 5px;">
+                                <option value="">请选择</option>
+                                <option value="未撤销">未撤销</option>
+                                <option value="已撤销">已撤销</option>
+                            </select>
+                            <input id="SiteCode" name="SiteCode" type="hidden">
+                            <input id="SiteName" name="SiteCode" type="text" class="form-control SearchContent hidSearchContent" readonly="readonly" placeholder="站点名称">
+                            <span class="input-group-btn input-group-btn-search SearchContent hidSearchContent" name="SiteCode">
+                                <button type="button" class="btn  btn-primary" onclick="selectSite();"><i class="fa fa-search"></i></button>
+                            </span>
+                            <input id="OrderCode" name="OrderCode" type="text" class="form-control SearchContent hidSearchContent">
+                            <input id="TypeCode" name="TypeCode" type="text" class="form-control SearchContent hidSearchContent">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                            <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

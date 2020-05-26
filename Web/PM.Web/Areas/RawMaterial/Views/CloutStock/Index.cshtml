@@ -1,0 +1,679 @@
+﻿@{
+    ViewBag.Title = "余料库存列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<link href="~/Content/js/datepicker/skin/WdatePicker.css" rel="stylesheet" />
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script src="~/Content/js/highstock.js"></script>
+<script>
+    var xkd = 0;
+    $(function () {
+        //设置统计图形的高度
+        var screenHeight = $("body").height();
+        $(".highchartImg").each(function () {
+            $(this).height(screenHeight * 0.45);
+            $(".highchartImgNew").each(function () {
+                $(this).height(screenHeight * 0.45-30);
+            });
+        });
+        $.LodeMenuBtn("/RawMaterial/CloutStock/Index");
+        $('#layout').layout();
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 30;
+        if (Number(whN[0]) < whN[1]) {
+            Height = -30;
+        } else {
+            Height = 30;
+        }
+        $(".ui-layout-center").css("padding", "10px");
+        leftList();
+        ReportForm1("");
+        var param = $(".divs1").GetSearchCondition();
+        var OrgType = $("input[name='OrgType']:checked").val();
+        param.OrgType = OrgType;
+        ReportForm2(param);
+        gridList(Height);
+        $(".ui-jqgrid ").css("margin-bottom", "10px");
+        //折叠ibox
+        $('.collapse-link').click(function () {
+            var ibox = $(this).closest('div.ibox');
+            var button = $(this).find('i');
+            var content = ibox.find('div.ibox-content');
+            content.slideToggle(150);
+            button.toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
+            ibox.toggleClass('').toggleClass('border-bottom');
+        });
+        $("#HistoryMonth1").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var HistoryMonth1 = dp.cal.getNewDateStr();
+                    var OrgType = $("input[name='OrgType']:checked").val();
+                    var param = $(".divs1").GetSearchCondition();
+                    param.HistoryMonth = HistoryMonth1;
+                    param.OrgType = OrgType;
+                    ReportForm2(param);
+                }
+            });
+        });
+        $("input[type='radio']").on("click",
+            function() {
+                var OrgType = $("input[name='OrgType']:checked").val();
+                if (OrgType == "2") {
+                    xkd = 0;
+                } else {
+                    xkd = 4;
+                }
+                var HistoryMonth1 = $("#HistoryMonth1").val();
+                var param = $(".divs1").GetSearchCondition();
+                param.HistoryMonth = HistoryMonth1;
+                param.OrgType = OrgType;
+                ReportForm2(param);
+            });
+        searchOneNew();
+        //余料流向
+        LxCsh();
+        gridListLx();
+    });
+    //余料库存列表
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "CloutStock")",
+            height: $(window).height() * 0.62+(Height),
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '所属项目', name: 'ProjectName', width: 180, align: 'left', hidden: true, sortable: false },
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: "加工厂名称", name: "ProcessFactoryName", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: '原材料编号', name: 'MaterialCode', width: 80, align: 'left', sortable: false },
+                { label: "原材料名称", name: "MaterialName", width: 80, align: 'left', sortable: false },
+                { label: '规格', name: 'SpecificationModel', width: 100, align: 'left', sortable: false },
+                { label: "尺寸（m;㎡）", name: "Size", width: 80, align: 'left', sortable: false },
+                { label: '单位重量(kg/m;㎡)', name: 'MeasurementUnitZl', width: 100, align: 'left', sortable: false },
+                { label: '库存数量（根）', name: 'Number', width: 100, align: 'left', sortable: false },
+                { label: '可用数量（根）', name: 'UseNumber', width: 100, align: 'left', sortable: false },
+                { label: '重量（kg）', name: 'Weight', width: 100, align: 'left', sortable: false },
+                { label: '厂家', name: 'Factory', width: 100, align: 'left', sortable: false },
+                { label: '炉批号', name: 'BatchNumber', width: 100, align: 'left', sortable: false },
+                { label: '数据来源', name: 'SourceType', width: 100, align: 'left', sortable: false, formatter: ShowText },
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".divs1").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function searchOneNew(){
+        $("#btn_searchOneNew").click(function () {
+            var postData = $(".divs1").formSerialize();
+            for (x in postData) {
+                if (x != "ProjectId") {
+                    postData[x] = "";
+                }
+            }
+            var ss = $("#SearchType").children('option:selected').val();
+            if (ss != "") {
+                var cons = $("[name='" + ss + "']");
+                $.each(cons, function (i, item) {
+                    postData[$(item)[0].id] = $(item).val();
+                });
+            }
+            $("#gridList").jqGrid('setGridParam', {
+                postData: postData,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+    }
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 50,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,
+            treeGridModel: 'adjacency',
+            ExpandColumn: 'CompanyFullName',
+            rownumbers: false,
+            onCellSelect: function (ucode) {//单击
+                var siteCode = getOrganizationalCode(ucode);
+            }
+        });
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpenAdd({
+            id: "Form",
+            title: "新增余料库存信息",
+            url: "@Url.Action("Form", "CloutStock")" + where,
+        });
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改余料库存",
+            url: "@Url.Action("Form", "CloutStock")",
+            anyUrl: "@Url.Action("AnyInfo", "CloutStock")",
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看余料库存",
+            url: "@Url.Action("Details", "CloutStock")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "CloutStock")",
+            anyUrl: "@Url.Action("AnyInfo", "CloutStock")",
+            isdel: true,
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "480px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "CloutStock")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+    //导入
+    function btn_other1() {
+        var name = "余料库存导入模板";
+        var url = "@Url.Action("SubmitInput", "CloutStock")" + "&exclName=" + name + "&isInput=true";
+        CommonOpenAdd({
+            title: "导入余料库存信息",
+            url: url,
+            windowType: 3,
+        });
+    }
+    function ShowText(cellvalue, options, rowObject) {
+        if (rowObject.SourceType == "1") {
+            var butHtm = '用户导入';
+            return butHtm;
+        }
+        else {
+            var butHtm = '系统添加';
+            return butHtm;
+        }
+    }
+
+    //余料当前库存统计
+    function ReportForm1(param) {
+        var maxCoount = 0;
+        var namey = [];
+        $.ajax({
+            url: "@Url.Action("GetCloutStockTotalReport", "CloutStock")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < data.Item1.length; i++) {
+                    namey.push({ name: data.Item1[i]["MaterialName"] + " " + data.Item1[i]["SpecificationModel"], y: parseFloat(data.Item1[i]["Weight"]) });
+                }
+                //Sum = data.Item2;
+                $("#kczl").html(data.Item2);
+                maxCoount = data.Item1.length-1;
+            }
+        });
+        if (maxCoount>6) {
+            maxCoount = 6;
+        }
+        var chart = Highcharts.chart('YlDqKcl', {
+            chart: {
+                type: 'column'
+            },
+            title: null,
+            xAxis: {
+                type: 'category',
+                crosshair: true,
+                max: maxCoount,
+                labels: {
+                    rotation: -45,  // 设置轴标签旋转角度
+                    formatter: function () {
+                        //获取到刻度值
+                        var labelVal = this.value;
+                        //实际返回的刻度值
+                        var reallyVal = labelVal;
+                        //判断刻度值的长度
+                        if (labelVal.length > 5) {
+                            //截取刻度值
+                            reallyVal = labelVal.substr(0, 5) + "<br/>" + labelVal.substring(5, labelVal.length);
+                        }
+                        return reallyVal;
+                    }
+                }
+            },
+            //设置滚动条
+            scrollbar: {
+                enabled: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '重量'
+                }
+            },
+            credits: {
+                enabled: false//是否显示版权信息
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+                pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f}kg</b><br/>'
+            },
+            series: [{
+                name: '库存量',
+                data: namey
+            }]
+        });
+    }
+    //余料生成及使用量统计
+    function ReportForm2(param) {
+        var namex = [];
+        var valuey1 = [];
+        var valuey2 = [];
+        var namey = [];
+        $.ajax({
+            url: "@Url.Action("GetCloutStockUseReport", "CloutStock")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    namex.push(data[i].CompanyName);
+                    valuey1.push(data[i].CloutCount);
+                    valuey2.push(data[i].PickCount);
+                }
+                namey.push({
+                    name: "余料生产量",
+                    data: valuey1
+                }, {
+                    name: "领料量",
+                    data: valuey2
+                });
+            }
+        });
+        var chart = Highcharts.chart('YlScJSyl', {
+            chart: {
+                type: 'column'
+            },
+            title: null,
+            xAxis: {
+                categories:namex,
+                type: 'category',
+                crosshair: true,
+                max: xkd,
+                labels: {
+                    rotation: -45,  // 设置轴标签旋转角度
+                    formatter: function () {
+                        //获取到刻度值
+                        var labelVal = this.value;
+                        //实际返回的刻度值
+                        var reallyVal = labelVal;
+                        //判断刻度值的长度
+                        if (labelVal.length > 5) {
+                            //截取刻度值
+                            reallyVal = labelVal.substr(0, 5) + "<br/>" + labelVal.substring(5, labelVal.length);
+                        }
+                        return reallyVal;
+                    }
+                }
+            },
+            legend: {
+                align: 'right', //水平方向位置
+                verticalAlign: 'top', //垂直方向位置
+                x: 0, //距离x轴的距离
+                y: 0
+            },
+            //设置滚动条
+            scrollbar: {
+                enabled: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '重量'
+                }
+            },
+            credits: {
+                enabled: false//是否显示版权信息
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                '<td style="padding:0"><b>{point.y:.1f} kg</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true
+            },
+            series: namey
+        });
+    }
+</script>
+<script>
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+    //余料流向列表
+    function gridListLx() {
+        var $gridList = $("#gridListLx");
+        $gridList.dataGrid({
+            url: "@Url.Action("GeCloutStockPlace", "CloutStock")",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '原材料编号', name: 'MaterialCode', width: 100, align: 'left', sortable: false },
+                { label: "原材料名称", name: "MaterialName", width: 80, align: 'left', sortable: false },
+                { label: '规格', name: 'SpecificationModel', width: 100, align: 'left', sortable: false },
+                { label: '原始项目', name: 'StartProjectName', width: 180, align: 'left', sortable: false },
+                { label: '原始站点', name: 'StartSiteName', width: 100, align: 'left', sortable: false },
+                { label: "流向项目", name: "EndProjectName", width: 180, align: 'left', sortable: false },
+                { label: "流向站点", name: "EndSiteName", width: 100, align: 'left', sortable: false },
+                { label: "流向时间", name: "PlaceTime", width: 120, align: 'left', sortable: false },
+                { label: '重量（kg）', name: 'Weight', width: 200, align: 'left', sortable: false },
+            ],
+            pager: "#gridPagerLx",
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search1").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".divs2").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search1').trigger("click");
+            }
+        }
+    }
+    //余料流向查询
+    function LxCsh() {
+        //列表搜索框
+        $("#SearchType1").change(function () {
+            var ss = $(this).children('option:selected').val();
+            if (ss == "") {
+                $(this).siblings().addClass("hidSearchContent");
+            }
+            var consh = $(".SearchContent");
+            $.each(consh,
+                function (i, item) {
+                    $(item).addClass("hidSearchContent");
+                });
+            var cons = $("[name='" + ss + "']");
+            $.each(cons,
+                function (i, item) {
+                    $(item).removeClass("hidSearchContent");
+                });
+        });
+        $("#btn_searchOne1").click(function () {
+            var postData = $(".divs2").formSerialize();
+            for (x in postData) {
+                if (x != "ProjectId") {
+                    postData[x] = "";
+                }
+            }
+            var ss = $("#SearchType1").children('option:selected').val();
+            if (ss != "") {
+                var cons = $("[name='" + ss + "']");
+                $.each(cons,
+                    function (i, item) {
+                        postData[$(item)[0].id] = $(item).val();
+                    });
+            }
+            $("#gridListLx").jqGrid('setGridParam',
+                {
+                    postData: postData,
+                    page: 1
+                }).trigger('reloadGrid');
+        });
+
+        $("#MaterialNameSelect1").bindSelect({
+            url: "/Distribution/DistributionPlan/MaterialNameSelect",
+            id: "MaterialName",
+            text: "MaterialName"
+        });
+
+        //原材料名称值改变事件
+        $("#MaterialNameSelect1").change("bind",
+            function() {
+                var MaterialNameSelect = $(this).find("option:selected").val();
+                $("#MaterialNames1").val(MaterialNameSelect);
+            });
+        $("#PlaceTimeS").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd HH:mm:ss',
+                maxDate: '#F{$dp.$D(\'PlaceTimeE\')}'
+            });
+        });
+        $("#PlaceTimeE").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd HH:mm:ss',
+                minDate: '#F{$dp.$D(\'PlaceTimeS\')}'
+            });
+        });
+    }
+    //站点选择
+    function selectSiteS() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/5"
+        var str = "SiteCodeS=CompanyCode,SiteNameS=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+    }
+    //站点选择
+    function selectSiteE() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/5"
+        var str = "SiteCodeE=CompanyCode,SiteNameE=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <ul class="nav nav-tabs">
+            <li id="YLKC" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);" style="color:#000000">余料库存</a></li>
+            <li id="YLLX" onclick="selectTab($(this))"><a href="javascript:void(0);" style="color:#000000">余料流向</a></li>
+        </ul>
+        <div id="YLKCInfo">
+            <div class="topPanel divwidth1">
+                <div class="topPanel-btn divwidth2" id="toolbar">
+                    <div class="btn-group">
+                        <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                    </div>
+                </div>
+                <div class="divs1 search divwidth2">
+                    <table>
+                        <tr>
+                            <td>
+                                <div class="input-group input-group-search">
+                                    <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                        <option value="">全部</option>
+                                        <option value="MaterialName">原材料名称</option>
+                                        <option value="SpecificationModel">规格型号</option>
+                                        <option value="HistoryMonth">历史月份</option>
+                                    </select>
+                                    <select id="MaterialNameSelect" name="MaterialName" class=" form-control SearchContent hidSearchContent">
+                                        <option value="">请选择原材料名称</option>
+                                    </select>
+                                    <input type="hidden" id="MaterialName" name="MaterialName" />
+                                    <input id="SpecificationModel" name="SpecificationModel" placeholder="规格型号" type="text" class="form-control SearchContent hidSearchContent">
+                                    <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-search">
+                                    <a class="btn btn-primary" id="btn_searchOneNew">查询</a>
+                                    <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="gridPanel">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5 id="ReportTitel">报表展示</h5>
+                        <div class="ibox-tools" style="float: left; padding-left: 5px;">
+                            <a class="collapse-link" style="color:#1490fa">
+                                <i class="fa fa-chevron-up"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ibox-content" style="padding:5px">
+                        <div class="row" style="margin-top: 10px; margin-right:0px;">
+                            <div style="float:left; width:49%;margin-left:20px;">
+                                <div class="ImgTitle" style="width:100%;height:20px;">
+                                    <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">库存总量:<label id="kczl"></label>kg</div>
+                                    <div style="float:right;padding-right:15px;font-size:16px;font-weight:600;">单位：kg</div>
+                                </div>
+                                <div id="YlDqKcl" style="float: left; width: 100%;" class="highchartImg"></div>
+                            </div>
+
+                            <div style="float: left; width: 49%;" class="highchartImg">
+                                <div class="ImgTitle" style="width:100%;height:20px;">
+                                    <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">
+                                        <div style="float:left;padding-left:30px;">
+                                            <input name="OrgType" type="radio" value="2" checked="checked" />经理部
+                                            <input name="OrgType" type="radio" value="3" />分部
+                                            <input name="OrgType" type="radio" value="4" />工区
+                                        </div>
+                                        <div style="float:left;margin-left:20px;">
+                                            <input id="HistoryMonth1" name="HistoryMonth1" type="text" class="form-control required input-wdatepicker" style="padding-bottom:0px;padding-top:0px;height:25px;width:120px;" placeholder="历史月份" />
+                                        </div>
+                                    </div>
+                                    <div style="float:right;padding-right:15px;font-size:16px;font-weight:600;">单位：kg</div>
+                                </div>
+                                <div id="YlScJSyl" class="highchartImgNew"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="gridPanel">
+                <table id="gridList"></table>
+                <div id="gridPager" style="position: fixed; bottom: 0; background-color: #F9F9F9;"></div>
+            </div>
+        </div>
+        <div id="YLLXInfo"style="display:none">
+            <div class="topPanel">
+                <div class="divs2 search">
+                    <table>
+                        <tr>
+                            <td>
+                                <div class="input-group input-group-search">
+                                    <select id="SearchType1" name="SearchType1" class="form-control" style="width: 120px;">
+                                        <option value="">全部</option>
+                                        <option value="MaterialName1">原材料名称</option>
+                                        <option value="SpecificationModel1">规格型号</option>
+                                        <option value="SiteCodeS">原始站点</option>
+                                        <option value="SiteCodeE">流向站点</option>
+                                        <option value="PlaceTime">时间选择</option>
+                                    </select>
+                                    <select id="MaterialNameSelect1" name="MaterialName1" class=" form-control SearchContent hidSearchContent">
+                                        <option value="">请选择</option>
+                                    </select>
+                                    <input type="hidden" id="MaterialName1" name="MaterialName1" />
+                                    <input id="SpecificationModel1" name="SpecificationModel1" placeholder="规格型号" type="text" class="form-control SearchContent hidSearchContent">
+                                    <input id="SiteCodeS" type="hidden" name="SiteCodeS">
+                                    <input id="SiteNameS" type="text" name="SiteCodeS" class="form-control SearchContent hidSearchContent" readonly="readonly" placeholder="原始站点">
+                                    <span class="input-group-btn input-group-btn-search SearchContent hidSearchContent" name="SiteCodeS">
+                                        <button type="button" class="btn  btn-primary" onclick="selectSiteS();"><i class="fa fa-search"></i></button>
+                                    </span>
+                                    <input id="SiteCodeE" type="hidden" name="SiteCodeE">
+                                    <input id="SiteNameE" type="text" name="SiteCodeE" class="form-control SearchContent hidSearchContent" readonly="readonly" placeholder="流向站点">
+                                    <span class="input-group-btn input-group-btn-search SearchContent hidSearchContent" name="SiteCodeE">
+                                        <button type="button" class="btn  btn-primary" onclick="selectSiteE();"><i class="fa fa-search"></i></button>
+                                    </span>
+                                    <input id="PlaceTimeS" type="text" name="PlaceTime" class="form-control input-wdatepicker SearchContent hidSearchContent" style="width:180px;" placeholder="开始时间">
+                                    <label name="PlaceTime" class="input-label SearchContent hidSearchContent">~</label>
+                                    <input id="PlaceTimeE" type="text" name="PlaceTime" class="form-control input-wdatepicker SearchContent hidSearchContent" style="width:180px;" placeholder="结束时间">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-search">
+                                    <a class="btn btn-primary" id="btn_searchOne1">查询</a>
+                                    <a class="btn btn-primary" id="btn_search1">结果中搜索</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="topPanel-btn" id="toolbar">
+                    <div class="btn-group">
+                        <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                    </div>
+                </div>
+            </div>
+            <div class="gridPanel">
+                <table id="gridListLx"></table>
+                <div id="gridPagerLx"></div>
+            </div>
+        </div>
+    </div>
+</div>
+

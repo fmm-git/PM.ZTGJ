@@ -1,0 +1,75 @@
+﻿@{
+    ViewBag.Title = "配送完成时间";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/uploadFile.js"></script>   
+
+<script>
+    $(function () {
+        $("#DistributionTime").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd ',
+                maxDate: new Date(),
+            });
+        });
+    })
+
+    //提交数据
+    function submitForm() {
+        var distributionTime = $("#DistributionTime").val();
+        var enclosure = $("#Enclosure").val();
+        if (!enclosure) {
+            $.modalMsg("请上传签收单", "warning");
+            return false;
+        }
+        var remark = $("#Remark").val();
+        var ID = '@ViewBag.keyValue';
+        $.deleteForm({
+            prompt: "注：您确定订单配送已经完成吗？",
+            loading: "正在提交数据...",
+            url: "@Url.Action("DeliveryConfirm", "WorkOrder")",
+            param: { keyValue: ID, deliveryCompleteTime: distributionTime, Enclosure: enclosure, Remark: remark },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+                top.layer.closeAll();
+            }
+        });
+    }
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), "", "SemiFinishedSign");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "SemiFinishedSign");
+    }
+</script>
+
+<div style="padding-top: 5px;margin-right:10px;">
+    <form id="form1" style="margin-left:-40px;">
+        <input id="Enclosure" name="Enclosure" type="hidden" />
+        <table class="form">
+            <tr>
+                <th class="formTitle">配送完成时间<span class="required1">*</span></th>
+                <td class="formValue">
+                    <input id="DistributionTime" name="DistributionTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" class="form-control required input-wdatepicker" readonly="readonly" style="width:160px;" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">附件</th>
+                <td class="formValue">
+                    <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                    <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                    <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">备注</th>
+                <td class="formValue">
+                    <textarea id="Remark" name="Remark" class="form-control" style="height: 100px;"></textarea>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>

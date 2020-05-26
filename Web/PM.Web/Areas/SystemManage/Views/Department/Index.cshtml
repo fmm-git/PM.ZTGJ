@@ -1,0 +1,171 @@
+﻿@{
+    ViewBag.Title = "部门Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    var Tc = $.request("tc");
+    var code = $.request("code");
+    var projectId;
+    $(function () {
+        $('#layout').layout();
+        $.LodeMenuBtn("/SystemManage/Department/Index");//这里是对应网页的菜单管理地址
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        RoleView();
+        gridList();
+    });
+    function RoleView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/SystemManage/Company/GetAllCompanyOrBySearch",
+            height: $(window).height() - 50,
+            colModel: [
+                { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+                { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                { label: "组织机构类型", name: "OrgType", hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                var CompanyId = $("#leftgridList").jqGrid('getRowData', ucode);
+                clickCompany(ucode);
+            }
+        });
+    }
+    function clickCompany(id) {
+        var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+        if (CompanyId.OrgType == "1") {
+            projectId = "6245721945602523136";
+        } else {
+            checkParent(id);//获取所属项目
+        }
+        $("#gridList").jqGrid('setGridParam', {
+            postData: { DepartmentType: CompanyId.OrgType, DepartmentProjectId: projectId },
+        }).trigger('reloadGrid');
+    }
+    function checkParent(rowid) {
+        var CompanyId = $("#leftgridList").jqGrid("getLocalRow", rowid);
+        if (CompanyId.level != 0) {
+            var parent = $("#leftgridList").jqGrid('getNodeParent', $("#leftgridList").jqGrid("getLocalRow", rowid));
+            checkParent(parent.CompanyCode);
+        }
+        else {
+            projectId = CompanyId.CompanyCode;
+        }
+    }
+    function gridList(urlcode) {
+        var $gridList = $("#gridList");
+        var newurl = "/SystemManage/Department/GetGridJson";
+        $gridList.dataGrid({
+            height: $(window).height() - 128,
+            url: newurl,
+            colModel: [
+                { label: "标识ID", name: "id", hidden: true, key: true },
+                { label: '部门编号', name: 'DepartmentCode', hidden: true },
+                { label: '部门编号', name: 'DepartmentId', hidden: true },
+                { label: '部门名称', name: 'DepartmentName', sortable: false, width: 180, align: 'left' },
+                {
+                    label: '部门所属层级', name: 'DepartmentType', sortable: false, width: 180, align: 'left', formatter: function (value, options, rowObject) {
+                        var code = rowObject.DepartmentType;
+
+                        if (code == "1") {//加工厂
+                            return "加工厂"
+                        } else if (code == "2") {//经理部
+                            return "经理部"
+                        } else if (code == "3") {//分部
+                            return "分部"
+                        } else if (code == "4") {//工区
+                            return "工区"
+                        } else if (code == "5") {//工点
+                            return "工点"
+                        }
+                        else {
+                            return "";
+                        }
+                    }
+                },
+                { label: '部门所属项目', name: 'ProjectName', sortable: false, width: 180, align: 'left' }
+            ],
+            pager: "#gridPager",
+            sortname: 'DepartmentId',
+            sortorder: 'desc',
+            viewrecords: true,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    //同步部门
+    function SynchronizationDept() {
+        var url = "server/byServer/queryDepartmentList.json";
+        $.loading(true, "正在同步数据...");
+        $.ajax({
+            url: "/api/SystemManage/GetDepartmentList",
+            data: { url: url },
+            type: "get",
+            success: function (data) {
+                if (data.state == "success") {
+                    $.loading(false);
+                    $.modalMsg("同步成功", data.state);
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                } else {
+                    $.loading(false);
+                    $.modalMsg("同步失败", "error");
+                }
+            },
+            error: function () {
+                $.loading(false);
+                $.modalMsg("同步失败", "error");
+            }
+        });
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div id="disLeft" class="ui-layout-west">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="DepartmentName" type="text" class="form-control" placeholder="部门名称" style="width: 200px;">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_search">查询</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="topPanel-btn" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+                <div class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="SynchronizationDept()"><i class="fa fa-sava"></i>同步部门</a>
+                </div>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

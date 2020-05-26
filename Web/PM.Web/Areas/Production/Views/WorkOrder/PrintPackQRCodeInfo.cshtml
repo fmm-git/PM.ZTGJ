@@ -1,0 +1,45 @@
+﻿@{
+    ViewBag.Title = "打包二维码打印";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/jqprint/jquery.jqprint-0.3.js"></script>
+<link href="~/Content/js/jqprint/jquery.jqprint.css" rel="stylesheet" />
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<script>
+    $(function () {
+        $('#layout').layout();
+        $("#icon_left").hide();
+        $("#icon_right").hide();
+    });
+    //打印
+    function Winprint() {
+        $("#print").jqprint();//打印
+    }
+    //关闭
+    function CloseWindow() {
+        window.close();
+    }
+</script>
+
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%; ">
+    <div class="ui-layout-west" style="overflow: scroll; overflow-x: hidden; text-align:center">
+        <br />
+        <a href="#" class="btn btn-primary dropdown-text" onclick="Winprint()" style="width:100px"><i class="fa fa-print"></i>打印</a><br /><br />
+        <a href="#" class="btn btn-primary dropdown-text" onclick="CloseWindow()" style="width:100px"><i class="fa fa-close"></i>关闭</a>
+    </div>
+    <div class="ui-layout-center">
+        <div id="print">
+            <style type="text/css">
+                    .printDiv {
+                        width: 100%;
+                        margin: 0 auto;
+                        float: left;
+                        margin-top: 15px;
+                        /*padding-left: 50px;*/
+                    }
+                </style>
+                @Html.Raw(ViewBag.PrintData)
+        </div>
+    </div>
+</div>

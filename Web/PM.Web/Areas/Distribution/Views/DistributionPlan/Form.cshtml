@@ -1,0 +1,43 @@
+﻿@{
+    ViewBag.Title = "计划配送时间修改";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script>
+    $(function () {
+        var DateTime = '@ViewBag.DistributionTime';
+        var aa = new Date(DateTime.replace(/-/g, '/')).Format("yyyy-MM-dd");//日期格式化
+        $("#DistributionTime").val(aa);
+    })
+
+    //提交数据
+    function submitForm() {
+        var DistributionTime = $("#DistributionTime").val();
+        var ID = '@ViewBag.keyValue ';
+        $.submitForm({
+            url: "/Distribution/DistributionPlan/SubmitForm",
+            param: { DistributionTime: DistributionTime, ID: ID },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <div style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <table style="margin-left:40px; margin-top:10px;">
+                <tr>
+                    <th>计划配送时间<span class="required1">*</span></th>
+                    <td>
+                        <input id="DistributionTime" name="DistributionTime" type="text" class="form-control required input-wdatepicker"  onfocus="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" readonly="readonly" style="width:160px;"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+
+

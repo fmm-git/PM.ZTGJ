@@ -1,0 +1,173 @@
+﻿@{
+    ViewBag.Title = "岗位列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    $(function () {
+        $('#layout').layout();
+        //加载菜单按钮
+        $.LodeMenuBtn("/SystemManage/Position/Index");
+        RoleView();
+        gridList();
+    })
+
+    function RoleView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "@Url.Action("GetTreeJsonForList", "Position")",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: "公司Code", name: "Code", hidden: true, key: true },
+                { label: '组织机构', name: 'Name', width: 220, align: 'left' },
+                { label: "是否公司", name: "isCompany", hidden: true},
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'Name',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                $("#gridList").jqGrid('setGridParam', {
+                    postData: { PositionName: $("#PositionName").val(), FullCode: ucode },
+                }).trigger('reloadGrid');
+            }
+        });
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            //ExpandColumn: 'PositionCode',//树型结构在哪列显示
+            url: "@Url.Action("GetGridJson", "Position")",
+            height: $(window).height() - 96,
+            rownumbers: false,
+            ExpandColClick: true,
+            colModel: [
+                { label: "岗位名称", name: "PositionName", width: 350, align: 'left', sortable: false },
+                { label: "岗位编号", name: "PositionCode", hidden: true, key: true },
+                { label: "部门编号", name: "DepartmentCode", hidden: true },
+                { label: "部门名称", name: "DepartmentName", width: 200, align: 'left', sortable: false },
+                { label: "公司编号", name: "CompanyCode", hidden: true },
+                { label: "公司名称", name: "CompanyFullName", width: 300, align: 'left', sortable: false },
+                { label: '录入人', name: 'CreateUser', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+            ],
+            ondblClickRow: function (rowid) {
+                btn_details(rowid);
+            }
+        });
+        $("#btn_search").click(function () {
+            var treeNodeId = "";
+            var treeNode = $("#leftgridList").jqGridRowValue();
+            if (treeNode != null) {
+                var itemId = treeNode.Code;
+                if (itemId) {
+                    treeNodeId = itemId;
+                }
+            }
+            $gridList.jqGrid('setGridParam', {
+                postData: { PositionName: $("#PositionName").val(), FullCode: treeNodeId },
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    function btn_add() {
+        var where = "?type=add";
+        var depCode = "";
+        var treeNode = $("#leftgridList").jqGridRowValue();
+        if (treeNode != null && treeNode.isCompany==0) {
+            var itemId = treeNode.Code;
+            if (itemId) {
+                depCode = itemId;
+                where = where + "&depCode=" + depCode;
+            }
+        }
+        if (depCode == "") {
+            $.modalMsg("请选择部门信息", "warning");
+            return false;
+        }
+        CommonOpen("Form", "新增岗位信息", "@Url.Action("Form", "Position")" + where, true, true);
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改岗位",
+            url: "@Url.Action("Form", "Position")",
+            isAny: false,
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "Position")",
+            isAny: false,
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看岗位",
+            url: "@Url.Action("Detail", "Position")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "30%",
+            height: "400px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+</script>
+
+
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow:no-display;">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="toolbar" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="PositionName" type="text" class="form-control" placeholder="岗位名称" style="width: 200px;">
+                                @*<input id="PositionName" type="text" class="form-control" placeholder="岗位编号" style="width: 200px;">*@
+                                <span class="input-group-btn">
+                                    <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

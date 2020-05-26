@@ -1,0 +1,897 @@
+﻿@{
+    ViewBag.Title = "原材料生产领料添加/修改界面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script src="~/Content/js/BWSPName.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    //var keyValue = $.request("keyValue");
+    var keyValue = '@ViewBag.keyValue';
+    var type = $.request("type");
+    var CompanyCode = $.request("CompanyCode");
+    var OrderCode = $.request("OrderCode"); //订单编号
+    var ProjectId = top.clients.projectId;
+    $(function () {
+        //$('.layui-layer-max', parent.document)[0].click();//窗口默认最大化
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();
+        initControl(); //初始化
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "RMProductionMaterial")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    ProjectId = data.Item1[0].ProjectId;
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data.Item2, true); //加载明细信息
+                    setBackData(data.Item3);
+
+                }
+            });
+        }
+        $(window).resize(function () {
+            $("#gridList").setGridHeight($(window).height() - 160);
+        });
+    });
+
+    function initControl() {
+        if (OrderCode) {
+            $.ajax({
+                url: "@Url.Action("TypeNameSelect", "RMProductionMaterial")",
+                data: { keyword: OrderCode },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#OrderCode").val(data.rows[0].OrderCode);
+                    $("#TypeName").val(data.rows[0].TypeName);
+                    $("#TypeCode").val(data.rows[0].TypeCode);
+                    $("#ProcessFactoryCode").val(data.rows[0].ProcessFactoryCode);
+                    $("#ProcessFactoryName").val(data.rows[0].ProcessFactoryName);
+                    $("#SiteCode").val(data.rows[0].SiteCode);
+                    $("#SiteName").val(data.rows[0].SiteName);
+                    $("#WorkAreaCode").val(data.rows[0].WorkAreaCode);
+                    $("#WorkAreaName").val(data.rows[0].WorkAreaName);
+                    $("#BranchCode").val(data.rows[0].BranchCode);
+                    $("#BranchName").val(data.rows[0].BranchName);
+                    $("#CollarPosition").val(data.rows[0].CollarPosition);
+                    $("#ProjectId").val(data.rows[0].ProjectId);
+                    //加载明细数据
+                    getAddData();
+                    // 默认选中明细选项卡
+                    $("#MXXX").click();
+                }
+            });
+
+        }
+    }
+    //加工订单选择
+    function selectOrder() {
+        var url = '/RawMaterial/RMProductionMaterial/TypeNameSelect&keyValue=ProjectId/' + ProjectId + "|SiteCode/" + CompanyCode;
+        var str = 'OrderCode,TypeCode,CollarPosition,ProcessFactoryCode,ProcessFactoryName,SiteName,SiteCode,WorkAreaName,WorkAreaCode,BranchCode,BranchName';
+        var ret = selectClick('win_OrderCode', url, 'Grid', 'InsertTime', '', '', '50%', '450px', function (data) {
+            //清空明细信息
+            $("#gridList").jqGrid('clearGridData');
+            $("#Total").val("0");
+            setBackData([]);
+        })
+    }
+
+    //提交数据
+    function submitForm() {
+        PostData(1);
+    }
+
+    //确认并打印
+    function submitForm2() {
+        PostData(2);
+    }
+
+    function PostData(isPrint) {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        //获取尺寸返回信息
+        var backData = getBackData();
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "RMProductionMaterial")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), itemModelBack: JSON.stringify(backData), type: type },
+            success: function (data) {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+                //1.当月领料订单分析饼状图
+                if (typeof ($.currentWindow().thisMonthOrder) == 'function') {
+                    $.currentWindow().thisMonthOrder();
+                }
+                //2.当月各站点领料分析
+                if (typeof ($.currentWindow().thisMonthOrderZ) == 'function') {
+                    $.currentWindow().thisMonthOrderZ();
+                }
+                if (isPrint == 2) {
+                    var keyValue = data.data;
+                    $.modalOpen({
+                        id: "Print",
+                        title: "打印",
+                        url: "@Url.Action("Print", "RMProductionMaterial")" + "?keyValue=" + keyValue,
+                        width: "70%",
+                        height: "89%",
+                        btn: null,
+                    });
+                }
+
+            }
+        })
+    }
+
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var collarCode = $("#CollarCode").val();
+        var columnData = [];
+        var sumCount = 0;
+        var weightSum = 0;
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.CollarCode = collarCode;
+            var DemandNum = parseFloat(rowData.WeightSmallPlanN);
+            if (isNaN(DemandNum)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            }
+            var weightSmallPlanNH = parseFloat(rowData.WeightSmallPlanNH);//未领料重量
+            if (isNaN(weightSmallPlanNH) || weightSmallPlanNH <= 0) {
+                $.modalMsg("领料已完成", "warning");
+                columnData = [];
+                return false;
+            }
+            if (rowData.NumberH == "0" || rowData.NumberH == "") {
+                $.modalMsg(rowData.MaterialCode + "领料数量不能为0", "warning");
+                columnData = [];
+                return false;
+            }
+            if (rowData.InOrderItemId == "") {
+                $.modalMsg(rowData.MaterialCode + "请选择炉批号", "warning");
+                columnData = [];
+                return false;
+            }
+            //var weightSmallPlan = parseFloat(rowData.WeightSmallPlan);//重量小计
+            //var weightSmallPlanN = parseFloat(rowData.WeightSmallPlanN);//领料重量小计
+            //if (isNaN(weightSmallPlan) || isNaN(weightSmallPlanN) || weightSmallPlan > weightSmallPlanN) {
+            //    $.modalMsg("领料数据尺寸不够", "warning");
+            //    columnData = [];
+            //    return false;
+            //}
+            columnData.push(rowData);
+
+            var weightSmallPlanN = parseFloat(rowData.WeightSmallPlanN);//领料重量小计
+            sumCount += weightSmallPlanN;
+            weightSum += parseFloat(rowData.WeightSmallPlan);
+        });
+        $("#Total").val(sumCount.toFixed(5));
+        $("#WeightSum").val(weightSum.toFixed(5));
+        return columnData;
+    }
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        else {
+            GetGridRowData();
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "RMProductionMaterial");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "RMProductionMaterial");
+    }
+</script>
+
+<!---------明细信息------->
+<script type="text/javascript">
+
+    var isOrderAdd = false;
+    if ($.request("OrderCode")) {
+        isOrderAdd = true;
+    }
+    var mydata = [];
+    var index = 1;
+    var lastsel = 0;
+    var backData = [];
+    var DetailsData = [];
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() * 0.65,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: "订单编号", name: "OrderCode", hidden: true },
+                    { label: "余料库存ID", name: "CloutStockID", hidden: true },
+                    { label: '构件名称<span class="required1">*</span>', name: 'ComponentName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料编号<span class="required1">*</span>', name: 'MaterialCode', width: 100, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称<span class="required1">*</span>', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '规格<span class="required1">*</span>', name: 'SpecificationModel', width: 120, align: "left", sortable: false },
+                    { label: '单位重量(kg/m;㎡)', name: 'MeasurementUnitZl', width: 120, align: "left", sortable: false },
+                    { label: '单件用量(m;㎡)', name: 'ItemUseNum', width: 100, align: "left", sortable: false },
+                    { label: '件数', name: 'Number', width: 60, align: "left", sortable: false },
+                    { label: '重量小计(kg)', name: 'WeightSmallPlan', width: 80, align: "left", sortable: false },
+                    { label: '未领料重量小计', name: 'WeightSmallPlanNH', hidden: true },
+                    { label: '领料件数', name: 'NumberShow', width: 60, align: "left", sortable: false },
+                    { label: '使用材料类型<span class="required1">*</span>', name: 'RMTypeName', width: 100, align: "center", sortable: false, editable: true, edittype: "select", editoptions: { value: "余料优先:余料优先;原材料:原材料" }, },
+                    { label: '尺寸(m;㎡)<span class="required1">*</span>', name: 'SizeSelectionStr', width: 200, align: "left", sortable: false, editable: true },
+                    { label: '数量(根)', name: 'RootNumberStr', width: 200, align: "left", sortable: false },
+                    { label: '领料重量小计(kg)', name: 'WeightSmallPlanN', width: 100, align: "left", sortable: false, editable: true },
+                    { label: '厂家', name: 'Manufactor', width: 100, align: "left", sortable: false, editable: true },
+                    { label: '炉批号', name: 'HeatNo', width: 100, align: "left", sortable: false },
+                    { label: '检测报告编号', name: 'TestReportNo', width: 140, align: "left", sortable: false },
+                    { label: "库存记录id", name: "InOrderItemId", hidden: true },
+                    { label: "加工订单明细Id", name: "WorkOrderItemId", hidden: true },
+                    { label: "尺寸", name: "SizeSelectionH", hidden: true },
+                    { label: "数量(根)", name: "RootNumberH", hidden: true },
+                    { label: "领料重量小计", name: "WeightSmallPlanNHH", hidden: true },
+                    { label: "领料件数", name: "NumberHH", hidden: true },
+                    { label: "尺寸", name: "SizeSelection", hidden: true },
+                    { label: "数量", name: "RootNumber", hidden: true },
+                    { label: '领料件数', name: 'NumberH', hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                $($("#gridList").find("tr")).each(function (index, item) {
+                    if (index != 0) {
+                        $(this).removeClass("success");
+                    }
+                });
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel);
+                    editRow(rowid)
+                }
+            }
+        });
+    }
+
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        var rowData = $("#gridList").jqGrid("getRowData", rowid);
+        if (rowData.MaterialName == "圆钢" || rowData.MaterialName == "螺纹钢") {
+            //尺寸选择弹出框选择
+            $("#" + rowid + "_SizeSelectionStr").focus(function () {
+                var text = $($(this).parent().prev()).find("option:selected").text();
+                $(this).removeAttr("readonly");
+                selecteTargetCostItem(this, rowid, text);
+                $(this).attr("readonly", "readonly");
+            });
+            //领料重量小计
+            var wn = $("#" + rowid + "_WeightSmallPlanN").val();
+            $("#" + rowid + "_WeightSmallPlanN").parent().html(wn);
+            //材料类型
+            $("#" + rowid + "_RMTypeName").change(function () {
+                var text = $(this).find("option:selected").text();
+                var domepp = $(this).parent().parent().children();
+                var domep = $(this).parent().next();
+                if (text != "余料优先") {
+                    var a = $(domepp[23]).html();//尺寸
+                    var b = $(domepp[24]).html();//数量
+                    var c = $(domepp[25]).html();//重量小计
+                    var d = $(domepp[26]).html();//领料数量
+                    $(domep).children().val("");//尺寸
+                    $(domep.next()).html(b);//数量
+                    $(domep.next().next()).children().val(c);//领料重量小计
+                    $(domepp[13]).html(d);//领料数量
+                    $(domepp[27]).html(a);//尺寸
+                    $(domepp[28]).html(b);//数量
+                }
+                else {
+                    $(domepp[3]).html("");//余料库存Id
+                    $(domepp[13]).html("");//领料数量
+                    $(domepp[27]).html("");//领料重量小计
+                    $(domepp[28]).html("");//领料重量小计
+                    $(domep).children().val("");//尺寸
+                    $(domep.next()).html("");//数量
+                    $(domep.next().next()).children().val("");//领料重量小计
+                }
+            });
+        } else {
+            $("#" + rowid + "_SizeSelectionStr").parent().html("0");
+            $("#" + rowid + "_RMTypeName").val("原材料").attr("disabled", "disabled");
+            $("#" + rowid + "_WeightSmallPlanN")
+              .keyup(function () { regTextBox(this, true); })
+              .bind("paste", function () { regTextBox(this, true); })
+              .blur(function () { }).css("ime-mode", "disabled");
+        }
+        $("#" + rowid + "_Manufactor").focus(function () {
+            $(this).removeAttr("readonly");
+            getTestReportList(this, rowid);
+            $(this).attr("readonly", "readonly");
+        });
+    }
+
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    //尺寸选择
+    function selecteTargetCostItem(obj, rowid, text) {
+        var rowData = $("#gridList").jqGrid("getRowData", rowid);
+        var materialCode = rowData.MaterialCode;
+        var itemUseNum = rowData.ItemUseNum;
+        var measurementUnitZl = rowData.MeasurementUnitZl;
+        var weightSmallPlan = rowData.WeightSmallPlan;
+        var number = rowData.Number;
+        var workOrderItemId = rowData.WorkOrderItemId;
+        var materialName = rowData.MaterialName;
+        var collarCode = $("#CollarCode").val();
+        var workAreaCode = $("#WorkAreaCode").val();
+        var where = "?MaterialCode=" + materialCode + "&ItemUseNum=" + itemUseNum +
+                   "&WeightSmallPlan=" + weightSmallPlan + "&Number=" + number +
+                   "&WorkOrderItemId=" + workOrderItemId + "&MaterialName=" + materialName +
+                   "&Text=" + text + "&CollarCode=" + collarCode +
+                   "&WorkAreaCode=" + workAreaCode + "&ProjectId=" + $("#ProjectId").val() +
+                   "&SpecificationModel=" + rowData.SpecificationModel +
+                   "&MeasurementUnitZl=" + measurementUnitZl;
+        $.modalOpen({
+            id: "Plan",
+            title: "尺寸选择",
+            url: "@Url.Action("Plan", "RMProductionMaterial")" + where,
+            width: "70%",
+            height: "89%",
+            btn: ['确认', '关闭'],
+            callBack: function (iframeId) {
+                top.frames[iframeId].BackData({
+                    success: function (data) {
+                        if (data != false && data.rowData.length > 0) {
+                            var Size = 0;
+                            var Number = 0;
+                            var Weight = 0;
+                            var NumberH = data.numberH;
+                            var CloutStockIDs = [];
+                            var Sizes = [];
+                            var Numbers = [];
+                            var backDataTem = [];
+                            $.each(data.rowData, function (i, item) {
+                                Size += parseFloat(item.SizeSelection);
+                                Number += parseFloat(item.RootNumber);
+                                Weight += parseFloat(item.WeightSmallPlanN);
+                                if (item.RMTypeName == "余料") {
+                                    CloutStockIDs.push(item.StockID);
+                                }
+                                Sizes.push(item.SizeSelection);
+                                Numbers.push(item.RootNumber);
+
+                                backDataTem.push(item);
+                            });
+                            if (backData.length > 0) {
+                                $.each(backData, function (i, j) {
+                                    if (j.WorkOrderItemId != workOrderItemId) {
+                                        backDataTem.push(j);
+                                    }
+                                });
+                            }
+                            backData = backDataTem;
+                            getRetYLData(backData);
+                            var cloutStockIDsStr = CloutStockIDs.join(",");
+                            var sizesStr = Sizes.join(" | ");
+                            var numbersStr = Numbers.join(" | ");
+                            $(obj).val(sizesStr);
+                            $($(obj).parent()).next().html(numbersStr);
+                            //var wn = parseFloat(NumberH) * parseFloat(itemUseNum) * parseFloat(measurementUnitZl);
+                            //$($(obj).parent()).next().next().html(wn.toFixed(5));
+                            $($(obj).parent()).next().next().html(Weight.toFixed(5));
+                            $($($(obj).parent().parent()).children()[3]).html(cloutStockIDsStr);
+                            var numberShow = $($($(obj).parent().parent()).children()[10]).html();
+                            $($($(obj).parent().parent()).children()[13]).html(numberShow);
+                            //$($($(obj).parent().parent()).children()[26]).html(Number);
+                            $($($(obj).parent().parent()).children()[27]).html(Size);
+                            $($($(obj).parent().parent()).children()[28]).html(Number);
+                            $($($(obj).parent().parent()).children()[29]).html(NumberH);
+
+                            var index = top.layer.getFrameIndex(iframeId);
+                            top.layer.close(index);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    function getRetYLData(backData) {
+        DetailsData = [];
+        $.each(backData, function (i, item) {
+            var Detaild = {};
+            Detaild.StockID = item.StockID;
+            Detaild.RMTypeName = item.RMTypeName;
+            Detaild.NumberH = item.NumberH;
+            Detaild.RootNumber = item.RootNumber;
+            Detaild.WeightSmallPlanN = item.WeightSmallPlanN;
+            Detaild.WorkOrderItemId = item.WorkOrderItemId;
+            DetailsData.push(Detaild);
+        });
+    }
+    function getPlanDetailsData() {
+        //组装数据（动态减少库存）
+        var dtjskc = [];
+        $.each(DetailsData, function (i, item) {
+            var dtkc = {
+                StockID: item.StockID,
+                WorkOrderItemId: item.WorkOrderItemId,
+                RMTypeName: item.RMTypeName,
+                NumberH: item.NumberH,
+                RootNumber: item.RootNumber,
+            };
+            dtjskc.push(dtkc);
+        });
+        return JSON.stringify(dtjskc).replace(/\"/g, "'");
+    }
+
+    //厂家，炉批号，质检报告选择
+    function getTestReportList(obj, rowid) {
+        var siteCode = $("#SiteCode").val();
+        var workAreaCode = $("#WorkAreaCode").val();
+        var rowData = $("#gridList").jqGrid("getRowData", rowid);
+        var materialCode = rowData.MaterialCode;
+        var cloutStockID = rowData.CloutStockID;
+        var workOrderItemId = rowData.WorkOrderItemId;
+        var url = "/RawMaterial/RMProductionMaterial/GetTestReportList&keyValue=WorkAreaCode/" + workAreaCode + "|MaterialCode/" + materialCode + "|CloutStockID/" + cloutStockID + "|ProjectId/" + $("#ProjectId").val() + "|CollarCode/" + $("#CollarCode").val() + "|WorkOrderItemId/" + workOrderItemId;
+        var ret = selectClick('win_TestReport', url, 'Grid', '', '', '', '550px', '450px', function (data) {
+            if (data != null) {
+                var factory = [];
+                var batchNumber = [];
+                var testReportNo = [];
+                var inOrderItemId = [];
+                data.forEach(function (v) {
+                    if (!v.isNotSelect) {
+                        factory.push(v.Factory);
+                        batchNumber.push(v.BatchNumber);
+                        if (v.TestReportNo != "") {
+                            testReportNo.push(v.TestReportNo);
+                        }
+                    }
+                    inOrderItemId.push(v.InOrderItemId);
+                });
+                var factoryStr = factory.join(",");
+                var batchNumberStr = batchNumber.join(",");
+                var testReportNoStr = testReportNo.join(",");
+                var inOrderItemIdStr = inOrderItemId.join(",");
+                //$(obj).val(factoryStr);
+                //$($(obj).parent()).next().html(batchNumberStr);
+                //$($(obj).parent()).next().next().html(testReportNoStr);
+                //$($(obj).parent()).next().next().next().html(inOrderItemIdStr);
+                GetTestReportListForOrder(materialCode, factoryStr, batchNumberStr, testReportNoStr, inOrderItemIdStr)
+            };
+        }, true)
+    }
+
+    //根据厂家，炉批号选择加载同规格所有数据
+    function GetTestReportListForOrder(mc, factoryStr, batchNumberStr, testReportNoStr, inOrderItemIdStr) {
+        $.each(mydata, function (i, item) {
+            if (item.MaterialCode == mc) {
+                item.Manufactor = factoryStr;
+                item.HeatNo = batchNumberStr;
+                item.TestReportNo = testReportNoStr;
+                item.InOrderItemId = inOrderItemIdStr;
+            }
+        });
+        lodeList(mydata, false, true);
+    }
+
+
+    //加载列表数据
+    function lodeList(data, ise, istp) {
+        var first = 2;
+        if (data != null && data != "" && istp == undefined) {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            if (i == 0) {
+                first = index + 1;
+            }
+            index++;
+            item.id = index;
+            item.OldCount = item.RootNumber;
+            if (ise) {
+                item.SizeSelectionH = item.SizeSelection,
+                item.RootNumberH = item.RootNumber,
+                item.WeightSmallPlanNHH = item.WeightSmallPlanN,
+                item.NumberShow = item.Number,
+                //item.NumberH = item.Number,
+                item.NumberHH = item.NumberH
+            }
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+        //editRow(0);
+    }
+    //编辑行
+    function editRow(rowId) {
+        $("#gridList").jqGrid('editRow', rowId, true);
+        lastsel = rowId;
+        $("#gridList>tbody").find("input:text").each(function () {
+            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+            $(this).css("height", "20px").css("width", "150px");
+        });
+        $($("#gridList").find("tr[id='" + rowId + "']")).addClass("success").attr("editable", "1").attr("aria-selected", true);
+        valid(rowId);
+    }
+
+    //批量添加
+    function btn_add() {
+        var url = "/RawMaterial/RMProductionMaterial/RMProductionMDetailSelect&keyValue=OrderCode/" + $("#OrderCode").val();
+        var ret = selectClick('win_RMProductionSelectForm', url, 'Grid', '', '', '', '50%', '500px', function (row) {
+            AllMyBack(row);
+        }, true);
+    }
+
+    //批量添加(请求数据)
+    function getAddData() {
+        $.ajax({
+            url: "@Url.Action("RMProductionMDetailSelectAll", "RMProductionMaterial")" + "?OrderCode=" + $("#OrderCode").val(),
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                AllMyBack(data);
+            }
+        });
+    }
+
+    var orderYCLDataList = null;
+    //批量添加回调函数
+    function AllMyBack(row) {
+        var rowData = [];
+        if (row && row.length > 0) {
+            if (isOrderAdd) {
+                //根据加工订单获取原材料推荐方案数据
+                GetOrderYCLGridJson(row);
+            }
+            for (var i = 0; i < row.length; i++) {
+                if (isOrderAdd && orderYCLDataList != null) {
+                    var ycldataList = $.grep(orderYCLDataList, function (n, j) {
+                        return (n.WorkOrderItemId == row[i].WorkOrderItemId);
+                    });
+                    if (ycldataList.length > 0) {
+                        var ycldata = ycldataList[0];
+                        row[i].WeightSmallPlanN = ycldata.WeightSmallPlanN == "" ? 0 : ycldata.WeightSmallPlanN;
+                        row[i].SizeSelection = ycldata.SizeSelection == "" ? 0 : ycldata.SizeSelection;
+                        row[i].RootNumber = ycldata.RootNumber == "" ? 0 : ycldata.RootNumber;
+                        row[i].NumberH = ycldata.NumberH == "" ? 0 : ycldata.NumberH;
+                    }
+                }
+
+                var mydata = {
+                    ID: row[i].WorkOrderItemId,
+                    OrderCode: row[i].OrderCode,
+                    ComponentName: row[i].ComponentName,
+                    MaterialCode: row[i].MaterialCode,
+                    MaterialName: row[i].MaterialName,
+                    SpecificationModel: row[i].SpecificationModel,
+                    MeasurementUnitZl: row[i].MeasurementUnitZl,
+                    ItemUseNum: row[i].ItemUseNum,
+                    Number: row[i].Number,
+                    NumberShow: row[i].Number,
+                    WeightSmallPlan: row[i].WeightSmallPlan,
+                    RMTypeName: "原材料",
+                    Manufactor: row[i].Manufactor,
+                    HeatNo: row[i].HeatNo,
+                    TestReportNo: row[i].TestReportNo,
+                    WeightSmallPlanNH: row[i].WeightSmallPlanNH == "" ? row[i].WeightSmallPlan : row[i].WeightSmallPlanNH,
+                    WorkOrderItemId: row[i].WorkOrderItemId,
+                    SizeSelectionStr: row[i].SizeSelection,
+                    RootNumberStr: row[i].RootNumber,
+                    SizeSelection: row[i].SizeSelection == "" ? 0 : row[i].SizeSelection,
+                    RootNumber: row[i].RootNumber == "" ? 0 : row[i].RootNumber,
+                    WeightSmallPlanN: row[i].WeightSmallPlanN,
+                    NumberH: row[i].NumberH,
+                    SizeSelectionH: row[i].SizeSelection == "" ? 0 : row[i].SizeSelection,
+                    RootNumberH: row[i].RootNumber == "" ? 0 : row[i].RootNumber,
+                    WeightSmallPlanNHH: row[i].WeightSmallPlanN,
+                    NumberHH: row[i].NumberH,
+                };
+                if (row[i].MaterialName != "圆钢" && row[i].MaterialName != "螺纹钢") {
+                    mydata.WeightSmallPlanN = row[i].WeightSmallPlan;
+                    mydata.NumberH = row[i].Number;
+                    mydata.RMTypeName = "原材料";
+                    mydata.SizeSelection = 0;
+                    mydata.SizeSelectionStr = 0;
+                    mydata.RootNumber = 0;
+                }
+                rowData.push(mydata);
+            }
+        }
+        lodeList(rowData);
+    }
+
+    //根据加工订单获取原材料推荐方案数据
+    function GetOrderYCLGridJson(rowData) {
+        var DetailsData = [];
+        $.each(rowData, function (i, item) {
+            var Detaild = {};
+            Detaild.ItemUseNum = item.ItemUseNum;
+            Detaild.Number = item.Number;
+            Detaild.WeightSmallPlan = item.WeightSmallPlan;
+            Detaild.WorkOrderItemId = item.WorkOrderItemId;
+            Detaild.MaterialCode = item.MaterialCode;
+            Detaild.MaterialName = item.MaterialName;
+            Detaild.MeasurementUnitZl = item.MeasurementUnitZl;
+            Detaild.SpecificationModel = item.SpecificationModel;
+            DetailsData.push(Detaild);
+        });
+        var obj = {};
+        obj.ProjectId = top.clients.projectId;
+        obj.CollarCode = $("#CollarCode").val();
+        obj.WorkAreaCode = $("#WorkAreaCode").val();
+        obj.OrderDetailsDataStr = JSON.stringify(DetailsData).replace(/\"/g, "'");
+        $.ajax({
+            url: "@Url.Action("GetOrderYCLGridJson", "CloutStock")",
+            data: obj,
+            type: 'POST',
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                orderYCLDataList = data;
+                setBackData(data);
+            }
+        });
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(parseInt(v.WorkOrderItemId)); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.WorkOrderItemId, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        var rowData = $("#gridList").jqGrid("getRowData", rowId);
+        var workOrderItemId = rowData.WorkOrderItemId;
+        if (backData.length > 0) {
+            var backDataTem = [];
+            $.each(backData, function (i, j) {
+                if (j.WorkOrderItemId != workOrderItemId) {
+                    backDataTem.push(j);
+                }
+            });
+            setBackData(backDataTem);
+        }
+        if (mydata.length > 0) {
+            var backDataTem = [];
+            $.each(mydata, function (i, j) {
+                if (j.WorkOrderItemId != workOrderItemId) {
+                    backDataTem.push(j);
+                }
+            });
+            mydata = backDataTem;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+
+    function getBackData() {
+        return backData;
+    }
+    function setBackData(data) {
+        backData = data;
+        getRetYLData(backData);
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <input id="Examinestatus" name="Examinestatus" type="hidden" value="未发起" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">领用单号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CollarCode" name="CollarCode" type="text" disabled="disabled" class="form-control required" value="@ViewBag.CollarCode" />
+                    </td>
+                    <th class="formTitle">领用日期<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CollarDate" name="CollarDate" type="text" class="form-control required input-wdatepicker" onfocus="WdatePicker()" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">加工订单<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="OrderCode" name="OrderCode" type="hidden" />
+                            <input id="TypeName" name="TypeName" readonly="readonly" type="text" class="form-control required" placeholder="类型名称" />
+                            <span id="TypeName" class="input-group-btn" @*onclick="selectOrder()"*@>
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i style="padding-bottom:8px;padding-top:8px;" class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">使用部位<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CollarPosition" name="CollarPosition" type="text" readonly="readonly" class="form-control required" placeholder="由加工订单带入" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">分部<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="BranchCode" name="BranchCode" type="hidden" />
+                        <input id="BranchName" name="BranchName" readonly="readonly" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">工区<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="WorkAreaCode" name="WorkAreaCode" type="hidden" />
+                        <input id="WorkAreaName" name="WorkAreaName" readonly="readonly" type="text" class="form-control required" placeholder="工区" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">站点<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SiteCode" name="SiteCode" type="hidden" />
+                        <input id="SiteName" name="SiteName" readonly="readonly" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">加工厂名称</th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" readonly="readonly" type="text"
+                                   class="form-control" placeholder="加工厂名称" />
+                            <span id="ProcessFactoryName" class="input-group-btn" @*onclick="ProcessingFactory()"*@>
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i style="padding-bottom:8px;padding-top:8px;" class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">领用人<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="UserCode" name="UserCode" type="hidden" value="@ViewBag.InsertUserCode" />
+                            <input id="UserName" name="UserName" readonly="readonly" type="text" class="form-control required" placeholder="领用人" value="@ViewBag.InsertUserName" />
+                            <span id="UserName" class="input-group-btn" onclick="selectClickNew('UserCode,UserName', '75%', '75%')">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i style="padding-bottom:8px;padding-top:8px;" class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">类型编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TypeCode" name="TypeCode" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                    <th class="formTitle">领料合计kg<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Total" name="Total" type="text" value="0" disabled="disabled" class="form-control required">
+                        <input id="WeightSum" name="WeightSum" type="text" value="0" hidden="hidden">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input type="hidden" name="InsertUserCode" id="InsertUserCode" value="@ViewBag.InsertUserCode" />
+                        <input id="InsertUserName" name="InsertUserName" type="text" readonly="readonly" class="form-control" value="@ViewBag.InsertUserName" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" readonly="readonly" class="form-control"
+                               value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 70px; padding-right:2px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

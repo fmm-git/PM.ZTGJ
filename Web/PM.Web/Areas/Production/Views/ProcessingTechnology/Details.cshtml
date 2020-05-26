@@ -1,0 +1,59 @@
+﻿@{
+    ViewBag.Title = "加工工艺查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script>
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "ProcessingTechnology")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                }
+            });
+        }
+    });
+
+    function initControl() {
+        $("#PID").bindSelect({
+            url: "/Production/ProcessingTechnology/GetPaent",
+        });
+    }
+    
+</script>
+<form id="formd">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+        <input id="ID" name="ID" type="hidden" />
+        <div style="padding-top: 20px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">上级加工工艺<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <select id="PID" name="PID" class="form-control">
+                            <option value="0">父节点</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">加工工艺<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="ProcessingTechnologyName" name="ProcessingTechnologyName" type="text" class="form-control required" value="" placeholder="请输入加工工艺" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">排序<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="Sort" name="Sort" type="text" class="form-control required" value="" placeholder="请输入排序" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

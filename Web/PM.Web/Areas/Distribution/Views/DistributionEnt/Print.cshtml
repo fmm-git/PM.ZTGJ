@@ -1,0 +1,62 @@
+﻿@{
+    ViewBag.Title = "Print";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/print.js"></script>
+<div id="ExAndPrint" style="position: absolute; top: 22px; right: 8px;">
+</div>
+<!--startprint-->
+<div id="printView" style="height: 100%; margin: 10px; overflow: hidden">
+    <table id="DTable" style="width: 100%; min-height: 25px; line-height: 35px; text-align: center; border-collapse: collapse; border: 1px solid #070606">
+        <tr class="trclass" style="border: 1px solid #070606;">
+            <td id="btH" class="tdclass" colspan="14" style="border: 1px solid #070606;"><h1></h1></td>
+        </tr>
+        <tr class="trclass1" style="text-align: left; border: 1px solid #070606;">
+            <td id="shdw" class="tdclass1" colspan="5" style="border: 1px solid #070606;"></td>
+            <td id="psbh" class="tdclass1" colspan="9" style="border: 1px solid #070606;"></td>
+        </tr>
+        <tr id="bt" class="trclass" style="border: 1px solid #070606;">
+            <td class="tdclass1" style="border: 1px solid #070606;">序号</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">订单信息</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">材料名称</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">规格/型号</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">单位重量(kg/m,kg/㎡)</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">单件用量(m,㎡)</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">件数</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">打包数量</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">打包包数</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">本次配送件数</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">本次配送量(kg)</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">备注</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">厂家</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">批号</td>
+        </tr>
+        <tr id="wb" class="trclass" style="border: 1px solid #070606;">
+            <td class="tdclass1" colspan="10" style="border: 1px solid #070606;text-align:right">合计：</td>
+            <td id="hj" class="tdclass1" style="border: 1px solid #070606;"></td>
+            <td class="tdclass1" style="border: 1px solid #070606;">订单号：</td>
+            <td id="ddh" class="tdclass1" colspan="2" style="border: 1px solid #070606;"></td>
+        </tr>
+        <tr class="trclass1" style="text-align: left; border: 1px solid #070606;">
+            <td id="fhdw" class="tdclass1" colspan="5" style="border:1px solid #070606;"></td>
+            <td id="Cph" class="tdclass1" colspan="4" style="border:1px solid #070606;">运输车牌：</td>
+            <td id="qsdw" class="tdclass1" colspan="5" style="border:1px solid #070606;"></td>
+        </tr>
+        <tr class="trclass1" style="text-align: left; border: 1px solid #070606;">
+            <td class="tdclass1" colspan="5" style="border:1px solid #070606;">发货人：</td>
+            <td id="Sj" class="tdclass1" colspan="4" style="border:1px solid #070606;">运输司机：</td>
+            <td class="tdclass1" colspan="5" style="border:1px solid #070606;">收货人：</td>
+        </tr>
+        <tr class="trclass1" style="text-align: left;border: 1px solid #070606;">
+            <td class="tdclass1" colspan="5" style="border:1px solid #070606;">联系电话：</td>
+            <td id="SjTel" class="tdclass1" colspan="4" style="border:1px solid #070606;">司机电话：</td>
+            <td class="tdclass1" colspan="5" style="border:1px solid #070606;">联系电话：</td>
+        </tr>
+        <tr id="rq" class="trclass" style="border: 1px solid #070606;">
+        </tr>
+        <tr class="trclass" style="text-align: left; border: 1px solid #070606;">
+            <td class="tdclass" colspan="14" style="border:1px solid #070606;">注：1、本表一式三份，发货单位、收货方各执一份；&nbsp;&nbsp;&nbsp;&nbsp;2、附加工订单</td>
+        </tr>
+    </table>
+</div>
+<!--endprint-->

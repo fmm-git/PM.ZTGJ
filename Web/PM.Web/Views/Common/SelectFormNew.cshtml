@@ -1,0 +1,273 @@
+﻿@{
+    ViewBag.Title = "SelectFormNew";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div id="disLeft" class="ui-layout-west">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="UserName" type="text" class="form-control" placeholder="用户名称" style="width: 200px;">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_search">查询</a>
+                                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+<script>
+    var multiselect1 = $.request("multiselect");//是多选
+    var where = $.request("where");//筛选条件
+    if ((multiselect1 == null || multiselect1 == "" || multiselect1 == undefined) || multiselect1 == "false") {
+        multiselect1 = false;
+    } else {
+        multiselect1 = true;
+    }
+    $(function () {
+        $('#layout').layout();
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        RoleView();
+        gridList();
+    });
+    var url = "/SystemManage/Company/GetAllCompanyOrBySearch";
+    if (where == null || where == "" || where == undefined) {
+        url = url+"?";
+    }
+    function RoleView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: url,
+            height: $(window).height() - 50,
+            colModel: [
+                { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+                { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                { label: "组织机构类型", name: "OrgType", hidden: true },
+                { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                clickCompany(ucode);
+            }
+        });
+    }
+    //function clickCompany(id) {
+    //    var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+    //    $("#gridList").jqGrid('setGridParam', {
+    //        url: "/SystemManage/User/GetCompanyUser",
+    //        postData: { CompanyCode: CompanyId.CompanyCode, DepartmentProjectId: CompanyId.ProjectId },
+    //        page: 1
+    //    }).trigger('reloadGrid');
+    //}
+    function clickCompany(id) {
+        var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+        var CompanyCode = CompanyId.CompanyCode;
+        if (CompanyId.OrgType == "1") {
+            var a = CompanyCode.split('_');
+            CompanyCode = a[0];
+        }
+        if (CompanyId.OrgType == "1") {
+            projectId = "6245721945602523136";
+        } else {
+            checkParent(id);
+        }
+        $("#gridList").jqGrid('setGridParam', {
+            url: "/SystemManage/User/GetCompanyUser",
+            postData: { CompanyCode: CompanyCode, DepartmentProjectId: projectId },
+        }).trigger('reloadGrid');
+    }
+    function checkParent(rowid) {
+        var CompanyId = $("#leftgridList").jqGrid("getLocalRow", rowid);
+        if (CompanyId.level != 0) {
+            var parent = $("#leftgridList").jqGrid('getNodeParent', $("#leftgridList").jqGrid("getLocalRow", rowid));
+            checkParent(parent.CompanyCode);
+        }
+        else {
+            projectId = CompanyId.CompanyCode;
+        }
+    }
+    //定义全局数组保存所选对象
+    var selectsArr = new Array();
+    //定义全局对象用来保存选中页与选中id
+    function selects(page, id,UserCode,UserName) {
+        this.page = page;
+        this.id = id;
+        this.UserCode = UserCode;
+        this.UserName = UserName;
+    }
+
+    function gridList() {
+        var $gridList = $("#gridList");
+        var newurl = "/SystemManage/User/GetGridJson";
+        $gridList.dataGrid({
+            height: $(window).height() - 128,
+            url: newurl,
+            multiselect: multiselect1,
+            pager: "#gridPager",
+            sortname: 'UserCode',
+            sortorder: 'desc',
+            viewrecords: true,
+            colModel: [
+                { label: "标识ID", name: "Id", hidden: true, key: true },
+                { label: '员工编号', name: 'UserId', hidden: true },
+                { label: '员工编号', name: 'UserCode', sortable: false, width: 100, align: 'left', Key: true },
+                { label: '员工姓名', name: 'UserName', sortable: false, width: 100, align: 'left' },
+                { label: '用户状态', name: 'UserClosed', sortable: false, width: 80, align: 'left' },
+                { label: '性别', name: 'UserSex', sortable: false, width: 80, align: 'left' },
+            ],
+            gridComplete: function (id) {
+                $("#gridList>tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+                //数据加在完毕进行翻页保持行选中
+                //判断数组不为空
+                if (selectsArr.length > 0) {
+                    //2、判断selects中是否有当前页数据
+                    //2.1 获取当前页
+                    var currentPage = $('#gridList').getGridParam('page');
+                    //2.2 遍历selectsArr
+                    for (i = 0; i < selectsArr.length; i++) {
+                        //2.3 判断是否有当前页数据
+                        if (selectsArr[i].page == currentPage) {
+                            //2.4 已经被选择就进行复选框选择（用jqgrid进行选中）
+                            $("#gridList").setSelection(selectsArr[i].id);
+                        }
+                    }
+                }
+            },
+            onSelectAll: function (aRowids, status) {
+                //1、选中某一行时将当前页的页数和选中的id放入对象中
+                //1.1 获取当前页码
+                var page = $('#gridList').getGridParam('page');
+                //1.2 获取当前行
+                //1.3 判断是选中状态还是取消状态
+                if (status) {
+                    for (var i = 0; i < aRowids.length; i++) {
+                        //1.4 如果是选中状态就将页面以及选中的id放入缓存中
+                        var rowdata = $("#gridList").jqGrid('getRowData', aRowids[i]);
+                        var select = new selects(page, aRowids[i],rowdata.UserCode,rowdata.UserName)
+                        selectsArr.push(select);
+                    }
+                } else {
+                    for (var i = 0; i < aRowids.length; i++) {
+                        //2 取消选中的时候将页数和反选id从对象清除
+                        //2.1遍历selectsArr,比对是否存在取消的id
+                        for (j = 0; j < selectsArr.length; j++) {
+                            //2.2 判断selectsArr对象中是否已经存在取消勾选的当前页
+                            if (selectsArr[j].page == page) {
+                                //2.3 判断selectsArr对象存在当前page是否存在当前取消勾选的id
+                                if (selectsArr[j].id == aRowids[i]) {
+                                    //2.4 selectsArr中存在该取消勾选项，进行删除
+                                    selectsArr.splice(j, 1);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            beforeSelectRow: function (rowid, e) {
+                //1、选中某一行时将当前页的页数和选中的id放入对象中
+                //1.1 获取当前页码
+                var page = $('#gridList').getGridParam('page');
+                var ids = $('#gridList').jqGrid('getGridParam', 'selarrrow');//获取所有选中的行
+                var a = $.inArray(rowid, ids);//判断当前点击的行是否为选中
+                if (a == -1) {//表示选中
+                    var rowdata = $("#gridList").jqGrid('getRowData', rowid);
+                    var select = new selects(page, rowid, rowdata.UserCode, rowdata.UserName);
+                    selectsArr.push(select);
+                } else {//表示取消
+                    //2 取消选中的时候将页数和反选id从对象清除
+                    //2.1遍历selectsArr,比对是否存在取消的id
+                    for (i = 0; i < selectsArr.length; i++) {
+                        //2.2 判断selectsArr对象中是否已经存在取消勾选的当前页
+                        if (selectsArr[i].page == page) {
+                            //2.3 判断selectsArr对象存在当前page是否存在当前取消勾选的id
+                            if (selectsArr[i].id == rowid) {
+                                //2.4 selectsArr中存在该取消勾选项，进行删除
+                                selectsArr.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        $("#btn_search").click(function () {
+            var rowData = $("#leftgridList").jqGridRowValue();
+            if (rowData.CompanyCode) {
+                //重新加载该组织机构下的用户
+                $("#gridList").jqGrid('setGridParam', {
+                    url: "/SystemManage/User/GetCompanyUser",
+                    postData: { UserName: $("#UserName").val(), CompanyCode: rowData.CompanyCode, DepartmentProjectId: projectId },
+                    page: 1
+                }).trigger('reloadGrid');
+            } else {
+                //获取系统所有的用户
+                $gridList.jqGrid('setGridParam', {
+                    postData: $(".search").formSerialize(),
+                    page: 1
+                }).trigger('reloadGrid');
+            }
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function BackData(multiselect) {
+        var rowData = [];
+        if (multiselect == true) {
+            if (selectsArr.length > 0) {
+                for (var i = 0; i < selectsArr.length; i++) {
+                    rowData.push(selectsArr[i]);
+                }
+            } else {
+                $.modalMsg("你还没选择任何行", "warning");
+                return;
+            }
+            //var ids = jQuery("#gridList").jqGrid('getGridParam', 'selarrrow');//获取选中行id
+            //if (ids == null || ids == "" || ids == undefined || ids == []) {
+            //    $.modalMsg("你还没选择任何行", "warning");
+            //    return;
+            //}
+            //if (ids.length > 0) {
+            //    for (var i = 0; i < ids.length; i++) {
+            //        rowData.push(jQuery("#gridList").jqGrid('getRowData', ids[i]));
+            //    }
+            //}
+        } else {
+            var id = jQuery("#gridList").jqGrid('getGridParam', 'selrow');//获取选中行id
+            if (id == null || id == "" || id == undefined || id == []) {
+                $.modalMsg("你还没选择任何行", "warning");
+                return;
+            }
+            if (id.length > 0) {
+                rowData.push(jQuery("#gridList").jqGrid('getRowData', id));
+            }
+        }
+        return rowData;
+    }
+</script>

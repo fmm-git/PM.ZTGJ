@@ -1,0 +1,662 @@
+﻿@{
+    /*
+     * 新增/编辑页
+     * 配送装车
+     */
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var keyValue1 = $.request("keyValue1");
+    var type = $.request("type");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridListOrder();//加载配送装车订单信息
+        gridList();//加载配送装车订单明细信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "DistributionEnt")",
+                data: { keyValue: keyValue, keyValue1: keyValue1 },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeOrderList(data.Item2);//加载明细信息
+                    lodeOrderItemList(data.Item3);//加载明细信息
+                    $("#form1").find('.form-control,select,input').attr('disabled', 'disabled');
+                    $("#form1").find('div.ckbox label').attr('for', '');
+                }
+            });
+        }
+    });
+
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "DistributionEnt");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "DistributionEnt");
+    }
+</script>
+
+<!--------装车订单明细信息------->
+<script type="text/javascript">
+    var index1 = 1;
+    var lastsel1;
+    function gridListOrder() {
+        var $gridList = $("#gridListOrder");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },//1
+                    { label: '订单编号', name: 'OrderCode', width: 140, height: 10, align: "left", sortable: false},//2
+                    { label: '类型编号', name: 'TypeCode', width: 140, height: 10, align: "left", sortable: false },//3
+                    { label: '类型名称', name: 'TypeName', width: 140, height: 10, align: "left", sortable: false },//4
+                    { label: '计划配送时间', name: 'PlanDistributionTime', width: 140, height: 10, align: "left", sortable: false },//5
+                    { label: '使用部位', name: 'UsePart', width: 140, height: 10, align: "left", sortable: false },//6
+                    { label: '配送地址', name: 'DistributionAddress', width: 140, height: 10, align: "left", sortable: false },//7
+                    { label: '站点编号', name: 'SiteCode', hidden: true },//8
+                    { label: '站点名称', name: 'SiteName', width: 80, height: 10, align: "left", sortable: false },//9
+                    { label: '站点联系人', name: 'SiteContacts', hidden: true },
+                    { label: '站点联系人', name: 'SiteContactsName', width: 80, height: 10, align: "left", sortable: false},
+                    { label: '站点联系人电话', name: 'SiteContactTel', width: 100, height: 10, align: "left", sortable: false },
+                    { label: '重量合计', name: 'SiteWeightTotal', hidden: true },
+                    { label: '配送装车订单标识列', name: 'DisEntOrderIdentity', hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel1 || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel1);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel1 = rowid;
+                    $("#gridListOrder>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+            },
+        });
+    }
+    //加载列表数据
+    function lodeOrderList(data) {
+        $("#gridListOrder").jqGrid('clearGridData');
+        $.each(data, function (i, item) {
+            index1++;
+            item.id = index1;
+            $("#gridListOrder").jqGrid('addRowData', index1, item);
+        });
+    }
+
+</script>
+
+<!--------装车订单明细信息------->
+<script type="text/javascript">
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: "配送装车订单标识列", name: "DisEntOrderIdentity", hidden: true },
+                    { label: "订单编号", name: "OrderCode", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "站点名称", name: "SiteName", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "类型编号", name: "TypeCode", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "类型名称", name: "TypeName", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "订单明细id", name: "WorkorderdetailId", hidden: true },
+                    { label: '构件名称', name: 'ComponentName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '规格', name: 'Standard', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '计量单位', name: 'MeteringUnit', hidden: true },
+                    { label: '计量单位', name: 'MeasurementUnitName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '单位重量(kg/m,kg/㎡)', name: 'UnitWeight', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '单件用量(m,㎡)', name: 'SingletonWeight', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '件数', name: 'GjNumber', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '重量小计(kg)', name: 'WeightGauge', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '打包件数', name: 'PackNumber', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '打包包数', name: 'PackagesNumber', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '可装车包数', name: 'CanLoadingPackCount', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '本次装车包数', name: 'ThisTimePackCount', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '本次装车件数', name: 'Number', width: 100, align: "left", sortable: false },
+                    { label: '加工工艺', name: 'ProcessingTechnology', hidden: true },
+                    { label: '加工工艺', name: 'ProcessingTechnologyName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '厂家', name: 'Manufactor', width: 120, align: "left", sortable: false },
+                    { label: '炉批号', name: 'HeatNo', width: 70, align: "left", sortable: false },
+                    { label: '检测报告编号', name: 'TestReport', width: 100, align: "left", sortable: false },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+            },
+        });
+    }
+    //加载列表数据
+    function lodeOrderItemList(data) {
+        $("#gridList").jqGrid('clearGridData');
+        $.each(data, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">装车订单信息</a></li>
+        <li id="OrderMXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">装车订单明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <!---------标识ID------->
+            <input id="ID" name="ID" type="hidden" />
+            <!---------审批状态------->
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <!---------附件------->
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <!------卸货状态------>
+            <input id="UnloadingState" name="UnloadingState" type="hidden">
+            <!------签收状态------>
+            <input id="SignState" name="SignState" type="hidden">
+            <!------项目id------>
+            <input id="ProjectId" name="ProjectId" type="hidden">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">配送装车编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DistributionCode" name="DistributionCode" type="text" disabled="disabled" value="@ViewBag.DistributionCode" class="form-control required" />
+                    </td>
+                    <th class="formTitle">装车完成日期<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="LoadCompleteTime" name="LoadCompleteTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" class="form-control input-wdatepicker" onfocus="WdatePicker({ isShowClear: false, readOnly: false, dateFmt: 'yyyy-MM-dd HH:mm:ss' })" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">车牌号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="VehicleCode" name="VehicleCode" type="hidden" />
+                            <input id="CarCph" name="CarCph" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectCar()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">驾驶员<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Driver" name="Driver" type="hidden" class="form-control required" />
+                        <div class="input-group input-group-with">
+                            <input id="CarUser" name="CarUser" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectCarUser()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                    <td></td>
+                    <td>
+                        <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserCode" name="InsertUserCode" type="hidden" value="@ViewBag.UserCode" class="form-control" />
+                        <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridListOrder"></table>
+        </div>
+    </div>
+    <div id="OrderMXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+@*@{
+        /*
+         * 查询页
+         * 配送装车
+         */
+        ViewBag.Title = "Details";
+        Layout = "~/Views/Shared/_Form.cshtml";
+    }
+    <script src="~/Content/js/Comm.js"></script>
+    <script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+    <link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+    <script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+    <script src="~/Content/js/uploadFile.js"></script>
+    <style>
+        .select2-container {
+            box-sizing: border-box;
+            display: inline-block;
+            margin: 0;
+            position: relative;
+            vertical-align: middle;
+            width: 102% !important;
+        }
+    </style>
+    <!---------基本信息------->
+    <script type="text/javascript">
+        var keyValue = $.request("keyValue");
+        var type = $.request("type");
+        $(function () {
+            //选择框样式调整
+            $(".input-group-btn").each(function () {
+                $(this).parent().parent().css("padding-right", "0px");
+                $(this).css("padding-left", "8px");
+                $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+            });
+            gridList();//加载明细信息
+            if (!!keyValue) {
+                $.ajax({
+                    url: "@Url.Action("GetFormJson", "DistributionEnt")",
+                    data: { keyValue: keyValue },
+                    dataType: "json",
+                    async: false,
+                    success: function (data) {
+                        $("#form1").formSerialize(data.Item1[0]);
+                        if ($("#Enclosure").val()) {
+                            $("#uplaodFileTitle").html("已上传");
+                            $("#uplaodFilelook").show();
+                        }
+                        lodeList(data.Item2);//加载明细信息
+                        $("#form1").find('.form-control,select,input').attr('disabled', 'disabled');
+                        $("#form1").find('div.ckbox label').attr('for', '');
+                    }
+                });
+            }
+        });
+
+        //选择计划单
+        function selectPlan() {
+            var url = "/Distribution/DistributionEnt/GetPSJHGridJson";
+            var str = "DistributionPlanCode,TypeCode,TypeName,PlanDistributionTime=DistributionTime,DistributionAddress=DistributionAdd,SiteCode,SiteName,UsePart,ProcessFactoryCode,ProcessFactoryName,OrderCode";
+            var ret = selectClick('win_ZCPlan', url, 'Grid', '', '', str, '550px', '450px', function () {
+            });
+        }
+
+        //联系人选择
+        function selectUser() {
+            var url = "/SystemManage/User/GetAllOrBySearchUser";
+            var str = "Contacts=UserCode,ContactsName=UserName,ContactWay=MobilePhone";
+            var ret = selectClick('win_UserCodeOrName', url, 'Grid', '', '', str, '550px', '450px')
+        }
+
+        //提交数据
+        function submitForm() {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+            var tableData = GetGridRowData();//明细信息
+            if (tableData.length < 1) {
+                return false;
+            }
+            totalDemandNum();
+            var formData = $("#form1").formSerialize();
+            if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+                formData.ID = 0;
+            }
+            $.submitForm({
+                url: "@Url.Action("SubmitForm", "DistributionEnt")" + "?type=" + type,
+                param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+                success: function () {
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            })
+        }
+        //获取表格数据
+        function GetGridRowData() {
+            $("#gridList").jqGrid('saveRow', lastsel);
+            var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+            if (ids.length < 1) {
+                $.modalMsg("明细数据不完整", "warning");
+                return null;
+            }
+            var DistributionCode = $("#DistributionCode").val();
+            var columnData = [];
+            $(ids).each(function (index, yu) {
+                var rowData = $("#gridList").jqGrid("getRowData", yu);
+                rowData.ID = 0;
+                rowData.DistributionCode = DistributionCode;
+                var DemandNum = parseFloat(rowData.WeightGauge);
+                if (isNaN(DemandNum)) {
+                    $.modalMsg("明细数据不完整", "warning");
+                    columnData = [];
+                    return false;
+                }
+                columnData.push(rowData);
+            });
+            return columnData;
+        }
+
+        //汇总明细需求数量
+        function totalDemandNum() {
+            var data = GetGridRowData();
+            if (data && data.length > 0) {
+                var total = 0;
+                for (var i = 0; i < data.length; i++) {
+                    total += parseFloat(data[i].WeightGauge);
+                }
+                $("#TotalAggregate").val(total.toFixed(5));
+            }
+            else {
+                $("#TotalAggregate").val("0.00000");
+            }
+        }
+
+        //选项卡
+        function selectTab(v) {
+            var id = v.attr('id');
+            $("#" + id + "").addClass("active").siblings().removeClass("active");
+            $("#" + id + "Info").show();
+            $("#" + id + "Info").siblings('div').hide();
+        }
+    </script>
+
+    <!---------附件列表------->
+    <script type="text/javascript">
+        //查看附件
+        function uplaodFilelook() {
+            showFile($("#Enclosure").val(), "detail", "DistributionEnt");
+        }
+    </script>
+
+    <!---------明细信息------->
+    <script type="text/javascript">
+        var mydata = [];
+        var index = 1;
+        var lastsel;
+        function gridList() {
+            var $gridList = $("#gridList");
+            $gridList.dataGrid({
+                datatype: "json",
+                height: $(window).height() - 160,
+                colModel: [
+                        { label: "主键", name: "ID", hidden: true },
+                        { label: '构件名称', name: 'ComponentName', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '原材料名称', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '规格', name: 'Standard', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '计量单位', name: 'MeteringUnit', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '单位重量(kg/m,kg/㎡)', name: 'UnitWeight', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '单件用量(m,㎡)', name: 'SingletonWeight', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '件数', name: 'GjNumber', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '打包数量', name: 'PackNumber', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '打包包数', name: 'PackagesNumber', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '本次装车件数', name: 'Number', width: 100, align: "left", sortable: false, },
+                        { label: '重量小计(kg)', name: 'WeightGauge', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '厂家', name: 'Manufactor', width: 120, align: "left", sortable: false },
+                        { label: '炉批号', name: 'HeatNo', width: 70, align: "left", sortable: false },
+                        { label: '检测报告编号', name: 'TestReport', width: 100, align: "left", sortable: false },
+                        { label: "配送计划明细ID", name: "PlanItemID", hidden: true },
+                ],
+                gridComplete: function () {
+                    $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                    $("div.unwritten").remove();
+                }
+            });
+        }
+
+        //加载列表数据
+        function lodeList(data) {
+            //if (data != null && data != "") {
+            //    mydata = filterGridData(data);
+            //}
+            //$("#gridList").jqGrid('clearGridData');
+            $("#gridList").jqGrid('saveRow', lastsel);
+            var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+            if (ids.length > 0) {
+                index = Number(ids[ids.length - 1]);
+            } else {
+                index = 0;
+            }
+            $.each(data, function (i, item) {
+                index++;
+                item.id = index;
+                $("#gridList").jqGrid('addRowData', index, item);
+            });
+        }
+
+    </script>
+
+    <div style="margin-top: 10px;">
+        <ul class="nav nav-tabs">
+            <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+            <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+        </ul>
+        <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+            <form id="form1">
+                <!---------标识ID------->
+                <input id="ID" name="ID" type="hidden" />
+                <!---------审批状态------->
+                <input id="Examinestatus" name="Examinestatus" type="hidden" />
+                <!---------附件------->
+                <input id="Enclosure" name="Enclosure" type="hidden" />
+                <table class="form">
+                    <tr>
+                        <th class="formTitle">配送编号<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="DistributionCode" name="DistributionCode" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                        <th class="formTitle">计划编号<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <div class="input-group input-group-with">
+                                <input id="OrderCode" name="OrderCode" type="hidden" />
+                                <input id="DistributionPlanCode" name="DistributionPlanCode" type="text" disabled="disabled" class="form-control required" />
+                                <span class="input-group-btn">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">类型编码<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="TypeCode" name="TypeCode" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                        <th class="formTitle">类型名称<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="TypeName" name="TypeName" disabled="disabled" type="text" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">站点名称<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="SiteCode" name="SiteCode" type="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                        <th class="formTitle">使用部位<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="UsePart" name="UsePart" disabled="disabled" type="text" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">计划配送日期<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="PlanDistributionTime" name="PlanDistributionTime" disabled="disabled" type="text" class="form-control required" />
+                        </td>
+                        <th class="formTitle">装车完成日期<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="LoadCompleteTime" name="LoadCompleteTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" class="form-control input-wdatepicker" onfocus="WdatePicker({ isShowClear: false, readOnly: false })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">总量合计(kg)<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="TotalAggregate" name="TotalAggregate" disabled="disabled" value="0.0000" type="text" class="form-control ContractData moneyData" />
+                        </td>
+                        <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">车辆编号<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="CarCph" name="CarCph" disabled="disabled" type="text" class="form-control required" />
+                        </td>
+                        <th class="formTitle">驾驶员<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="CarUser" name="CarUser" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">配送地址<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="DistributionAddress" name="DistributionAddress" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">联系人<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <div class="input-group input-group-with">
+                                <input id="Contacts" name="Contacts" type="hidden" class="form-control" />
+                                <input id="ContactsName" name="ContactsName" type="text" disabled="disabled" class="form-control required" />
+                                <span class="input-group-btn">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </td>
+                        <th class="formTitle">联系人方式<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="ContactWay" name="ContactWay" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">附件</th>
+                        <td class="formValue" colspan="3">
+                            <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                            <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">录入人</th>
+                        <td class="formValue">
+                            <input id="InsertUserCode" name="InsertUserCode" type="hidden" class="form-control" />
+                            <input id="UserName" name="UserName" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                        <th class="formTitle">录入时间</th>
+                        <td class="formValue">
+                            <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">备注</th>
+                        <td class="formValue" colspan="3">
+                            <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+        <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+            <div class="toolbar">
+
+            </div>
+            <div class="gridPanel" style="margin-top: 1px; ">
+                <table id="gridList"></table>
+            </div>
+        </div>
+    </div>*@

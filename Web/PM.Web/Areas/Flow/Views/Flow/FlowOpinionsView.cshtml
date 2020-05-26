@@ -1,0 +1,176 @@
+﻿@{
+    ViewBag.Title = "流程及审批意见查看";
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>流程及审批意见查看</title>
+    <link href="~/UiFrame/EasyUi/themes/gray/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+    <link href="~/UiFrame/pmicon.css" rel="stylesheet" />
+    <script src="~/UiFrame/EasyUi/jquery.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/EasyUi/easyui-lang-zh_CN.js"></script>
+    <script src="~/UiFrame/jeasyui.extensions.js"></script>
+    <script src="~/SysConfig/genericOperate.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.form.js"></script>
+</head>
+<body class="easyui-layout" style="padding: 0px; margin: 0px">
+    <div data-options="region:'center'">
+        <div class="easyui-tabs" data-options="border:false,fit:true" id="tabflowOpinionsView">
+            <div title="审批意见">
+                <div style="width: 100%; height: 100%;">
+                    <form id="form_PerformInfo">
+                        <img id="imgState" alt="" src="/UiFrame/Images/completed.png" style="display: none; position: absolute; z-index: 999; margin: 30px 0 0 460px;" />
+                        <table style="margin: 5px;">
+                            <tr>
+                                <td style="width: 60px; text-align: right;">发&nbsp;起&nbsp;人：</td>
+                                <td style="width: 200px;">
+                                    <input name="UserName" id="UserName" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">流程名称：</td>
+                                <td style="width: 200px;">
+                                    <input name="FlowName" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">流程状态：</td>
+                                <td style="width: 200px;">
+                                    <input name="FlowState" id="FlowState" readonly="true" class="easyui-textbox" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width: 60px; text-align: right;">发起时间：</td>
+                                <td style="width: 200px;">
+                                    <input name="BeginTime" id="BeginTime" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">结束时间：</td>
+                                <td style="width: 200px;">
+                                    <input name="EndTime" id="EndTime" readonly="true" class="easyui-textbox" />
+                                </td>
+                                <td style="width: 60px; text-align: right;">级&nbsp;&nbsp;&nbsp;&nbsp;别：</td>
+                                <td style="width: 200px;">
+                                    <input name="FlowLevel" readonly="true" class="easyui-textbox" />
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+
+                    <table id="opinionList" style="height:80%" class="easyui-datagrid" data-options="autoRowHeight:false,nowrap:false,rownumbers:true,fit:false,singleSelect:true,striped:true">
+                        <thead>
+                            <tr>
+                                <th data-options="field:'id'" hidden="hidden">ID</th>
+                                <th data-options="field:'FlowPerformID'" hidden="hidden"></th>
+                                <th data-options="field:'FlowNodeCode'" hidden="hidden"></th>
+                                <th data-options="field:'FlowNodeName',width:'10%',align:'left'">节点名称</th>
+                                <th data-options="field:'PreNodeCompleteDate',width:'10%'">发起时间</th>
+                                <th data-options="field:'UserName',width:'10%'">接收人</th>
+                                <th data-options="field:'UserType',width:'10%'">人员类型</th>
+                                <th data-options="field:'Describe',width:'10%'">审批状态</th>
+                                <th data-options="field:'PerformDate',width:'15%'">处理时间</th>
+                                <th data-options="field:'PerformOpinions',width:'35%'">审批意见</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+            <div title="流程图">
+                <div style="width: 100%; height: 100%;">
+                    <iframe frameborder="no" id="iframeFlowExamineView" style="width: 100%; height: 99%;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var firstlist = true;
+        var firstflow = true;
+        $("#tabflowOpinionsView").tabs({
+            onSelect: function (title, index) {
+                if (title == "审批意见") {
+                    if (firstlist) {
+                        LoadOpinionList();
+                        firstlist = false;
+                    }
+                }
+                if (title == "流程图") {
+                    if (firstflow) {
+                        $("#iframeFlowExamineView").attr("src", '@Url.Action("FlowView", "Flow")' + "?flowPerformID=" + '@ViewBag.FlowPerformID');
+                        firstflow = false;
+                    }
+                }
+            }
+        });
+        function LoadOpinionList() {
+            $("#form_PerformInfo").form('reset');
+            $.post('@Url.Action("GridListAPI", "Flow", new { FunCode = "GetPerformFlowInfo" })', { FlowPerformID: '@ViewBag.FlowPerformID' }, function (result) {
+                if (result.length > 0) {
+                    $("#form_PerformInfo").form('load', result[0]);
+                } else {
+                    $.messager.alert('操作提示', '获取流程发起人失败', 'info');
+                }
+            }, 'json').error(function () {
+                $.messager.alert('操作提示', '获取流程发起人失败', 'info');
+            });
+
+        $("#opinionList").datagrid({
+            url: '@Url.Action("GridListAPI", "Flow", new { FunCode = "GetOpinionList" })',
+            queryParams: { FlowPerformID: '@ViewBag.FlowPerformID' },
+            rowStyler: function (index, row) {
+                var backColor = 'color:black;';
+                switch (row.PerformState) {
+                    case -1://未阅
+                    case 0://已阅
+                        backColor = 'color:blue;';
+                        break;
+                        //case 0://已阅
+                        //    backColor = 'color:black;';
+                        //    break;
+                    case 1://同意
+                    case 5://系统跳过
+                    case 9://其他用户处理
+
+                        backColor = 'color:green;';
+                        break;
+                    case 2://不同意
+                        //backColor = 'color:grey;';
+                        //break;
+                    case 3://退回
+                    case 4://终止
+                        backColor = 'color:red;';
+                        break;
+                }
+                return backColor;
+            },
+        onLoadSuccess: function (data) {
+            $("#opinionList").datagrid('insertRow', {
+                index: 0,
+                row: {
+                    FlowNodeName: '发起',
+                    PreNodeCompleteDate: $('#BeginTime').textbox('getText'),
+                    PerformState: 1
+                }
+            });
+
+            if ($('#EndTime').textbox('getText') != null && $('#EndTime').textbox('getText') != '') {
+                $("#opinionList").datagrid('appendRow', {
+                    FlowNodeName: '结束',
+                    PreNodeCompleteDate: $('#EndTime').textbox('getText'),
+                    PerformState: 1
+                });
+
+                if ($('#FlowState').textbox('getText') == '审核完成') {
+                    $('#imgState').show();
+                }
+                else {
+                    $('#imgState').hide();
+                }
+            }
+        }
+        });
+        }
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,78 @@
+﻿@{
+    ViewBag.Title = "流程节点事件";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>流程节点事件</title>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+    <link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="row" style="margin-left:15px;margin-top:10px;">
+        <div class="gridPanel">
+            <table id="gridList"></table>
+        </div>
+    </div>
+    <script src="/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+    <script src="/UiFrame/FlowChartTool/jquery.window.js"></script>
+    <script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+    <link href="~/Content/js/select2/select2.min.css" rel="stylesheet" />
+    <script src="~/Content/js/select2/select2.min.js"></script>
+    <link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+    <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+    <script src="~/Content/js/layer/layer.js"></script>
+    <script type="text/javascript">
+        var FormCode = $.request("FormCode");
+        var FlowNodeEvent = $.request("FlowNodeEvent");
+        $(function () {
+            var $gridList = $("#gridList");
+            $gridList.dataGrid({
+                url: '/Flow/Flow/GetFlowNodeEvent?FormCode=' + FormCode,
+                height: $(window).height() - 128,
+                multiselect: true,//不显示每一列前面的复选框
+                colModel: [
+                    { label: "id", name: "id", key: true, hidden: true },
+                    { label: "菜单编号", name: "FormCode", width: 100, align: 'left', sortable: false },
+                    { label: "菜单名称", name: "MenuName", width: 100, align: 'left', sortable: false },
+                    { label: "流程节点事件名称", name: "EventDescriptionName", width: 100, align: 'left', sortable: false },
+                    { label: "流程节点事件描述", name: "EventDescription", width: 160, align: 'left', sortable: false },
+                    { label: "流程节点事件执行sql", name: "EventDescriptionsql", hidden: true, sortable: false }
+                ],
+                gridComplete: function () {
+                    $("#gridList>tbody").find("input:checkbox").each(function () {
+                        $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                    });
+                    if (FlowNodeEvent) {
+                        debugger;
+                        var idsplit = FlowNodeEvent.split(',');
+                        if (idsplit.length > 0) {
+                            for (var i = 0; i < idsplit.length; i++) {
+                                if (idsplit[i]) {
+                                    $("#gridList").setSelection(idsplit[i], false);//默认选中
+                                }
+                            }
+                        }
+                    }
+                },
+            });
+        });
+        //保存
+        function BackData() {
+            var ids = $('#gridList').jqGrid('getGridParam', 'selarrrow');
+            var idstr = "";
+            for (var i = 0; i < ids.length; i++) {
+                idstr += ids[i] + ",";
+            }
+            return idstr;
+        }
+    </script>
+</body>
+</html>

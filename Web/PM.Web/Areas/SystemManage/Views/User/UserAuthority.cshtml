@@ -1,0 +1,347 @@
+﻿@{
+    ViewBag.Title = "UserAuthority";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script src="~/Content/js/jqgrid/jquery.contextmenu.r2.js"></script>
+<script>
+    var UserId = $.request("UserId");
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/SystemManage/User/RoleAuthority");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: true,
+            treeGridModel: "adjacency",
+            ExpandColumn: "OperationExamination",
+            url: "/SystemManage/Menu/GetAuthorityTreeGridJson",
+            height: $(window).height() - 96,
+            colModel: [
+                { label: "菜单编号", name: "MenuCode", hidden: true, key: true },
+                { label: "父级菜单编号", name: "MenuPCode", hidden: true },
+                { label: '菜单名称', name: 'MenuName', width: 200, align: 'left', sortable: false },
+                {
+                    label: '审批流程', name: 'OperationExamination', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '查看', name: 'OperationView', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '新增', name: 'OperationAdd', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '编辑', name: 'OperationEdit', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '删除', name: 'OperationDel', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '导出', name: 'OperationOutput', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '自定义按钮1', name: 'OperationOther1', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '自定义按钮2', name: 'OperationOther2', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '自定义按钮3', name: 'OperationOther3', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '自定义按钮4', name: 'OperationOther4', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+                {
+                    label: '自定义按钮5', name: 'OperationOther5', width: 100, align: 'left', sortable: false,
+                    formatter: defaultformatter
+                },
+            ],
+            loadComplete: function () {
+                $("tr.jqgrow", this).contextMenu('menu', {
+                    bindings: { //右键菜单绑定的事件
+                        "SetAll": function (trigger) {
+                            SetAll();
+                            //trigger.id为当前行中单元格设置成key：true的值
+                        },
+                        "CancelAll": function (trigger) {
+                            //trigger.id为当前行中单元格设置成key：true的值
+                            CancelAll();
+                        },
+                        "SetNodeAndChildren": function (trigger) {
+                            //trigger.id为当前行中单元格设置成key：true的值
+                            SetNodeAndChildren(trigger);
+                        },
+                        "CancelNodeAndChildren": function (trigger) {
+                            //trigger.id为当前行中单元格设置成key：true的值
+                            CancelNodeAndChildren(trigger);
+                        }
+                    }
+                });
+                LodeUserMenu(UserId);
+            }
+
+        });
+    }
+    //根据单元格结果显示复选框(0 无复选框 1 有复选框 2 有被勾选的复选框)
+    function defaultformatter(value, options, cell) {
+        //var valueNew;
+        //if (value == "true") {
+        //    valueNew = 1;
+        //} else {
+        //    valueNew = 0;
+        //}
+        var rowId = cell.MenuCode;
+        var field = options["colModel"]["name"];
+        var isCheckStr;
+        switch (value) {
+            case "1": isCheckStr = ""; break;
+            case "2": isCheckStr = 'checked="checked"'; break;
+            default: return "";
+        }
+        return '<input type="checkbox" id="chx' + rowId + '' + field + '" ' + isCheckStr + ' value="' + rowId + '" onclick=\"clickCheckbox(\'' + rowId + '\',\'' + field + '\',$(this))\" />'
+    }
+    function clickCheckbox(rowid, field, v) {
+        //选中子节点
+        checkChildren1($(v).is(':checked'), rowid, field);
+        if ($(v).is(':checked')) {
+            //选中父节点
+            checkParent(rowid, field, v);
+        }
+    }
+    //递归选中父节点
+    function checkParent(rowid, field, v) {
+        var parent = $("#gridList").jqGrid('getNodeParent', $("#gridList").jqGrid("getLocalRow", rowid));
+        if (parent && parent[field] == true) {
+            var cb = $("#chx" + parent.MenuCode + field);
+            cb.prop("checked", $(v).is(':checked'));
+            if ($(v).is(':checked') == true) {
+                parent[field] = 2;
+            } else {
+                parent[field] = 1;
+            }
+            checkParent(parent.MenuCode, field, cb);
+        }
+    }
+
+    /**********************鼠标右击事件（Menu）***********************/
+
+    //改变指定节点数组勾选状态
+    function ChangeNodesChecked(isChecked, nodes) {
+        var arr_Field = ["OperationExamination", "OperationView", "OperationAdd", "OperationEdit", "OperationDel", "OperationOutput", "OperationOther1", "OperationOther2", "OperationOther3", "OperationOther4", "OperationOther5"];
+        for (var i = 0; i < nodes.length; i++) {
+            for (var j = 0; j < arr_Field.length; j++) {
+                checkChildren1(isChecked, nodes[i].MenuCode, arr_Field[j]);
+            }
+        }
+    }
+    //改变指定节点数组勾选状态
+    function ChangeNodesChecked1(isChecked, nodes) {
+        var arr_Field = ["OperationExamination", "OperationView", "OperationAdd", "OperationEdit", "OperationDel", "OperationOutput", "OperationOther1", "OperationOther2", "OperationOther3", "OperationOther4", "OperationOther5"];
+        for (var j = 0; j < arr_Field.length; j++) {
+            checkChildren1(isChecked, nodes.MenuCode, arr_Field[j]);
+        }
+    }
+    //递归选中子节点
+    function checkChildren1(isChecked, rowid, field) {
+        //获取父节点
+        var nodes = $("#gridList").jqGrid('getLocalRow', rowid);
+        if (nodes) {
+            var cb = $("#chx" + nodes.MenuCode + field);
+            if (cb.length > 0) {//判断id对象对象是否存在
+                if (isChecked == true) {
+                    cb.prop("checked", "checked");
+                    nodes[field] = 2;
+                } else {
+                    cb.prop("checked", "");
+                    nodes[field] = 1;
+                }
+            } else {
+                nodes[field] = 0;
+            }
+        }
+        //获取子节点数据
+        var records = $("#gridList").jqGrid('getNodeChildren', $("#gridList").jqGrid("getLocalRow", rowid));
+        if (records.length > 0) {
+            for (var i = 0; i < records.length; i++) {
+                var cb = $("#chx" + records[i].MenuCode + field);
+                if (cb.length > 0) {//判断id对象对象是否存在
+                    if (isChecked == true) {
+                        cb.prop("checked", "checked");
+                        records[i][field] = 2;
+                    } else {
+                        cb.prop("checked", "");
+                        records[i][field] = 1;
+                    }
+                    checkChildren1(isChecked, records[i].MenuCode, field);
+                } else {
+                    records[i][field] = 0;
+                    checkChildren1(isChecked, records[i].MenuCode, field);
+                }
+            }
+        }
+    }
+
+    function GetNodesChildren(rowid) {
+        var recordsc = $("#gridList").jqGrid('getNodeChildren', $("#gridList").jqGrid("getLocalRow", rowid));
+        return recordsc;
+    }
+    //授予所有菜单功能所有权限
+    function SetAll() {
+        //获取所有行
+        var nodes = $("#gridList").jqGrid("getRowData");
+        ChangeNodesChecked(true, nodes);
+    }
+
+    //取消所有菜单功能所有权限
+    function CancelAll() {
+        //获取所有行
+        var nodes = $("#gridList").jqGrid("getRowData");
+        ChangeNodesChecked(false, nodes);
+    }
+
+    //授予此菜单功能所有权限
+    function SetNodeAndChildren(trigger) {
+        //获取当前选中行
+        var nodes = $("#gridList").jqGrid('getRowData', trigger.id);
+        ChangeNodesChecked1(true, nodes);
+    }
+
+    //取消此菜单功能所有权限
+    function CancelNodeAndChildren(trigger) {
+        //获取当前选中行
+        var nodes = $("#gridList").jqGrid('getRowData', trigger.id);
+        ChangeNodesChecked1(false, nodes);
+    }
+
+    //树形Json转换成对象数组(递归)
+    function ConvertTreeToList(treeData, newData, UserId) {
+        for (var i = 0; i < treeData.length; i++) {
+            if (HasOperation(treeData[i])) {
+                treeData[i].UserCode = UserId;
+                newData.push(treeData[i]);
+            }
+        }
+    }
+
+    //是否包含有权限的列
+    function HasOperation(node) {
+        var hasOperation = node["OperationExamination"] == 2 ||
+                            node["OperationView"] == 2 ||
+                            node["OperationAdd"] == 2 ||
+                            node["OperationEdit"] == 2 ||
+                            node["OperationDel"] == 2 ||
+                            node["OperationOutput"] == 2 ||
+                            node["OperationOther1"] == 2 ||
+                            node["OperationOther2"] == 2 ||
+                            node["OperationOther3"] == 2 ||
+                            node["OperationOther4"] == 2 ||
+                            node["OperationOther5"] == 2;
+        return hasOperation;
+    }
+    //保存
+    function btn_other1() {
+        var rows = $("#gridList").jqGrid("getRowData");
+        //处理少一行bug
+        var allCountID = $("#gridList").jqGrid('getDataIDs'); //这里获取所有行 主键id 是全的
+        rows.push($("#gridList").jqGrid('getRowData', allCountID[allCountID.length - 1]));  //单独用最后一个 ID 获取行数据 并 追加到 集合里
+        if (rows.length > 0) {
+            for (var i = 0; i < rows.length; i++) {
+                rows[i] = $("#gridList").jqGrid("getLocalRow", rows[i].MenuCode)
+            }
+        }
+        var data = [];
+        ConvertTreeToList(rows, data, UserId);//将树形数据转换为数组
+        var postData = data;
+        $.submitForm({
+            url: "/SystemManage/User/submitForm1",
+            param: { postData: JSON.stringify(postData), UserCode: UserId },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+
+    //加载角色菜单
+    function LodeUserMenu(id) {
+        $.ajax({
+            url: "/SystemManage/User/GetGridUserMenuJson?UserCode=" + id,
+            type: "get",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    var node = $("#gridList").jqGrid("getLocalRow", data[i].MenuCode)
+                    if (node) {//加载数据
+                        node.OperationExamination = data[i].OperationExamination == 2 ? 2 : node.OperationExamination;
+                        node.OperationView = data[i].OperationView == 2 ? 2 : node.OperationView;
+                        node.OperationAdd = data[i].OperationAdd == 2 ? 2 : node.OperationAdd;
+                        node.OperationEdit = data[i].OperationEdit == 2 ? 2 : node.OperationEdit;
+                        node.OperationDel = data[i].OperationDel == 2 ? 2 : node.OperationDel;
+                        node.OperationOutput = data[i].OperationOutput == 2 ? 2 : node.OperationOutput;
+                        node.OperationOther1 = data[i].OperationOther1 == 2 ? 2 : node.OperationOther1;
+                        node.OperationOther2 = data[i].OperationOther2 == 2 ? 2 : node.OperationOther2;
+                        node.OperationOther3 = data[i].OperationOther3 == 2 ? 2 : node.OperationOther3;
+                        node.OperationOther4 = data[i].OperationOther4 == 2 ? 2 : node.OperationOther4;
+                        node.OperationOther5 = data[i].OperationOther5 == 2 ? 2 : node.OperationOther5;
+                    }
+                }
+                var rows = $('#gridList').jqGrid('getRowData');
+                //处理少一行bug
+                var allCountID = $("#gridList").jqGrid('getDataIDs'); //这里获取所有行 主键id 是全的
+                rows.push($("#gridList").jqGrid('getRowData', allCountID[allCountID.length - 1]));  //单独用最后一个 ID 获取行数据 并 追加到 集合里
+                if (rows.length > 0) {
+                    for (var i = 0; i < rows.length; i++) {
+                        rows[i] = $("#gridList").jqGrid("getLocalRow", rows[i].MenuCode);
+                        var arr_Field = ["OperationExamination", "OperationView", "OperationAdd", "OperationEdit", "OperationDel", "OperationOutput", "OperationOther1", "OperationOther2", "OperationOther3", "OperationOther4", "OperationOther5"];
+                        for (var j = 0; j < arr_Field.length; j++) {
+                            if (rows[i][arr_Field[j]] == 2) {
+                                var cb = $("#chx" + rows[i].MenuCode + arr_Field[j]);
+                                cb.prop("checked", "checked");
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+<div class="contextMenu" id="menu" style="display: none">
+    <ul>
+        <li id="SetAll">授予所有菜单功能所有权限</li>
+        <li id="CancelAll">取消所有菜单功能所有权限</li>
+        <li id="SetNodeAndChildren">授予此菜单功能所有权限</li>
+        <li id="CancelNodeAndChildren">取消此菜单功能所有权限</li>
+    </ul>
+</div>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="toolbar" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+                <div class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_other1()"><i class="fa fa-sava"></i>保存</a>
+                </div>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

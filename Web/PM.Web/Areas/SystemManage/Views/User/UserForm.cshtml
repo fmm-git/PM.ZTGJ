@@ -1,0 +1,232 @@
+﻿@{
+    ViewBag.Title = "修改个人信息";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script>
+    var type = $.request("type");
+    //var userCode = $.request("userCode");
+    var UserCode = '@ViewBag.UserCode '
+    var comCode = $.request("comCode");
+    var comCodeName = $.request("comCodeName");
+    $(function () {
+        bindSelect();
+        if (!!UserCode) {
+            $.ajax({
+                url: "/SystemManage/User/UserFormSelect",
+                data: { UserCode: UserCode },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    if (data.Birthday == "" || data.Birthday == undefined || data.Birthday == null) {
+                        $("#Birthday").val("");
+                    } else {
+                        var tm = fdate(data.Birthday);// new Date(data.Birthday).Format("yyyy-MM-dd");
+                        $("#Birthday").val(tm);
+                    }
+                    if (data.CreateTime == "" || data.CreateTime == undefined || data.CreateTime == null) {
+                        $("#CreateTime").val("");
+                    } else {
+                        var CreateTime = fdate(data.CreateTime);// new Date(data.CreateTime).Format("yyyy-MM-dd");
+                        $("#CreateTime").val(CreateTime);
+                    }
+                }
+            });
+        }
+        if (type == "add") {
+            if (!!comCode) {
+                $("#CompanyCodeName").val(comCodeName);
+                $("#CompanyCode").val(comCode);
+            }
+        }
+        $("#CompanyCodeName").click(function () {
+            SearchCom();
+        });
+        $("#DepartmentName").click(function () {
+            SearchDep();
+        });
+        $("#BtnCom").click(function () {
+            SearchCom();
+        });
+        $("#BtnDep").click(function () {
+            SearchDep();
+        });
+    });
+
+    function bindSelect() {
+        //员工状态
+        $("#UserClosed").bindSelect({
+            url: "/SystemManage/User/GetSelect?dataCode=IncumbencyState",
+        });
+        //性别
+        $("#UserSex").bindSelect({
+            url: "/SystemManage/User/GetSelect?dataCode=Sex",
+        });
+        //政治面貌
+        $("#PoliticalLandscape").bindSelect({
+            url: "/SystemManage/User/GetSelect?dataCode=PoliticalOutlook",
+        });
+        //招聘来源
+        $("#RecruitmentSource").bindSelect({
+            url: "/SystemManage/User/GetSelect?dataCode=RecruitmentSources",
+        });
+        //社保情况
+        $("#PurchaseSocialSecurity").bindSelect({
+            url: "/SystemManage/User/GetSelect?dataCode=SocialSecurity",
+        });
+        //保密合同
+        $("#ConfidentialityContract").bindSelect({
+            url: "/SystemManage/User/GetSelect?dataCode=ConfidentialityContract",
+        });
+        //劳务合同
+        $("#TheLaborContract").bindSelect({
+            url: "/SystemManage/User/GetSelect?dataCode=ServiceContract",
+        });
+    }
+
+    //提交新的员工信息
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "/SystemManage/User/UserUpdateSubmitForm",
+            param: $("#form1").formSerialize(),
+            success: function () {
+                var $loadingpage = top.$("#loadingPage");
+                $loadingpage.hide();
+            }
+        })
+    }
+
+    //选择所属公司
+    function SearchCom() {
+        $.modalOpen({
+            id: "GetCompany",
+            title: "公司信息",
+            url: "/SystemManage/Company/GetCompany?tc=1",
+            width: "700px",
+            height: "530px",
+            callBack: function (iframeId) {
+                var company = top.frames[iframeId].GetCompany();
+                if (company == 1) {
+                    $.modalMsg("请选择公司", "warning");
+                }
+                else {
+                    $("#CompanyCodeName").val(company.CompanyFullName);
+                    $("#CompanyCode").val(company.CompanyCode);
+                    $("#DepartmentCode").val("");
+                    $("#DepartmentName").val("");
+                    parent.layer.close(top.layer.index);
+                }
+            }
+        });
+    }
+
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li role="presentation" class="active"><a href="#">基本信息</a></li>
+        </ul>
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">您的姓名<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" maxlength="200" type="text" class="form-control required" placeholder="员工名称" />
+                        <input id="UserPwd" name="UserPwd" type="text" style="display:none" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">出生年月</th>
+                    <td class="formValue">
+                        <input id="Birthday" name="Birthday" type="text" class="form-control input-wdatepicker" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" onfocus="WdatePicker()" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">在职状态<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="UserClosed" name="UserClosed" class="form-control required"></select>
+                    </td>
+                    <th class="formTitle">政治面貌</th>
+                    <td class="formValue">
+                        <select id="PoliticalLandscape" name="PoliticalLandscape" class="form-control">
+                            <option value="0">请选择</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">手机号码<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="MobilePhone" maxlength="14" name="MobilePhone" type="text" class="form-control required isTel" />
+                    </td>
+                    <th class="formTitle">固定电话</th>
+                    <td class="formValue">
+                        <input id="Tell" maxlength="20" name="Tell" type="text" class="form-control isTel" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">电子邮箱</th>
+                    <td class="formValue">
+                        <input id="Email" name="Email" maxlength="200" type="text" class="form-control isEmail" />
+                    </td>
+                    <th class="formTitle">QQ号</th>
+                    <td class="formValue">
+                        <input id="QQ" name="QQ" maxlength="200" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">微信号</th>
+                    <td class="formValue">
+                        <input id="WeChat" name="WeChat" maxlength="200" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">招聘来源</th>
+                    <td class="formValue">
+                        <select id="RecruitmentSource" name="RecruitmentSource" class="form-control">
+                            <option></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">社保情况</th>
+                    <td class="formValue">
+                        <select id="PurchaseSocialSecurity" name="PurchaseSocialSecurity" class="form-control">
+                            <option></option>
+                        </select>
+                    </td>
+                    <th class="formTitle">劳务合同</th>
+                    <td class="formValue">
+                        <select id="TheLaborContract" name="TheLaborContract" class="form-control">
+                            <option></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">保密合同</th>
+                    <td class="formValue">
+                        <select id="ConfidentialityContract" name="ConfidentialityContract" class="form-control">
+                            <option></option>
+                        </select>
+                    </td>
+                    <th class="formTitle">加入时间</th>
+                    <td class="formValue">
+                        <input id="CreateTime" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" name="CreateTime" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">所属公司<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input type="hidden" id="UserCode" name="UserCode" value="@ViewBag.UserCode" />
+                            <input id="CompanyCodeName" name="CompanyCodeName" type="text" disabled="disabled" class="form-control required" />
+                            <input id="CompanyCode" style="display:none" name="CompanyCode" type="text" class="form-control" />
+                            <span class="input-group-btn">
+                                <a class="btn  btn-primary" id="BtnCom"><i class="fa fa-search"></i></a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

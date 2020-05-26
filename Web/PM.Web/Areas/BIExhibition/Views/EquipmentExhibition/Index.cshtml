@@ -1,0 +1,156 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<link href="~/Content/css/app.v2.css" rel="stylesheet" />
+<script>
+    var PId = $.request("PId");
+    $(function () {
+        if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+            $("header").css("background-color", "#1491e4");
+            $("header").css("color", "#ffffff");
+            $(".panel-default").css("border-bottom", "2px solid #dcd260");
+        }
+        //加工厂设备历史产能分析
+        JGCLSEquipmentAnalysis();
+        //加工厂当月设备能耗产能分析
+        JGCThisMonthEquipmentExhibitionAnalysis();
+    });
+
+    //加工厂设备历史产能分析
+    function JGCLSEquipmentAnalysis() {
+        //$.get('/BIExhibition/EquipmentExhibition/JGCLSEquipmentAnalysis?PId=' + PId, {}, function (data) {
+            //var data1 = [];
+            //var data2 = [];
+            //var yuedata = [];
+            //var json = eval('(' + data + ')');
+            //if (json.length > 0) {
+            //    for (var i = 0; i < json.length; i++) {
+            //        data1.push(parseInt(json[i]["Count1"]));
+            //        data2.push(parseInt(json[i]["Count2"]));
+            //        yuedata.push(json[i]["months"]);
+            //    }
+            //}
+            var chart = Highcharts.chart('two', {
+                chart: {
+                    type: 'line'
+                },
+                title: {
+                    text: '加工厂设备历史产能分析'
+                }, credits: {
+                    enabled: false//是否显示版权信息
+                },
+                xAxis: {
+                    categories: [ '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+                }, yAxis: {
+                    title: {
+                        text: 'kg'
+                    }
+                },
+                plotOptions: {
+                    line: {
+                        dataLabels: {
+                            // 开启数据标签
+                            enabled: true
+                        },
+                        // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+                        enableMouseTracking: true
+                    }
+                },
+                series: [{
+                    name: '钢筋弯曲机',
+                    data: [7.0, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2]
+                }, {
+                    name: '钢筋直螺纹滚丝机',
+                    data: [7.5, 6.0, 9.0, 15, 20.5, 5.5, 20.2]
+                }, {
+                    name: '数控等离子火焰切割机',
+                    data: [5.5, 7.7, 6.5, 9.5, 22.4, 15.5, 2.2]
+                }, {
+                    name: '数控多功能冲剪机',
+                    data: [10.0, 6.9, 9.5, 16.5, 11.4, 19.5, 5.2]
+                }, {
+                    name: '数控工字钢冷弯机',
+                    data: [8.0, 5.9, 3.5, 18.5, 12.4, 12.5, 20.2]
+                }]
+            });
+        //})
+    }
+
+    //加工厂当月设备能耗产能分析
+    function JGCThisMonthEquipmentExhibitionAnalysis()
+    {
+        //$.get('/BIExhibition/EquipmentExhibition/JGCThisMonthEquipmentExhibitionAnalysis?PId=' + PId, {}, function (data) {
+            //var json = eval('(' + data + ')');
+            //for (var i = 0; i < json.length; i++) {
+            //    site.push([json[i]["CompanyFullName"]]);
+            //    ZNum.push([parseFloat(json[i]["WeightTotal"])]);
+            //    YNum.push([parseFloat(json[i]["AccumulativeQuantity"])]);
+            //    WNum.push([parseFloat(json[i]["unfinished"])]);
+            //}
+            var chart = Highcharts.chart('three', {
+                chart: {
+                    type: 'line'
+                },
+                title: {
+                    text: '加工厂当月设备能耗产能分析'
+                },
+                xAxis: {
+                    categories: ["钢筋弯曲机", "钢筋直螺纹滚丝机", "数控等离子火焰切割机", "数控多功能冲剪机", "数控工字钢冷弯机"]
+                },
+                yAxis: {
+                    title: {
+                        text: ''
+                    }
+                }, credits: {
+                    enabled: false//是否显示版权信息
+                },
+                plotOptions: {
+                    line: {
+                        dataLabels: {
+                            // 开启数据标签
+                            enabled: true
+                        },
+                        // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+                        enableMouseTracking: true
+                    }
+                },
+                series: [{
+                    name: '耗油',
+                    data: [22,14,33,27,25]
+                }, {
+                    name: '耗电',
+                    data: [55,43,23,14,27]
+                }, {
+                    name: '产能',
+                    data: [11,22,77,32,21]
+                }]
+            });
+        //})
+    }
+</script>
+
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                加工厂设备历史产能分析
+            </header>
+            <div class="panel-body">
+                <div id="two" style="height: 250px;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                加工厂当月设备能耗产能分析
+            </header>
+            <div class="panel-body">
+                <div id="three" style="height: 250px;"></div>
+            </div>
+        </section>
+    </div>
+</div>

@@ -1,0 +1,62 @@
+﻿@{
+    ViewBag.Title = "数据字典Details";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<link href="~/Content/css/input.css" rel="stylesheet" />
+<script>
+    var keyValue = $.request("keyValue");
+    $(function () {
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "/SystemManage/DataDictionary/GetFormJsonType",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    $("#form1").find('.form-control,select,input').attr('disabled', 'disabled');
+                    $("#form1").find('div.ckbox label').attr('for', '');
+                }
+            });
+        }
+    });
+    function initControl() {
+        $("#PDictionaryCode").bindSelect({
+            url: "/SystemManage/DataDictionary/GetSelectJson",
+        });
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li role="presentation" class="active"><a href="#">基本信息</a></li>
+        </ul>
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">上级分类</th>
+                    <td class="formValue">
+                        <select id="PDictionaryCode" name="PDictionaryCode" disabled="disabled" class="form-control required">
+                            <option value="0">请选择</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+
+                    <th class="formTitle">分类编码<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DictionaryCode" name="DictionaryCode" type="text" class="form-control required" placeholder="分类名称" />
+                    </td>
+                </tr>
+                <tr>
+
+                    <th class="formTitle">分类名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DictionaryType" name="DictionaryType" type="text" class="form-control required" placeholder="分类名称" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,173 @@
+﻿@{
+    ViewBag.Title = "事件设置";
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>事件设置</title>
+    <link href="~/UiFrame/EasyUi/themes/gray/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+    <link href="~/UiFrame/pmicon.css" rel="stylesheet" />
+    <script src="~/UiFrame/EasyUi/jquery.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/EasyUi/easyui-lang-zh_CN.js"></script>
+    <script src="~/UiFrame/jeasyui.extensions.js"></script>
+    <script src="~/SysConfig/genericOperate.js"></script>
+</head>
+<body>
+    <table id='EventList' class="easyui-datagrid" data-options="pagination:false,singleSelect:true,rownumbers:true,fit:true" toolbar="#tlbEvent">
+        <thead>
+            <tr>
+                <th data-options="field:'id'" hidden='hidden'>id</th>
+                <th data-options="field:'FlowCode'" hidden='hidden'>流程代码</th>
+                <th data-options="field:'FlowNodeCode'" hidden='hidden'>节点代码</th>
+                <th data-options="field:'StateCode'" hidden='hidden'>执行状态代码</th>
+                <th data-options="field:'StateDescription'">事件执行阶段</th>
+                <th data-options="field:'fmCode'">所属功能</th>
+                <th data-options="field:'ActionCode'">操作代码</th>
+                <th data-options="field:'EventDescription'">事件描述</th>
+            </tr>
+        </thead>
+    </table>
+    <div id="tlbEvent" style="height: auto">
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'pmicon-add-16',plain:true" onclick="AddEvent()">添加</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'pmicon-add-16',plain:true" onclick="AddEvent()">修改</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'pmicon-remove-16',plain:true" onclick="DelEvent()">删除</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'pmicon-close-16',plain:true" onclick="javascript:parent.$('#winEvent').window('close')">关闭</a>
+    </div>
+
+    <div id="dlgFlowEvent" title="事件设置" class="easyui-dialog" data-options="closed:true,buttons:'#dlgbtnFlowEvent',maximizable:false,modal:true" style="width: 360px; height: 240px">
+        <div style="height: 20px;"></div>
+        <form id="fmEdit" method="post">
+            <input id="id" type="hidden" />
+            <input id="FlowCode" name="FlowCode" value="@ViewBag.FlowCode" type="hidden" />
+            <input id="FlowNodeCode" name="FlowNodeCode" value="@ViewBag.FlowNodeCode" type="hidden" />
+            <table>
+                <tbody>
+                    <tr>
+                        <td style="word-break: break-all;" align="right" valign="middle" width="100">执行阶段</td>
+                        <td style="word-break: break-all;" valign="top" width="200">
+                            <select style="width: 200px;" id="StateCode" name="StateCode" class="easyui-combobox" prompt="必填项" missingmessage="必填" required="true">
+                                <option value="-1">流程开始审批</option>
+                                <option value="9">流程审核完成</option>
+                                <option value="4">流程终止</option>
+                                <option value="3">流程退回</option>
+                                <option value="2">流程撤销</option>
+                            </select >
+                        </td>
+                    </tr>
+                    <tr style="display:none;">
+                        <td style="word-break: break-all;" align="right" valign="middle" width="100">所属功能</td>
+                        <td style="word-break: break-all;" valign="top" width="200">
+                            <input style="width: 200px;" id="fmCode" name="fmCode" class="easyui-combobox" prompt="必填项" missingmessage="必填" required="true"
+                                   data-options="valueField: 'fmCode',textField: 'fmCode',panelMaxHeight:120" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="word-break: break-all;" align="right" valign="middle" width="100">执行事件</td>
+                        <td style="word-break: break-all;" valign="top" width="200">
+                            <input style="width: 200px;" id="ActionCode" name="ActionCode" class="easyui-combobox" prompt="必填项" missingmessage="必填" required="true"
+                                   data-options="panelMaxHeight:120" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="word-break: break-all;" align="right" valign="middle" width="100">事件描述</td>
+                        <td style="word-break: break-all;" valign="top" width="200">
+                            <input style="width: 200px;" class="easyui-textbox" prompt="必填项" missingmessage="必填" required="true" value="" id="EventDescription" name="EventDescription" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+    <div id="dlgbtnFlowEvent" style="text-align: center; display: none;">
+        <a href='javascript:void(0);' class='easyui-linkbutton' iconcls='icon-save' onclick="SaveEvent()">保存</a>
+        <a href="javascript:void(0);" onclick="javascript: $('#dlgFlowEvent').dialog('close');" class="easyui-linkbutton" iconcls="icon-cancel">取消</a>
+    </div>
+    <script>
+        var eventtype = '@ViewBag.eventtype';
+        var ListURL = '@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowEventList" })' + "&FlowCode='@ViewBag.FlowCode'";
+        if (eventtype == 'flownode') {
+            ListURL = '@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowNodeEventList" })' + "&FlowCode='@ViewBag.FlowCode'&FlowNodeCode='@ViewBag.FlowNodeCode'";
+        }
+        $(document).ready(function () {
+            $('#EventList').datagrid({
+                url: ListURL
+            });
+            InitControl();
+        })
+        //初始化编辑下拉控件
+        function InitControl() {
+            var FlowCode = '@ViewBag.FlowCode';
+            var FlowNodeCode = '@ViewBag.FlowNodeCode';
+            $("#ActionCode").combobox({
+                valueField: 'ProcName',
+                textField: 'Remark',
+                url: '/Flow/Flow/GetFlowEvent?FlowCode=' + FlowCode + '&FlowNodeCode' + FlowNodeCode
+            });
+        }
+        //添加
+        function AddEvent() {
+            $("#fmEdit").form('reset');
+            $('#id').val();
+            $("#dlgFlowEvent").dialog('open');
+        }
+        //保存
+        function SaveEvent() {
+            var url = '@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowEvent" })';
+            if (eventtype == 'flownode') {
+                url = '@Url.Action("ItemCUD", "Flow", new { FunCode = "addNodeEvent" })';
+            }
+            $.messager.progress();
+            $('#fmEdit').form('submit', {
+                url: url,
+                onSubmit: function () {
+                    var isValid = $(this).form('enableValidation').form('validate');
+                    if (!isValid) {
+                        $.messager.progress('close');
+                    }
+                    return isValid;
+                },
+                success: function (result) {
+                    result = eval('(' + result + ')');
+                    $.messager.progress('close');	// 如果提交成功则隐藏进度条
+                    if (result.success) {
+                        $("#dlgFlowEvent").dialog('close');
+                        $('#EventList').datagrid('reload');
+                    } else {
+                        $.messager.alert('操作提示', result.message, 'error');
+                    }
+                }
+            });
+        }
+
+        //删除节点事件
+        function DelEvent() {
+            var row = $("#EventList").datagrid('getSelected');
+            if (row) {
+                $.messager.confirm('警告', "您确定要删除所选事件吗？", function (flag) {
+                    if (flag) {
+                        var url = '@Url.Action("ItemCUD", "Flow", new { FunCode = "DeleteFlowEvent" })' + '&id=' + row.id;
+                        if (eventtype == 'flownode') {
+                            url = '@Url.Action("ItemCUD", "Flow", new { FunCode = "deleteNodeEvent" })' + '&id=' + row.id;
+                        }
+                        $.post(url, function (data) {
+                            data = eval('(' + data + ')');
+                            if (data.success) {
+                                $('#EventList').datagrid('reload');
+                            } else {
+                                $.messager.alert('操作提示', result.message, 'error');
+                            }
+                        });
+                    }
+                });
+            } else {
+                $.messager.alert('操作提示', '请选择要删除的事件', 'info');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link href="~/Content/css/framework-font.css" rel="stylesheet" />
+    <link href="~/Content/css/framework-login.css" rel="stylesheet" />
+    <link href="~/Content/css/Style-index.css" rel="stylesheet" />
+    <script src="~/Content/js/jquery/jquery-2.1.1.min.js"></script>
+    <script src="~/Content/js/cookie/jquery.cookie.js"></script>
+    <script src="~/Content/js/bootstrap/bootstrap.js"></script>
+    <link href="~/Content/js/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+    <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+    <script src="~/Content/js/layer/layer.js"></script>
+    <script src="~/Content/js/Highcharts-8.0.0/highcharts.js"></script>
+    <script src="~/Content/js/Highcharts-8.0.0/highcharts-more.js"></script>
+    <script src="~/Content/js/Highcharts-8.0.0/modules/solid-gauge.js"></script>
+    <style type="text/css">
+        .bg-bubbles-li {
+            background-color: rgba(17, 186, 236, 0.24) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper" style="height:100%;overflow:hidden;background:#D7FFEE">
+        <div>
+            <div style="text-align:center;position: absolute;width:100%;height:100%;top:50%;margin-top:-20%;" id="finfo">
+            </div>
+            <div class="login_tips"></div>
+        </div>
+        <ul class="bg-bubbles">
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+            <li class="bg-bubbles-li"></li>
+        </ul>
+    </div>
+    <div class="copyright" style="color:black">
+        <br>
+        <span>中铁广州建设有限公司 &copy; 版权所有 技术支持：中铁二院工程集团有限责任公司</span>
+        <br />
+    </div>
+    <script type="text/html" id="new-card">
+        <div style="width:25%;height:65%;display:inline-block;padding-left: 5px;padding-right: 5px;margin-left: 20px;margin-right: 20px;">
+            <div style="height:70px;margin-bottom:20px;" class="fbox">
+                <div style="width:75%;text-align:center;float:left;padding-top:20px;margin-left:50px;">
+                    <div style="width:250px;display:inline-block;padding:5px;" class="guide-card-bg">
+                        <label class="FactoryName" style="font-size:17px;">{FactoryNum}号加工厂</label><br />
+                        <label>{HistoryTime} 投产</label>
+                    </div>
+                </div>
+                <div style="float:right;">
+                    <div style="width:40px; margin-left:-40px;margin-top:5px; display:inline-block;position:absolute;z-index:2;">
+                        <label style="color:#00AEAE;font-size:14px;">进入</label>
+                        <img src="@Url.Content("~/Content/img/in.png")" style="width:40px;height:40px; cursor:pointer;" class="divClick" fcode="{FactoryCode}" />
+                    </div>
+                </div>
+            </div>
+            <div style="height:90%;padding:5px;" class="guide-card-bg">
+                <div style="height:27%;margin-bottom:3px;" class="guide-card-border">
+                    <div style="float:left;width:10%;padding-top:8%;">
+                        <div class="guide-card-lab">本<br />月</div>
+                    </div>
+                    <div style="float:left;width:90%;text-align:left;height: 85%">
+                        <div style="height:70%;overflow:hidden;margin:5px;margin-left:0px;margin-right:5px;padding-top:2px;">
+                            <div style="float:left;width:43%;padding:5px;" class="guide-card-border">
+                                <div class="guide-rate"><label>生产及时率 </label><label class="guide-right" style="{color1}">{M-O-TotalRate}%</label><br /></div>
+                                <label>订单: </label><label class="guide-right">{M-O-OrderCount}个(加急单{M-O-OrderRate}%)</label><br />
+                                <label>滞后: </label><label class="guide-right">{M-O-OtherCount}个(加急单{M-O-OtherRate}%)</label>
+                            </div>
+                            <div style="float:right;width:55%;padding:5px;" class="guide-card-border">
+                                <div class="guide-rate">
+                                    <label>配送准时率</label><label class="guide-right" style="{color2}">{M-P-TotalRate}%</label><br />
+                                </div>
+                                <label>超期配送:</label><label class="guide-right"> {M-P-OrderCount}单(加急单{M-P-OrderRate}%)</label><br />
+                                <label>超期未配送:</label><label class="guide-right">{M-P-OtherCount}单(加急单{M-P-OtherRate}%)</label>
+                            </div>
+                        </div>
+                        <div style="height:30%;overflow:hidden;margin-right:5px;padding:5px;" class="guide-card-border">
+                            <div style="float:left;width:50%;">业务站点: {M-Site}个</div>
+                            <div style="float:left;width:50%;">业务工区: {M-WorkArea}个</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="height:40%;margin-bottom:3px;margin-top:-10px;">
+                    <div style="position:absolute;z-index:2;padding:10px;text-align:left;">
+                        <div style="margin-top:40px;">月综合产能</div>
+                        <div>{R-TotalRate}kg</div>
+                        <div style="margin-top:20px;">当月未完成总量</div>
+                        <div>{R-OrderRate}kg</div>
+                    </div>
+                    <div style="position:absolute;z-index:2;width:24%;margin-top:6.4%; font-weight:bold;color:black;">
+                        产能负荷
+                    </div>
+                    <div style="position:absolute;z-index:2;width:24%;margin-top:8.4%; font-weight:bold;color:black;">
+                        {CN}%
+                    </div>
+                    <div style="position:absolute;z-index:2;width:24%;margin-top:10.4%;">
+                        {NowDate}
+                    </div>
+                    <div id="container{ContainerNum}" style="width:100%; height: 100%; margin: 0 auto"></div>
+                </div>
+                <div style="height:26%;margin-bottom:3px;" class="guide-card-border">
+                    <div style="float:left;width:10%;padding-top:8%">
+                        <div class="guide-card-lab">综<br />合</div>
+                    </div>
+                    <div style="float:left;width:90%;text-align:left;height: 85%">
+                        <div style="height:70%;overflow:hidden;margin:5px;margin-left:0px;margin-right:5px;padding-top:2px;">
+                            <div style="float:left;width:50%;padding:5px;" class="guide-card-border">
+                                <div class="guide-rate">
+                                    <label>生产及时率 </label><label class="guide-right" style="{color3}"> {T-O-TotalRate}%</label><br />
+                                </div>
+                                <label>累计完成:</label><label class="guide-right">{T-O-OrderCount}单</label><br />
+                                <div class="guide-right">{T-O-OrderRate}kg</div>
+                            </div>
+                            <div style="float:right;width:48%;padding:5px;" class="guide-card-border">
+                                <div class="guide-rate">
+                                    <label>配送准时率</label><label class="guide-right" style="{color4}"> {T-P-TotalRate}%</label><br />
+                                </div>
+                                <label>累计配送:</label><label class="guide-right"> {T-P-OrderCount}单</label><br />
+                                <label style="visibility:hidden">xxx</label>
+                            </div>
+                        </div>
+                        <div style="height:30%;overflow:hidden;margin-right:5px;padding:5px;" class="guide-card-border">
+                            <div style="float:left;">月均接单量: </div><div class="guide-right">{T-Site}单 ({T-TotalWeight}kg)</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="height:40px;">
+                    <div style="float:left;width:10%;padding-top:5px;">
+                        <img src="@Url.Content("~/Content/img/tel.png")" />
+                    </div>
+                    <div style="float:left;width:90%;text-align:left;">
+                        <div style="height:50%;overflow:hidden;margin-left:0px;margin-right:2px;">
+                            <div style="float:left;width:50%;">联系人: {Contacts}</div>
+                            <div style="float:left;width:50%;">联系电话: {Tel}</div>
+                        </div>
+                        <div style="height:50%;">
+                            <div>地址: {Address}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+    <script type="text/javascript">
+        $(function () {
+            GetData("6386683214299275264", 1);
+            GetData("6386683729561128960", 2);
+            GetData("6386683947165814784", 3);
+
+            $(".divClick").click(function () {
+                var code = $(this).attr("fcode");
+                var name = $(this).parents(".fbox").find(".FactoryName").html();
+                var fm = "@ViewBag.ProcessFactoryName";
+                var factoryCode = "@ViewBag.ProcessFactoryCode";
+                var orgType = "@ViewBag.OrgType";
+                if (orgType == "1" && factoryCode != code) {
+                    var msg = "只能查看" + fm + "数据";
+                    $.modalMsg(msg, "warning");
+                    return false;
+                }
+                $.ajax({
+                    url: "/Home/SaveProcessFactoryCode",
+                    data: { ProcessFactoryCode: code, ProcessFactoryName: name },
+                    type: "get",
+                    dataType: "json",
+                    async: false,
+                    success: function (data) {
+                        top.location.href = "/Home/Index";
+                    }
+                });
+            });
+        });
+        function GetData(code, id) {
+            var request = {};
+            request.ProcessFactoryCode = code;
+            $.ajax({
+                url: "@Url.Action("GetFactoryInfo", "Home")",
+                data: request,
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    var factoryNum = "一";
+                    var historyTime = "2017-11-25";
+                    if (id == 2) {
+                        factoryNum = "二";
+                        historyTime = "2018-01-25";
+                    }
+                    else if (id == 3) {
+                        factoryNum = "三";
+                        historyTime = "2017-10-19";
+                    }
+                    var c1 = "red", c2 = "#00FF7F";
+                    var color1 = c1, color2 = c1, color3 = c1, color4 = c1;
+                    if (data.MonthInfo.Production.TotalRate >= 80)
+                        color1 = c2;
+                    if (data.MonthInfo.Delivery.TotalRate >= 80)
+                        color2 = c2;
+                    if (data.TotalInfo.Production.TotalRate >= 80)
+                        color3 = c2;
+                    if (data.TotalInfo.Delivery.TotalRate >= 80)
+                        color4 = c2;
+                    var item = $("#new-card").html()
+                     .replace("{color1}", "color:" + color1)
+                     .replace("{color2}", "color:" + color2)
+                     .replace("{color3}", "color:" + color3)
+                     .replace("{color4}", "color:" + color4)
+                     .replace("{FactoryCode}", code)
+                     .replace("{FactoryNum}", factoryNum)
+                     .replace("{HistoryTime}", historyTime)
+                     .replace("{M-O-TotalRate}", data.MonthInfo.Production.TotalRate)
+                     .replace("{M-O-OrderCount}", data.MonthInfo.Production.OrderCount)
+                     .replace("{M-O-OrderRate}", data.MonthInfo.Production.OrderRate)
+                     .replace("{M-O-OtherCount}", data.MonthInfo.Production.OtherCount)
+                     .replace("{M-O-OtherRate}", data.MonthInfo.Production.OtherRate)
+
+                     .replace("{M-P-TotalRate}", data.MonthInfo.Delivery.TotalRate)
+                     .replace("{M-P-OrderCount}", data.MonthInfo.Delivery.OrderCount)
+                     .replace("{M-P-OrderRate}", data.MonthInfo.Delivery.OrderRate)
+                     .replace("{M-P-OtherCount}", data.MonthInfo.Delivery.OtherCount)
+                     .replace("{M-P-OtherRate}", data.MonthInfo.Delivery.OtherRate)
+                     .replace("{M-Site}", data.MonthInfo.Site)
+                     .replace("{M-WorkArea}", data.MonthInfo.WorkArea)
+                     .replace("{R-TotalRate}", data.ReportInfo.TotalRate)
+                     .replace("{R-OrderRate}", data.ReportInfo.OrderRate)
+                     .replace("{NowDate}", data.DateTimeStr)
+                     .replace("{CN}", data.ReportInfo.OtherRate)
+
+                     .replace("{T-O-TotalRate}", data.TotalInfo.Production.TotalRate)
+                     .replace("{T-O-OrderCount}", data.TotalInfo.Production.OrderCount)
+                     .replace("{T-O-OrderRate}", data.TotalInfo.Production.OrderRate)
+                     .replace("{T-P-TotalRate}", data.TotalInfo.Delivery.TotalRate)
+                     .replace("{T-P-OrderCount}", data.TotalInfo.Delivery.OrderCount)
+                     .replace("{T-Site}", data.TotalInfo.Site)
+                     .replace("{T-TotalWeight}", data.TotalInfo.TotalWeight)
+
+                     .replace("{Contacts}", data.Contacts)
+                     .replace("{Tel}", data.Tel)
+                     .replace("{Address}", data.Address)
+                     .replace("{ContainerNum}", id);
+                    $("#finfo").append(item);
+                    loadChar("container" + id, data.ReportInfo.OtherRate);
+                }
+            });
+        }
+        function loadChar(id, data) {
+            var chart = Highcharts.chart(id, {
+                chart: {
+                    type: 'gauge',
+                    backgroundColor: "rgba(0,0,0,0)",
+                    plotBackgroundColor: null,
+                    plotBackgroundImage: null,
+                    plotBorderWidth: 0,
+                    plotShadow: false
+                },
+                title: {
+                    text: null
+                }, credits: {
+                    enabled: false // 禁用版权信息GQSHOW
+                },
+                pane: {
+                    startAngle: -150,
+                    endAngle: 150,
+                    background: [{
+                        backgroundColor: {
+                            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                            stops: [
+                                [0, '#FFF'],
+                                [1, '#333']
+                            ]
+                        },
+                        borderWidth: 0,
+                        outerRadius: '109%'
+                    }, {
+                        backgroundColor: {
+                            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                            stops: [
+                                [0, '#333'],
+                                [1, '#FFF']
+                            ]
+                        },
+                        borderWidth: 1,
+                        outerRadius: '107%'
+                    }, {
+                        // default background
+                    }, {
+                        backgroundColor: '#DDD',
+                        borderWidth: 0,
+                        outerRadius: '105%',
+                        innerRadius: '103%'
+                    }]
+                },
+                // the value axis
+                yAxis: {
+                    min: 0,
+                    max: 100,
+                    minorTickInterval: 'auto',
+                    minorTickWidth: 1,
+                    minorTickLength: 10,
+                    minorTickPosition: 'inside',
+                    minorTickColor: '#666',
+                    tickPixelInterval: 30,
+                    tickWidth: 2,
+                    tickPosition: 'inside',
+                    tickLength: 10,
+                    tickColor: '#666',
+                    labels: {
+                        step: 2,
+                        rotation: 'auto'
+                    },
+                    title: {
+                        text: '',
+                    },
+                    plotBands: [{
+                        from: 0,
+                        to: 20,
+                        color: '#55BF3B' // green
+                    }, {
+                        from: 20,
+                        to: 60,
+                        color: '#DDDF0D' // yellow
+                    }, {
+                        from: 60,
+                        to: 100,
+                        color: '#DF5353' // red
+                    }]
+                },
+                series: [{
+                    name: 'Speed',
+                    data: [data],
+                    tooltip: {
+                        valueSuffix: ' km/h'
+                    }
+                }]
+            }, function (chart) {
+
+            });
+        }
+    </script>
+</body>
+</html>

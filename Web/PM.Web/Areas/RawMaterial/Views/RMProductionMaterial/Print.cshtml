@@ -1,0 +1,189 @@
+﻿@{
+    ViewBag.Title = "打印领料单";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+@model Tuple<System.Data.DataTable, List<PM.DataEntity.Production.ViewModel.WorkOrderDetailDetailResponse>>
+<style>
+</style>
+<div id="ExAndPrint" style="position: absolute; top: 22px; right: 8px;">
+    <a class="btn btn-default " onclick="btn_print()"><i class="fa fa-print" style="margin-right: 5px; font-size: 13px;"></i>打印</a>
+</div>
+<!--startprint-->
+<div id="printView" style="height: 100%; margin: 10px; overflow: hidden">
+    <table id="DTable" style="width: 100%; min-height: 25px; line-height: 25px; text-align: center; border-collapse: collapse; border: 1px solid #070606;font-size:10px;margin-top:45px">
+        <tr class="trclass" style="border: 0px solid #070606;">
+            <td id="btH" class="tdclass" colspan="17" style="border: 0px solid #070606;"><h4>构件加工原材料生产领料单</h4></td>
+        </tr>
+        <tr class="trclass1" style="border: 0px solid #070606;">
+            <td colspan="17" style="text-align: right; border: 0px solid #070606;padding-right:25px;">
+                单位：kg
+            </td>
+        </tr>
+        <tr class="trclass1" style="text-align: left; border: 1px solid #070606;">
+            <td class="tdclass1" colspan="2" style="border: 1px solid #070606;">领用单号：</td>
+            <td class="tdclass1" colspan="3" style="border: 1px solid #070606;">@Model.Item1.Rows[0]["CollarCode"]</td>
+            <td class="tdclass1" colspan="3" style="border: 1px solid #070606;">加工订单：</td>
+            <td class="tdclass1" colspan="4" style="border: 1px solid #070606;">@Model.Item1.Rows[0]["OrderCode"]</td>
+            <td class="tdclass1" colspan="2" style="border: 1px solid #070606;">领用日期：</td>
+            <td class="tdclass1" colspan="3" style="border: 1px solid #070606;">@Model.Item1.Rows[0]["CollarDate"]</td>
+        </tr>
+        <tr class="trclass1" style="text-align: left; border: 1px solid #070606;">
+            <td class="tdclass1" colspan="2" style="border:1px solid #070606;">类型名称：</td>
+            <td class="tdclass1" colspan="3" style="border:1px solid #070606;">@Model.Item1.Rows[0]["TypeName"]</td>
+            <td class="tdclass1" colspan="3" style="border:1px solid #070606;">使用部位：</td>
+            <td class="tdclass1" colspan="4" style="border:1px solid #070606;">@Model.Item1.Rows[0]["CollarPosition"]</td>
+            <td class="tdclass1" colspan="2" style="border:1px solid #070606;">加工厂名称：</td>
+            <td class="tdclass1" colspan="3" style="border:1px solid #070606;">@Model.Item1.Rows[0]["ProcessFactoryName"]</td>
+        </tr>
+        <tr class="trclass1" style="text-align: left;border: 1px solid #070606;">
+            <td class="tdclass1" colspan="2" style="border:1px solid #070606;">分部：</td>
+            <td class="tdclass1" colspan="3" style="border:1px solid #070606;">@Model.Item1.Rows[0]["BranchName"]</td>
+            <td class="tdclass1" colspan="3" style="border:1px solid #070606;">工区：</td>
+            <td class="tdclass1" colspan="4" style="border:1px solid #070606;">@Model.Item1.Rows[0]["WorkAreaName"]</td>
+            <td class="tdclass1" colspan="2" style="border:1px solid #070606;">站点：</td>
+            <td class="tdclass1" colspan="3" style="border:1px solid #070606;">@Model.Item1.Rows[0]["SiteName"]</td>
+        </tr>
+        <tr id="bt" class="trclass" style="border: 1px solid #070606;">
+            <td class="tdclass1" style="border: 1px solid #070606;">序号</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">构件名称</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">原材料编号</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">原材料名称</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">规格/型号</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">单位重量</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">单件用量</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">件数</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">重量小计</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">领料件数</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">厂家</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">炉批号</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">检测报告编号</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">使用材料类型</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">尺寸(m)</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">数量(根)</td>
+            <td class="tdclass1" style="border: 1px solid #070606;">领料重量小计</td>
+        </tr>
+
+        @if (Model.Item2.Count > 0)
+        {
+            int index = 1;
+            foreach (var i in Model.Item2)
+            {
+                int rowp = 1;
+                if (i.plan.Count > 0)
+                {
+                    rowp = i.plan.Count;
+
+                }
+                <tr class='trclass' style='border: 1px solid #070606;'>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@index </td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.ComponentName</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.MaterialCode</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.MaterialName</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.SpecificationModel</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.MeasurementUnitZl</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.ItemUseNum</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.Number</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.WeightSmallPlan</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.Number</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.Manufactor</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.HeatNo</td>
+                    <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.TestReportNo</td>
+                    @if (i.plan.Count == 0)
+                    {
+                        <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.RMTypeName</td>
+                        <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@(i.SizeSelection.ToString("#0.00"))</td>
+                        <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.RootNumber</td>
+                        <td class='tdclass1' rowspan="@rowp" style='border: 1px solid #070606;'>@i.WeightSmallPlanN</td>
+                    }
+                    else
+                    {
+                        <td class='tdclass1' style='border: 1px solid #070606;'>@i.plan[0].RMTypeName</td>
+                        <td class='tdclass1' style='border: 1px solid #070606;'>@(i.plan[0].SizeSelection.ToString("#0.00"))</td>
+                        <td class='tdclass1' style='border: 1px solid #070606;'>@i.plan[0].RootNumber</td>
+                        <td class='tdclass1' style='border: 1px solid #070606;'>@i.plan[0].WeightSmallPlanN</td>
+                    }
+                </tr>
+                if (i.plan.Count > 0)
+                {
+                    for (int j = 0; j < i.plan.Count; j++)
+                    {
+                        if (j > 0)
+                        {
+                            <tr class='trclass' style='border: 1px solid #070606;'>
+                                <td class='tdclass1' style='border: 1px solid #070606;'>@i.plan[j].RMTypeName</td>
+                                <td class='tdclass1' style='border: 1px solid #070606;'>@(i.plan[j].SizeSelection.ToString("#0.00"))</td>
+                                <td class='tdclass1' style='border: 1px solid #070606;'>@i.plan[j].RootNumber</td>
+                                <td class='tdclass1' style='border: 1px solid #070606;'>@i.plan[j].WeightSmallPlanN</td>
+                            </tr>
+                        }
+                    }
+                }
+                index++;
+            }
+        }
+        <tr id="rq" class="trclass" style="border: 1px solid #070606;"></tr>
+        <tr class="trclass" style="text-align: left; border: 1px solid #070606;">
+            <td id="Remark" class="tdclass" colspan="17" style="border:1px solid #070606;">备注：@Model.Item1.Rows[0]["Remark"]</td>
+        </tr>
+    </table>
+</div>
+<!--endprint-->
+<script type="text/javascript">
+    $(function () {
+        top.$(".content-iframe").css("background-color", "#f9f9f9");
+        if (getExplorer() == "Chrome") {
+            $("#DTable").css({ "font-size": "12px", "-webkit-transform": "scale(0.9)" })
+        }
+    });
+    //打印
+    function btn_print() {
+        var bdhtml = window.document.body.innerHTML;
+        var sprnstr = "<!--startprint-->";
+        var eprnstr = "<!--endprint-->";
+        var prnhtml = bdhtml.substr(bdhtml.indexOf(sprnstr) + 17);
+        prnhtml = prnhtml.substring(0, prnhtml.indexOf(eprnstr));
+        if (getExplorer() == "IE") {
+            pagesetup_null();
+        }
+        window.document.body.innerHTML = prnhtml;
+        window.print();
+    }
+    //获取浏览器类型
+    function getExplorer() {
+        var explorer = window.navigator.userAgent;
+        //ie
+        if (explorer.indexOf("MSIE") >= 0) {
+            return "IE";
+        }
+            //firefox
+        else if (explorer.indexOf("Firefox") >= 0) {
+            return "Firefox";
+        }
+            //Chrome
+        else if (explorer.indexOf("Chrome") >= 0) {
+            return "Chrome";
+        }
+            //Opera
+        else if (explorer.indexOf("Opera") >= 0) {
+            return "Opera";
+        }
+            //Safari
+        else if (explorer.indexOf("Safari") >= 0) {
+            return "Safari";
+        }
+    }
+
+    //IE设置去除页眉页脚
+    function pagesetup_null() {
+        var hkey_root, hkey_path, hkey_key;
+        hkey_root = "HKEY_CURRENT_USER";
+        hkey_path = "\\Software\\Microsoft\\Internet Explorer\\PageSetup\\";
+        try {
+            var RegWsh = new ActiveXObject("WScript.Shell");
+            hkey_key = "header";
+            RegWsh.RegWrite(hkey_root + hkey_path + hkey_key, "");
+            hkey_key = "footer";
+            RegWsh.RegWrite(hkey_root + hkey_path + hkey_key, "");
+        } catch (e) { }
+    }
+</script>

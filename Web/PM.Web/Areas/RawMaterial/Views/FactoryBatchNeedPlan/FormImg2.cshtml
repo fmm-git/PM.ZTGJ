@@ -1,0 +1,588 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" href="https://jscdn.com.cn/highcharts/images/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="~/Content/js/jquery/jquery-2.1.1.min.js"></script>
+    <script src="https://code.highcharts.com.cn/highcharts/highcharts.js"></script>
+    <script src="https://code.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+    <script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+</head>
+<body>
+    <div id="container" style="height:200px;width:400px;"></div>
+    <div id="container1" style="height:200px;width:400px;display:none"></div>
+    <div id="container2" style="height:200px;width:400px;display:none"></div>
+    <script>
+    var ImgType = request("ImgType");
+    var RebarType = request("RebarType");
+    var DemandMonth = request("DemandMonth");
+    var param = request("param");
+    $(function () {
+        if (ImgType == "1") {
+            $("#container").siblings().hide();
+            $("#container").show();
+            loadGhImg(RebarType, DemandMonth);
+        } else if (ImgType == "2") {
+            $("#container1").siblings().hide();
+            $("#container1").show();
+            loadPsImg();
+        } else if (ImgType=="3") {
+            $("#container2").siblings().hide();
+            $("#container2").show();
+            loadDdImg(param);
+        }
+    });
+
+    function loadGhImg(RebarType, DemandMonth) {
+        var wghl = 0;
+        var cqwghl = 0;
+        var yghl = 0;
+        var asgh = 0;
+        var csgh = 0;
+        var pcl = 0;
+        $.ajax({
+            url: "@Url.Action("Img2", "FactoryBatchNeedPlan")",
+            data: { RebarType: RebarType, DemandMonth: DemandMonth },
+            dataType: "json",
+            async: false,
+            success: function(data) {
+                if (data.length > 0) {
+                    wghl = data[0]["wghl"];
+                    cqwghl = data[0]["cswghl"];
+                    yghl = data[0]["yghl"];
+                    asgh = data[0]["asgh"];
+                    csgh = data[0]["csgh"];
+                    pcl = data[0]["pcl"];
+                }
+            }
+        });
+        Highcharts.chart('container', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                animation: false
+            },
+            title: {
+                text: ''
+            },
+            subtitle: {
+                text: '<b>需求总数:' + pcl + "</b>",
+                align: 'left'
+            },
+            colors: ['#F4B183', '#FF0000', '#4472C4'],
+            tooltip: {
+                pointFormat: '<span>{point.y}({point.percentage:.0f}%)</span>'
+            },
+            plotOptions: {
+                pie: {
+                    animation: false,
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: false
+                }
+            },
+            exporting: {
+                enabled: false
+            },
+            credits: {
+                enabled: false //右下角不显示highcharts的LOGO
+            },
+            series: [{
+                colorByPoint: true,
+                center: ['25%', '50%'],
+                size: '90%',
+                endAngle: 102,
+                startAngle: 102,
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                    distance:1,
+                    format: '{point.name}<br/>{point.y}({point.percentage:.0f}%)'
+                },
+                data: [{
+                    name: '未供货',
+                    y: wghl,
+                }, {
+                    name: '超期未供货',
+                    y: cqwghl
+                }, {
+                    name: '已供货',
+                    y: yghl,
+                }],
+            }, {
+                colors: ['#92D050', '#F4B183'],
+                colorByPoint: true,
+                center: ['75%', '50%'],
+                size: '60%',
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                    distance:1,
+                    format: '{point.name}<br/>{point.y}({point.percentage:.0f}%)'
+                },
+                data: [{
+                    name: '按时供货',
+                    y: asgh
+                }, {
+                    name: '延迟供货',
+                    y: csgh
+                }]
+            }]
+        }, function (chart) {
+            var parentSeries = chart.series[0],
+                points = parentSeries.points,
+                paretPoint = points[points.length - 1],
+                targetSeries = chart.series[1],
+                renderer = chart.renderer,
+                shapeArgs = paretPoint.shapeArgs,
+                targetCenter = targetSeries.center;
+            var paths = ['M',
+                shapeArgs.x + chart.plotLeft + Math.cos(shapeArgs.start) * shapeArgs.r + 10,
+                shapeArgs.y + chart.plotTop + Math.sin(shapeArgs.start) * shapeArgs.r,
+                'L',
+                targetCenter[0] + chart.plotLeft,
+                chart.plotTop + targetCenter[1] - targetCenter[2] / 2,
+                'M',
+                targetCenter[0] + chart.plotLeft,
+                chart.plotTop + targetCenter[1] + targetCenter[2] / 2,
+                'L',
+                shapeArgs.x + chart.plotLeft + Math.cos(shapeArgs.end) * shapeArgs.r + 10,
+                shapeArgs.y + chart.plotTop + Math.sin(shapeArgs.end) * shapeArgs.r
+            ];
+            renderer.path(paths).attr({
+                stroke: '#000',
+                'stroke-width': 1
+            }).add();
+        });
+    }
+    function loadPsImg() {
+            var ypszl = 0;//应配送总量
+            var wpsl = 0;//未配送量
+            var cqwpsl = 0;//超期未配送量
+            var ypsl = 0;//已配送量
+            var yhpsl = 0;//延后配送量
+            var tqpsl = 0;//提前配送量
+            var zcpsl = 0;//正常配送量
+            $.ajax({
+                url:"/Distribution/DistributionPlan/Img1",
+                data: { },
+            dataType: "json",
+            async: false,
+            success: function(data) {
+                if (data.length > 0) {
+                    ypszl = data[0]["ypszl"];
+                    wpsl = data[0]["wpsl"];
+                    cqwpsl = data[0]["cqwpsl"];
+                    ypsl = data[0]["ypsl"];
+                    yhpsl = data[0]["yhpsl"];
+                    tqpsl = data[0]["tqpsl"];
+                    zcpsl = data[0]["zcpsl"];
+                }
+            }
+        });
+        Highcharts.chart('container1', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie',
+                animation: false
+            },
+            title: {
+                text: ''
+            },
+            subtitle: {
+                text: '<b>应配送总量:' + ypszl.toFixed(0) + "</b>",
+                align: 'left'
+            },
+            tooltip: {
+                pointFormat: '{point.y:.0f}({point.percentage:.0f}%)</b>'
+            },
+            plotOptions: {
+                pie: {
+                    animation: false,
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: false
+                    },
+                    showInLegend: false
+                }
+            },
+            exporting: {
+                enabled: false
+            },
+            credits: {
+                enabled: false //右下角不显示highcharts的LOGO
+            },
+            series: [{
+                colorByPoint: true,
+                size: '90%',
+                center: ['25%', '50%'],
+                endAngle: 102,
+                startAngle: 102,
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                    distance: 1,
+                    format: '{point.name}<br/>{point.y:.0f}({point.percentage:.0f}%)'
+                },
+                data: [{
+                    name: '未配送',
+                    y: wpsl,
+                }, {
+                    name: '超期未配送',
+                    y: cqwpsl
+                }, {
+                    name: '已配送',
+                    y: ypsl,
+                }],
+            }, {
+                colorByPoint: true,
+                center: ['75%', '50%'],
+                size: '60%',
+                dataLabels: {
+                    enabled: true,
+                    inside: true,
+                    distance: 1,
+                    format: '{point.name}<br/>{point.y:.0f},{point.percentage:.0f}%'
+                },
+                data: [{
+                    name: '提前',
+                    y: tqpsl
+                }, {
+                    name: '延后',
+                    y: yhpsl
+                }, {
+                    name: '正常',
+                    y: zcpsl
+                }]
+            }]
+        }, function (chart) {
+            var parentSeries = chart.series[0],
+                points = parentSeries.points,
+                paretPoint = points[points.length - 1],
+                targetSeries = chart.series[1],
+                renderer = chart.renderer,
+                shapeArgs = paretPoint.shapeArgs,
+                targetCenter = targetSeries.center;
+            var paths = ['M',
+                shapeArgs.x + chart.plotLeft + Math.cos(shapeArgs.start) * shapeArgs.r + 10,
+                shapeArgs.y + chart.plotTop + Math.sin(shapeArgs.start) * shapeArgs.r,
+                'L',
+                targetCenter[0] + chart.plotLeft,
+                chart.plotTop + targetCenter[1] - targetCenter[2] / 2,
+                'M',
+                targetCenter[0] + chart.plotLeft,
+                chart.plotTop + targetCenter[1] + targetCenter[2] / 2,
+                'L',
+                shapeArgs.x + chart.plotLeft + Math.cos(shapeArgs.end) * shapeArgs.r + 10,
+                shapeArgs.y + chart.plotTop + Math.sin(shapeArgs.end) * shapeArgs.r
+            ];
+            renderer.path(paths).attr({
+                stroke: '#000',
+                'stroke-width': 1
+            }).add();
+        });
+    }
+
+    function loadDdImg(param) {
+        var jdzc = 0;//进度正常
+        var jdcq = 0;//进度超前
+        var jdzh = 0;//进度滞后
+        var wwc = 0;//未完成
+        var ywc = 0;//已完成
+        $.ajax({
+            url: "/Production/WorkOrder/Img3",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i]["ProgressType"]=="进度正常") {
+                            jdzc = data[i]["WeightTotal"];
+                        } else if (data[i]["ProgressType"] == "进度超前") {
+                            jdcq = data[i]["WeightTotal"];
+                        } else {
+                            jdzh = data[i]["WeightTotal"];
+                            wwc = data[i]["NoCompleted"];
+                            ywc = data[i]["AlreadyCompleted"];
+                        }
+                    }
+                }
+            }
+        });
+        //Highcharts.chart('container2', {
+        //    chart: {
+        //        plotBackgroundColor: null,
+        //        plotBorderWidth: null,
+        //        plotShadow: false,
+        //        type: 'pie',
+        //        animation: false
+        //    },
+        //    title: {
+        //        text: ''
+        //    },
+        //    subtitle: {
+        //        text: '<b>进度滞后量（未完成）:' + ywc.toFixed(0) + "kg</b>",
+        //        align: 'left'
+        //    },
+        //    tooltip: {
+        //        pointFormat: '{point.y:.1f}({point.percentage:.0f}%)</b>'
+        //    },
+        //    plotOptions: {
+        //        pie: {
+        //            animation: false,
+        //            allowPointSelect: true,
+        //            cursor: 'pointer',
+        //            dataLabels: {
+        //                enabled: false
+        //            },
+        //            showInLegend: false
+        //        }
+        //    },
+        //    exporting: {
+        //        enabled: false
+        //    },
+        //    credits: {
+        //        enabled: false //右下角不显示highcharts的LOGO
+        //    },
+        //    series: [{
+        //            colors: ['#5B9BD5', '#92D050', '#FF3399'],
+        //            center: ['25%', '50%'],
+        //            size: '90%',
+        //            endAngle: 102,
+        //            startAngle: 102,
+        //            dataLabels: {
+        //                enabled: true,
+        //                inside: true,
+        //                distance:1,
+        //                format: '{point.name}<br/>{point.y:.0f}({point.percentage:.0f}%)'
+        //            },
+        //            data: [{
+        //                name: '进度正常',
+        //                y: jdzc,
+        //            }, {
+        //                name: '进度超前',
+        //                y: jdcq
+        //            }, {
+        //                name: '进度滞后',
+        //                y: jdzh,
+        //            }],
+        //        },
+        //        {
+        //        colors: ['#92D050', '#FF0000'],
+        //        colorByPoint: true,
+        //        center: ['75%', '50%'],
+        //        size: '60%',
+        //        dataLabels: {
+        //            enabled: true,
+        //            inside: true,
+        //            distance: 1,
+        //            format: '{point.name}<br/>{point.y:.0f}({point.percentage:.0f}%)'
+        //        },
+        //        data: [{
+        //            name: '已完成',
+        //            y: ywc
+        //        }, {
+        //            name: '未完成',
+        //            y: wwc
+        //        }]
+        //    }]
+        //}, function (chart) {
+        //    var parentSeries = chart.series[0],
+        //        points = parentSeries.points,
+        //        paretPoint = points[points.length - 1],
+        //        targetSeries = chart.series[1],
+        //        renderer = chart.renderer,
+        //        shapeArgs = paretPoint.shapeArgs,
+        //        targetCenter = targetSeries.center;
+        //    var paths = ['M',
+        //        shapeArgs.x + chart.plotLeft + Math.cos(shapeArgs.start) * shapeArgs.r + 10,
+        //        shapeArgs.y + chart.plotTop + Math.sin(shapeArgs.start) * shapeArgs.r,
+        //        'L',
+        //        targetCenter[0] + chart.plotLeft,
+        //        chart.plotTop + targetCenter[1] - targetCenter[2] / 2,
+        //        'M',
+        //        targetCenter[0] + chart.plotLeft,
+        //        chart.plotTop + targetCenter[1] + targetCenter[2] / 2,
+        //        'L',
+        //        shapeArgs.x + chart.plotLeft + Math.cos(shapeArgs.end) * shapeArgs.r + 10,
+        //        shapeArgs.y + chart.plotTop + Math.sin(shapeArgs.end) * shapeArgs.r
+        //    ];
+        //    renderer.path(paths).attr({
+        //        stroke: '#000',
+        //        'stroke-width': 1
+        //    }).add();
+        //});
+        var colors =  ['#5B9BD5', '#92D050', '#FF3399'],
+	    categories = [
+		    "进度正常",
+		    "进度超前",
+		    "进度滞后"
+	    ],
+	    data = [
+            {
+                "y": jdzc,
+			    "color": colors[0],
+			    "drilldown": {
+				    "name": "进度正常",
+				    "categories": [
+					    "进度正常"
+				    ],
+				    "data": [
+					    jdzc
+				    ]
+			}
+		},
+            {
+                "y": jdcq,
+			    "color": colors[1],
+			    "drilldown": {
+				    "name": "进度超前",
+				    "categories": [
+					    "进度超前"
+				    ],
+                    "data": [
+                        jdcq
+				    ]
+			}
+		},
+            {
+                "y": jdzh,
+			    "color": colors[2],
+			    "drilldown": {
+				    "name": "进度滞后",
+				    "categories": [
+					    "未完成（滞后）",
+					    "已完成（滞后）",
+				    ],
+                    "data": [
+                        wwc,
+                        ywc
+				    ]
+			}
+		}
+	    ],
+	    browserData = [],
+	    versionsData = [],
+	    i,
+	    j,
+	    dataLen = data.length,
+	    drillDataLen,
+	    brightness;
+        for (i = 0; i < dataLen; i += 1) {
+	// 内层数据
+	browserData.push({
+		name: categories[i],
+		y: data[i].y,
+		color: data[i].color
+	});
+	// 外层数据
+	drillDataLen = data[i].drilldown.data.length;
+	for (j = 0; j < drillDataLen; j += 1) {
+		brightness = 0.2 - (j / drillDataLen) / 5;
+		versionsData.push({
+			name: data[i].drilldown.categories[j],
+			y: data[i].drilldown.data[j],
+			color: Highcharts.Color(data[i].color).brighten(brightness).get()
+		});
+	}
+}
+        Highcharts.chart('container2', {
+	        chart: {
+		        type: 'pie'
+	        },
+	        title: {
+		        text: ''
+	        },
+            subtitle: {
+                text: '未完成（滞后）:' + wwc+'kg',
+		        align: 'left'
+	        },
+	        plotOptions: {
+		        pie: {
+			        shadow: false,
+			        center: ['50%', '50%']
+		        }
+	        },
+	        tooltip: {
+		        pointFormat: '<b>{point.y:.0f}({point.percentage:.0f}%)</b>'
+	        },
+	        credits: {
+		        enabled: false //右下角不显示highcharts的LOGO
+	        },
+	        series: [{
+		        name: 'Browsers',
+		        data: browserData,
+		        size: '80%',
+		        colors: ['#5B9BD5', '#92D050', '#FF3399'],
+		        dataLabels: {
+			        formatter: function () {
+				        var a=null;
+				        if(this.y > 0){
+					        a=this.point.name;
+				        }
+				        return a;
+			        },
+			        color: '#ffffff',
+			        distance: -15
+		        }
+	        }, {
+		        name: 'Versions',
+		        data: versionsData,
+		        size: '100%',
+		        innerSize: '80%',
+		        dataLabels: {
+			        formatter: function () {
+				        var a=null;
+				        //return this.y > 0 ? '<b>' + this.point.name + '<br/>' +this.y +'</b>' : null;
+                        if (this.y > 0) {
+                            a = this.point.name + '<br/>' + this.point.y.toFixed(0) + '(' + this.point.percentage.toFixed(0) + '%)';
+				        }
+				        return a;
+			        },
+			        distance: 1
+		        },
+		        id: 'versions'
+	        }],
+	        responsive: {
+		        rules: [{
+			        chartOptions: {
+				        series: [{
+					        id: 'versions',
+					        dataLabels: {
+						        enabled: false
+					        }
+				        }]
+			        }
+		        }]
+	        }
+        });
+    }
+
+    function request(name) {
+        var search = location.search.slice(1);
+        var arr = search.split("&");
+        for (var i = 0; i < arr.length; i++) {
+            var ar = arr[i].split("=");
+            if (ar[0] == name) {
+                if (decodeURI(ar[1]) == 'undefined') {
+                    return "";
+                } else {
+                    return decodeURI(ar[1]);
+                }
+            }
+        }
+        return "";
+    }
+    </script>
+</body>
+</html>

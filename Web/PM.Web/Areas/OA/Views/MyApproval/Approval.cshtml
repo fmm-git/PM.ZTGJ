@@ -1,0 +1,289 @@
+﻿@{
+    ViewBag.Title = "审批";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script>
+    var FlowCode = $.request("FlowCode"); //流程编码
+    var FormCode = $.request("FormCode"); //表单编码
+    var FlowPerformID = $.request("FlowPerformID"); //流程流水号
+    var flowNodeCode = $.request("FlowNodeCode");
+    var PerformState = $.request("PerformState"); //流程状态
+    var UserType = $.request("UserType"); //操作类型状态
+    var ID = $.request("ID"); //数据ID
+    var FlowType = $.request("FlowType");//类型类型（新版、老板）
+    $(function () {
+        //抄送人
+        if (UserType == "-1" && PerformState == "未阅") {
+            $("#approvalcontent").val("抄送人无须审批!");
+            $("#approvalcontent").attr("disabled", "disabled");
+            $(".btn-success").attr("disabled", "disabled");
+            $(".btn-info").attr("disabled", "disabled");
+            $(".btn-danger").attr("disabled", "disabled");
+            //修改审批状态为已阅
+            $.ajax({
+                type: 'POST',
+                url: '/MyApproval/UpdatePerformState',
+                data: {
+                    performState: -1,
+                    FlowCode: FlowCode,
+                    FlowPerformID: FlowPerformID,
+                    FlowNodeCode: flowNodeCode,
+                    UserType: UserType
+                },
+                async: false,
+                cache: false,
+                success: function (data) {
+                }
+            });
+        }
+            //执行人
+        else if (UserType == "0" && PerformState == "未阅") {
+            //修改审批状态为已阅
+            $.ajax({
+                type: 'POST',
+                url: '/MyApproval/UpdatePerformStateZxr',
+                data: {
+                    performState: -1,
+                    FlowCode: FlowCode,
+                    FlowPerformID: FlowPerformID,
+                    FlowNodeCode: flowNodeCode,
+                    UserType: UserType
+                },
+                async: false,
+                cache: false,
+                success: function (data) {
+                }
+            });
+        }
+        if ((UserType == -1 && PerformState != '未阅') ||
+            (UserType == 0 && PerformState != '未阅' && PerformState != '执行人(已阅)')) {
+            $("#spxx").css("width", "100%");
+            $("#spyj").css("display", "none");
+        }
+        var flag = false;
+        var timer;
+        $("#forminfo").load(function () {
+            if (timer) {
+                clearInterval(timer);
+            }
+            //pre_height用于记录上次检查时body的高度
+            //mainheight用于获取本次检查时body的高度，并赋予iframe的高度
+            var mainheight, pre_height;
+            var frame_content = $(this);
+            timer = setInterval(function () {
+                mainheight = frame_content.contents().find("body").height() + 30;
+                if (!flag) {
+                    if (mainheight != pre_height) {
+                        pre_height = mainheight;
+                        frame_content.height(Math.max(mainheight, 350));
+                    }
+                    $('#forminfo').attr('src', $('#forminfo').attr('src'));
+                    flag = true;
+                }
+            },
+                500);
+        });
+        //$("#lctdesign").attr("src", "/Flow/Flow/FlowChartDesign?readOnly=true&FlowCode=" + FlowCode);
+        LoadOderForm();
+        BindgridList();
+    })
+    //加载原单据信息
+    function LoadOderForm() {
+        $.ajax({
+            type: 'POST',
+            url: '/MyApproval/LoadOrderForm',
+            data: { formCode: FormCode },
+            async: false,
+            cache: false,
+            success: function (data) {
+                var str_json = JSON.parse(data);
+                var url = str_json.url;
+                $("#forminfo").attr("src", url + '?keyValue=' + ID);
+            }
+        });
+    }
+
+    //审批同意、退回提交
+    function Approval(performState) {
+        if (FlowType == "Old") {
+            var performOpinions = $("#approvalcontent").val();
+            //点击退回时，必须填写审批意见，否则提示：请填写退回原因
+            if (performState == 3 && performOpinions == "") {
+                $.modalMsg("请填写退回原因", "warning");
+                return false;
+            }
+            $.loading(true, '请稍后...');
+            var FlowTitle = '';
+            var para = {
+                FlowCode: FlowCode,
+                performState: performState,
+                performOpinions: performOpinions,
+                FlowPerformID: FlowPerformID,
+                flowNodeCode: flowNodeCode,
+                FlowTitle: FlowTitle,
+                FreeNodeUser: ''
+            };
+            if (FormCode == "WorkOrder") {
+                //判断加工订单的流程是否是加工厂接收阶段，同时更改加工订单的加工状态
+                $.ajax({
+                    type: 'POST',
+                    url: '/MyApproval/GetFlowWorkNode',
+                    data: { para: JSON.stringify(para) },
+                    async: false,
+                    cache: false,
+                    success: function (data) {
+                        $.loading(false);
+                        var str_json = JSON.parse(data);
+                        if (str_json.state == "success") {
+                            $.currentWindow().reload();
+                            //调用父页面方法刷新预警数量
+                            window.parent.getcount();
+                            var index = top.layer.getFrameIndex("Approval");
+                            top.layer.close(index);
+                        } else {
+                            $.modalAlert(str_json.message, "warning");
+                        }
+                    }
+                });
+            } else {
+                $.ajax({
+                    type: 'POST',
+                    url: '/MyApproval/Approval',
+                    data: { para: JSON.stringify(para) },
+                    async: false,
+                    cache: false,
+                    success: function (data) {
+                        $.loading(false);
+                        var str_json = JSON.parse(data);
+                        if (str_json.state == "success") {
+                            //判断该流程表单是否是原材料到货入库功能
+                            if (FormCode == "InOrder") {
+                                //判断该数据是否审核完成，如果审核完成发送短信、消息
+                                $.ajax({
+                                    url: "@Url.Action("LoadInOrder", "MyApproval")",
+                                    data: { ID: ID },
+                                    dataType: "json",
+                                    async: false,
+                                    success: function (data) {
+
+                                    }
+                                });
+                            }
+                            $.currentWindow().reload();
+                            //调用父页面方法刷新预警数量
+                            window.parent.getcount();
+                            var index = top.layer.getFrameIndex("Approval");
+                            top.layer.close(index);
+                        }
+                        else {
+                            $.modalAlert(str_json.message, "warning");
+                        }
+                    }
+                });
+            }
+        } else {
+            var performOpinions = $("#approvalcontent").val();
+            //点击退回时，必须填写审批意见，否则提示：请填写退回原因
+            if (performState == 3 && performOpinions == "") {
+                $.modalMsg("请填写退回原因", "warning");
+                return false;
+            }
+            $.loading(true, '请稍后...');
+            var FlowTitle = '';
+            var para = {
+                FlowCode: FlowCode,
+                performState: performState,
+                performOpinions: performOpinions,
+                FlowPerformID: FlowPerformID,
+                flowNodeCode: flowNodeCode,
+                FlowTitle: FlowTitle,
+                FreeNodeUser: ''
+            };
+            $.ajax({
+                type: 'POST',
+                url: '/MyApproval/ApprovalNew',
+                data: { para: JSON.stringify(para) },
+                async: false,
+                cache: false,
+                success: function (data) {
+                    $.loading(false);
+                    var str_json = JSON.parse(data);
+                    if (str_json.state == "success") {
+                        $.currentWindow().reload();
+                        //调用父页面方法刷新预警数量
+                        window.parent.getcount();
+                        var index = top.layer.getFrameIndex("Approval");
+                        top.layer.close(index);
+                    }
+                    else {
+                        $.modalAlert(str_json.message, "warning");
+                    }
+                }
+            });
+        }
+    }
+
+    function BindgridList() {
+        $("#gridList").dataGrid({
+            treeGrid: false,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            url: "/MyApproval/LoadApprovalOptions?FlowPerformID=" + FlowPerformID,
+            height: $(window).height() - 96,
+            rownumbers: false,
+            colModel: [
+                { label: "流程节点", name: "FlowNodeName", width: 250, align: 'left', sortable: false },
+                { label: "发起时间", name: "BeginTime", width: 140, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "接收人", name: "UserName", width: 100, align: 'left', sortable: false },
+                { label: "人员类型", name: "UserType", width: 100, align: 'left', sortable: false },
+                { label: "审批状态", name: "PerformState", width: 160, align: 'left', sortable: false },
+                { label: "处理时间", name: "PerformDate", width: 140, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "审批意见", name: "PerformOpinions", width: 300, align: 'left', sortable: false },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+            }
+        });
+    }
+
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+<form id="form1">
+    <ul class="nav nav-tabs">
+        <li id="ZW" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">正文</a></li>
+        <li id="SPYJ" onclick="selectTab($(this))"><a href="javascript:void(0);">审批意见</a></li>
+        <li id="LCT" style="display:none;" onclick="selectTab($(this))"><a href="javascript:void(0);">流程图</a></li>
+    </ul>
+    <div class="row">
+        <div id="spxx" class="col-md-6" style="width:70%;">
+            <div id="ZWInfo" style="padding-top: 5px; ">
+                <iframe id="forminfo" style="width: 100%; height: 100%; " scrolling="auto" frameborder="0"></iframe>
+            </div>
+            <div id="SPYJInfo" style="padding-top: 5px;  display:none; overflow-x: scroll;">
+                <div class="gridPanel">
+                    <table id="gridList" style="width:100%;"></table>
+                </div>
+            </div>
+            <div id="LCTInfo" style="padding-top: 5px; display:none;">
+                <iframe id="lctdesign" style="width:100%; height:100%; " scrolling="no" frameborder="0"></iframe>
+            </div>
+        </div>
+        <div id="spyj" class="col-md-6" style="width:25%; ">
+            <div class="well well-sm" style="width:100%;">审批意见</div>
+            <textarea id="approvalcontent" name="ProContent" class="form-control required" style="height:200px; padding-right: 0;"></textarea>
+            <button type="button" class="btn btn-success" style="margin-top:5px;" onclick="Approval(1);">同意</button>
+            <button type="button" class="btn btn-info" style="display:none; margin-top:5px;">暂存代办</button>
+            <button type="button" class="btn btn-danger" style="margin-top:5px;" onclick="Approval(3);">退回</button>
+            <button type="button" class="btn btn-danger" style="margin-top:5px; display:none; " onclick="Approval(4);">终止</button>
+        </div>
+    </div>
+
+</form>

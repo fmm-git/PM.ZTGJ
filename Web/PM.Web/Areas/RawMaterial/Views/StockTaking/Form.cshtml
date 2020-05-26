@@ -1,0 +1,395 @@
+﻿@{
+    ViewBag.Title = "库存盘点编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = top.clients.projectId;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+
+        //仓库属性
+        $("#WarehouseType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "MaterialType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        })
+        gridList();
+        //加载明细数据
+        GetItemData();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "StockTaking")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    //ProjectId = data.item1[0].ProjectId;
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data.Item2);
+                }
+            });
+        }
+        $("#WarehouseType").change(function () {
+            GetItemData();
+        });
+        $(window).resize(function () {
+            $("#gridList").setGridHeight($(window).height() - 160);
+            //$("#gridList").setGridWidth($(window).width());
+        });
+    });
+
+    //加工厂选择
+    function selectFactory() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/1";
+        var str = "ProcessFactoryCode=CompanyCode,FactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+            //加载明细数据
+            GetItemData();
+        });
+    }
+
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = [];
+        var tableData = GetGridRowData();
+        if (tableData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "StockTaking")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '原材料编号', name: 'MaterialCode', hidden: true },
+                { label: '材料名称', name: 'MaterialName', width: 150, align: "left", sortable: false },
+                { label: '规格', name: 'SpecificationModel', width: 150, align: "left", sortable: false },
+                { label: '钢筋类型', name: 'RebarTypeName', width: 100, align: "left", sortable: false },
+                { label: '账存重量(吨)', name: 'lnventoryWeight', width: 150, align: "right", sortable: false },
+                { label: '盘点重量(吨)', name: 'TakWeight', width: 150, align: "right", sortable: false, editable: true },
+                { label: '盘盈/盘亏(吨)', name: 'EarnOrLosWeight', width: 150, align: "right", sortable: false },
+                { label: '备注', name: 'Remark', width: 300, align: "left", sortable: false, editable: true },
+                { label: '盘盈/盘亏', name: 'EarnOrLosItem', hidden: true },
+                { label: '钢筋类型', name: 'RebarType', hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+
+                var objItem = $("#gridList").find("[aria-describedby='gridList_EarnOrLosItem']");
+                var ewt = $("#gridList").find("[aria-describedby='gridList_EarnOrLosWeight']");
+                $.each(objItem, function (i, item) {
+                    if ($(item).attr("title") == "-1") {
+                        $(ewt[i]).css("color", "red");
+                    }
+                    else {
+                        $(ewt[i]).css("color", "green");
+                    }
+                });
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                valid(rowid);
+            }
+        });
+    }
+
+    //获取明细数据
+    function GetItemData() {
+        $.ajax({
+            url: "@Url.Action("GetItemData", "StockTaking")",
+            data: { warehouseType: $("#WarehouseType").val(), factoryCode: $("#ProcessFactoryCode").val() },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                AllMyBack(data);
+            }
+        });
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+    //批量添加回调函数
+    function AllMyBack(row) {
+        var rowData = [];
+        if (row && row.length > 0) {
+            for (var i = 0; i < row.length; i++) {
+                var mydata = {
+                    id: 0,
+                    MaterialCode: row[i].MaterialCode,
+                    MaterialName: row[i].MaterialName,
+                    SpecificationModel: row[i].SpecificationModel,
+                    RebarTypeName: row[i].RebarTypeName,
+                    RebarType: row[i].RebarType,
+                    lnventoryWeight: row[i].lnventoryWeight,
+                    TakWeight: row[i].lnventoryWeight,
+                    EarnOrLosWeight: 0,
+                    EarnOrLosItem: 1,
+                };
+                rowData.push(mydata);
+            }
+        }
+        lodeList(rowData);
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var takNum = $("#TakNum").val();
+        var columnData = [];
+        var lnventory = 0;
+        var Tak = 0;
+        var EarnOrLos = 0;
+        var IsEarnOrLos = 1;
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.TakNum = takNum;
+            var totalTak = parseFloat(rowData.TakWeight);
+            var inventory = parseFloat(rowData.lnventoryWeight);
+            var earnOrLos = parseFloat(rowData.EarnOrLosWeight);
+            var isEarnOrLos = parseInt(rowData.EarnOrLosItem);
+            if (isNaN(totalTak)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            }
+            Tak += totalTak;
+            lnventory += inventory;
+            EarnOrLos += earnOrLos;
+            if (isEarnOrLos < 0)
+                IsEarnOrLos = isEarnOrLos;
+            columnData.push(rowData);
+        });
+        $("#TotalInventory").val(lnventory.toFixed(5));
+        $("#TotalTak").val(Tak.toFixed(5));
+        $("#TotalEarnOrLos").val(EarnOrLos.toFixed(5));
+        $("#EarnOrLos").val(IsEarnOrLos);
+
+        return columnData;
+    }
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        $("#" + rowid + "_TakWeight")
+               .keyup(function () { regTextBox(this, true); })
+               .bind("paste", function () { regTextBox(this, true); })
+               .blur(function () { Compute($(this).parent().parent()); }).css("ime-mode", "disabled");
+
+    }
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    function Compute(obj) {
+        var lnventoryWeight = $(obj.children()[6]);//账存重量
+        var TakWeight = $($(obj.children()[7]).children());//盘点重量
+        var EarnOrLosWeight = $($(obj.children()[8]));//盘盈/盘亏
+        var EarnOrLos = $($(obj.children()[10]));//盘盈/盘亏类型
+        var values = (parseFloat($(lnventoryWeight).html()) - parseFloat($(TakWeight).val())).toFixed(5);
+        if (parseFloat(values) > 0) {
+            $(EarnOrLos).html(-1);
+            $(EarnOrLosWeight).css("color", "red");
+        } else {
+            $(EarnOrLos).html(1);
+            $(EarnOrLosWeight).css("color", "green");
+        }
+        var tol = Math.abs(values);
+        $(EarnOrLosWeight).html(tol);
+    }
+</script>
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "StockTaking");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "StockTaking");
+    }
+
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        else {
+            GetGridRowData();
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="EarnOrLos" name="EarnOrLos" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">盘点单号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TakNum" name="TakNum" type="text" value="@ViewBag.TakNum" disabled="disabled" class="form-control required" />
+                        <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode">
+                    </td>
+                    @*<th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                            <input id="FactoryName" name="FactoryName" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn" onclick="selectFactory();">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>*@
+                    <th class="formTitle">仓库类型<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="WarehouseType" name="WarehouseType" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">账存总量(吨)</th>
+                    <td class="formValue">
+                        <input id="TotalInventory" name="TotalInventory" value="0" type="text" class="form-control" disabled="disabled" />
+                    </td>
+                    <th class="formTitle">盘点日期<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TakDay" name="TakDay" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">盘点总量(吨)</th>
+                    <td class="formValue">
+                        <input id="TotalTak" name="TotalTak" value="0" type="text" class="form-control" disabled="disabled" />
+                    </td>
+                    <th class="formTitle">盘盈/盘亏(吨)</th>
+                    <td class="formValue">
+                        <input id="TotalEarnOrLos" name="TotalEarnOrLos" value="0" type="text" class="form-control" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        @*<div class="toolbar">
+                <div class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+                </div>
+                <div class="btn-group">
+                    <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+                </div>
+            </div>*@
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

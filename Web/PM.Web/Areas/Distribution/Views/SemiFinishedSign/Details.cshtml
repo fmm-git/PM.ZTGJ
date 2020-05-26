@@ -1,0 +1,172 @@
+﻿@{
+    ViewBag.Title = "半成品查询";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script>
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var index = 1;
+    $(function () {
+        gridList();//加载明细信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "SemiFinishedSign")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#myformd").formSerialize(data.Item1[0]);
+                    lodeList(data.Item2);//加载明细信息
+                }
+            });
+        }
+    });
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+    function lodeList(data) {
+        $("#gridList").jqGrid('clearGridData');
+        $.each(data, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: "配送装车订单标识列", name: "DisEntOrderIdentity", hidden: true },
+                    { label: "订单编号", name: "OrderCode", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "站点名称", name: "SiteName", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "类型编号", name: "TypeCode", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "类型名称", name: "TypeName", width: 120, height: 10, align: "left", sortable: false },
+                    { label: "订单明细id", name: "WorkorderdetailId", hidden: true },
+                    { label: '构件名称', name: 'ComponentName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '规格', name: 'Standard', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '计量单位', name: 'MeteringUnit', hidden: true },
+                    { label: '计量单位', name: 'MeasurementUnitName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '单位重量(kg/m,kg/㎡)', name: 'UnitWeight', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '单件用量(m,㎡)', name: 'SingletonWeight', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '件数', name: 'GjNumber', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '重量小计(kg)', name: 'WeightGauge', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '打包件数', name: 'PackNumber', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '打包包数', name: 'PackagesNumber', width: 120, height: 10, align: "left", sortable: false },
+                    //{ label: '可装车包数', name: 'CanLoadingPackCount', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '本次卸货包数', name: 'ThisTimePackCount', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '本次卸货件数', name: 'Number', width: 100, align: "left", sortable: false },
+                    { label: '加工工艺', name: 'ProcessingTechnology', hidden: true },
+                    { label: '加工工艺', name: 'ProcessingTechnologyName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '厂家', name: 'Manufactor', width: 120, align: "left", sortable: false },
+                    { label: '炉批号', name: 'HeatNo', width: 70, align: "left", sortable: false },
+                    { label: '检测报告编号', name: 'TestReport', width: 150, align: "left", sortable: false },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+    }
+</script>
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="myformd">
+            <div style="margin-left: 5px; margin-right: 20px;">
+                <input id="ID" name="ID" type="hidden" />
+                <table class="form">
+                    <tr>
+                        <th class="formTitle">签收编号</th>
+                        <td class="formValue">
+                            <input id="SigninNuber" name="SigninNuber" type="text" disabled="disabled" class="form-control" />
+                        </td>
+                        <th class="formTitle">订单编号</th>
+                        <td class="formValue">
+                            <input id="OrderCode" name="OrderCode" readonly="readonly" type="text" class="form-control" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">配送装车编号</th>
+                        <td class="formValue">
+                            <input id="DistributionCode" name="DistributionCode" readonly="readonly" type="text" class="form-control" />
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">站点名称</th>
+                        <td class="formValue">
+                            <input id="SiteName" name="SiteName" type="text" readonly="readonly" class="form-control" />
+                        </td>
+                        <th class="formTitle">类型编码</th>
+                        <td class="formValue">
+                            <input id="TypeCode" name="TypeCode" type="text" readonly="readonly" class="form-control" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">类型名称</th>
+                        <td class="formValue">
+                            <input id="TypeName" name="TypeName" type="text" class="form-control" readonly="readonly" />
+                        </td>
+
+                        <th class="formTitle">使用部位</th>
+                        <td class="formValue">
+                            <input id="UsePart" name="UsePart" type="text" readonly="readonly" class="form-control">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">签收时间</th>
+                        <td class="formValue">
+                            <input id="SigninTime" name="SigninTime" class="form-control" readonly="readonly" />
+                        </td>
+                        <th class="formTitle">配送地址</th>
+                        <td class="formValue">
+                            <input id="DistributionAddress" name="DistributionAddress" class="form-control" readonly="readonly" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">车牌号</th>
+                        <td class="formValue">
+                            <input id="CarCph" name="CarCph" type="text" readonly="readonly" class="form-control" />
+
+                        </td>
+                        <th class="formTitle">驾驶员</th>
+                        <td class="formValue">
+                            <input id="CarUser" name="CarUser" type="text" class="form-control required" readonly="readonly" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th class="formTitle">总量合计(kg)</th>
+                        <td class="formValue" colspan="3">
+                            <input id="SumTotal" name="SumTotal" type="text" class="form-control required" disabled="disabled" />
+                        </td>
+                    </tr>
+
+                </table>
+            </div>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

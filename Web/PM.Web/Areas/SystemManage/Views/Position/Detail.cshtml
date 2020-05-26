@@ -1,0 +1,68 @@
+﻿@{
+    ViewBag.Title = "岗位查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<link href="~/Content/css/input.css" rel="stylesheet" />
+<script>
+    var keyValue = $.request("keyValue");
+    $(function () {
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "Position")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data);
+                }
+            });
+        }
+    });
+    function initControl() {
+        $("#ParentPositionCode").bindSelect({
+            url: "@Url.Action("GetTreeSelectJson", "Position")",
+        });
+        $("#DepartmentCode").bindSelect({
+            url: "@Url.Action("GetTreeSelectJsonForDep", "Position")",
+        });
+    }
+</script>
+<form id="formd">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">所属部门<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <select id="DepartmentCode" name="DepartmentCode" class="form-control"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">上级岗位</th>
+                    <td class="formValue" colspan="2">
+                        <select id="ParentPositionCode" name="ParentPositionCode" class="form-control"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">岗位编码<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="PositionCode" name="PositionCode" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">岗位名称<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="PositionName" name="PositionName" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="2">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

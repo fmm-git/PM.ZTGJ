@@ -1,0 +1,327 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<style>
+    .left {
+        width: 20%;
+        background: pink;
+        float: left;
+    }
+
+    .middle {
+        width: 37%;
+        background: blue;
+        margin-left: 20px;
+        float: left;
+    }
+
+    .right {
+        width: 37%;
+        background: black;
+        margin-left: 20px;
+        float: left;
+    }
+</style>
+<script>
+    var projectId;
+    $(function () {
+        $.LodeMenuBtn("/SystemManage/Role/Index");//这里是对应网页的菜单管理地址
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        RoleView();//加载组织机构
+        gridList();//加载部门
+        gridList1();//加载角色
+    });
+    function RoleView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/SystemManage/Company/GetAllCompanyOrBySearch",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+                { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                { label: "组织机构类型", name: "OrgType", hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                clickCompany(ucode);
+            }
+        });
+    }
+    function clickCompany(id) {
+        var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+        if (CompanyId.OrgType=="1") {
+            projectId = "6245721945602523136";
+        } else {
+            checkParent(id);
+        }
+        $("#gridList").jqGrid('setGridParam', {
+            postData: { DepartmentType: CompanyId.OrgType, DepartmentProjectId: projectId },
+        }).trigger('reloadGrid');
+        //刷新角色
+        reload2();
+    }
+    function checkParent(rowid) {
+        var CompanyId = $("#leftgridList").jqGrid("getLocalRow", rowid);
+        if (CompanyId.level != 0) {
+            var parent = $("#leftgridList").jqGrid('getNodeParent', $("#leftgridList").jqGrid("getLocalRow", rowid));
+            checkParent(parent.CompanyCode);
+        }
+        else {
+            projectId = CompanyId.CompanyCode;
+        }
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            height: $(window).height() - 178,
+            url: "/SystemManage/Department/GetGridJson",
+            colModel: [
+                { label: "标识ID", name: "id", hidden: true, key: true },
+                { label: '部门编号', name: 'DepartmentCode', hidden: true },
+                { label: '部门编号', name: 'DepartmentId', hidden: true },
+                { label: '部门名称', name: 'DepartmentName', sortable: false, width: 150, align: 'left' },
+                {
+                    label: '部门所属层级', name: 'DepartmentType', sortable: false, width: 100, align: 'left', formatter: function (value, options, rowObject) {
+                        var code = rowObject.DepartmentType;
+
+                        if (code == "1") {//加工厂
+                            return "加工厂"
+                        } else if (code == "2") {//经理部
+                            return "经理部"
+                        } else if (code == "3") {//分部
+                            return "分部"
+                        } else if (code == "4") {//工区
+                            return "工区"
+                        } else if (code == "5") {//工点
+                            return "工点"
+                        }
+                        else {
+                            return "";
+                        }
+                    }
+                },
+
+            ],
+            pager: "#gridPager",
+            sortname: 'DepartmentId',
+            sortorder: 'desc',
+            viewrecords: true,
+            onCellSelect: function (ucode) {
+                clickDept(ucode);
+            }
+
+        });
+        $("#btn_search1").click(function () {
+            var param = $("#search1").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search1').trigger("click");
+            }
+        }
+    }
+    //刷新部门
+    function reload1() {
+        $("#gridList").trigger("reloadGrid");
+        gridList1();
+    }
+    function clickDept(id) {
+        var DeptId = $("#gridList").jqGrid('getRowData', id);
+        $("#gridList1").jqGrid('setGridParam', {
+            postData: { DepartmentId: DeptId.DepartmentId },
+        }).trigger('reloadGrid');
+    }
+    function gridList1() {
+        var $gridList1 = $("#gridList1");
+        $gridList1.dataGrid({
+            height: $(window).height() - 178,
+            url: "/SystemManage/Role/GetGridJson",
+            colModel: [
+                { label: "标识ID", name: "id", hidden: true, key: true },
+                { label: '角色编号', name: 'RoleCode', hidden: true },
+                { label: '角色编号', name: 'RoleId', hidden: true },
+                { label: '角色名称', name: 'RoleName', sortable: false, width: 180, align: 'left' },
+            ],
+            pager: "#gridPager1",
+            sortname: 'DepartmentId',
+            sortorder: 'desc',
+            viewrecords: true,
+
+        });
+
+        $("#btn_search2").click(function () {
+            var param = $("#search2").GetSearchCondition();
+            $gridList1.jqGrid('setGridParam', {
+                postData: param,
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search2').trigger("click");
+            }
+        }
+    }
+    //刷新角色
+    function reload2() {
+        $("#gridList1").trigger("reloadGrid");
+    }
+    //设置权限
+    function SetUpRoleAuthority() {
+        var RoleId = $("#gridList1").jqGridRowValue().RoleId;
+        if (RoleId!=undefined) {
+            $.modalOpen({
+                id: "RoleAuthority",
+                title: "设置角色权限",
+                url: "/SystemManage/Role/RoleAuthority?RoleId=" + RoleId,
+                width: "70%",
+                height: "550px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要设置权限的角色信息", "warning");
+        }
+    }
+    //角色人员
+    function RoleUser() {
+        var CompanyInfo = $("#leftgridList").jqGridRowValue();
+        var CompanyCode = CompanyInfo.CompanyCode;
+        var CompanyId=CompanyCode;
+        if (CompanyInfo.OrgType=="1") {
+            var a = CompanyCode.split('_');
+            CompanyId = a[0];
+        } 
+        var DeptId = $("#gridList").jqGridRowValue().DepartmentId;
+        var RoleId = $("#gridList1").jqGridRowValue().RoleId;
+        if (RoleId != undefined) {
+            $.modalOpen({
+                id: "RoleAuthority",
+                title: "角色人员",
+                url: "/SystemManage/RoleUser/Index?RoleId=" + RoleId + "&DeptId=" + DeptId + "&CompanyId=" + CompanyId + "&ProjectId=" + projectId,
+                width: "70%",
+                height: "550px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要设置权限的角色信息", "warning");
+        }
+    }
+    //同步角色
+    function SynchronizationRole() {
+        var url = "server/byServer/queryRoleList.json";
+        $.loading(true, "正在同步数据...");
+        $.ajax({
+            url: "/api/SystemManage/GetRoleList",
+            data: { url: url },
+            type: "get",
+            success: function (data) {
+                if (data.state == "success") {
+                    $.loading(false);
+                    $.modalMsg("同步成功", data.state);
+                    $.currentWindow().$("#leftgridList").trigger("reloadGrid");
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                    $.currentWindow().$("#gridList1").trigger("reloadGrid");
+                } else {
+                    $.loading(false);
+                    $.modalMsg("同步失败", "error");
+                }
+            },
+            error: function () {
+                $.loading(false);
+                $.modalMsg("同步失败", "error");
+            }
+        });
+    }
+    //同步角色人员
+    function SynchronizationRoleUser() {
+        $.loading(true, "正在同步数据...");
+        var url = "server/byServer/queryUserRoleInfo.json";
+        $.ajax({
+            url: "/api/SystemManage/GetUserRoleList",
+            data: { url: url },
+            type: "get",
+            success: function (data) {
+                if (data.state == "success") {
+                    $.loading(false);
+                    $.modalMsg("同步成功", data.state);
+                    $.currentWindow().$("#leftgridList").trigger("reloadGrid");
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                    $.currentWindow().$("#gridList1").trigger("reloadGrid");
+                } else {
+                    $.loading(false);
+                    $.modalMsg("同步失败", "error");
+                }
+            },
+            error: function () {
+                $.loading(false);
+                $.modalMsg("同步失败", "error");
+            }
+        });
+    }
+</script>
+<div class="topPanel">
+    <div class="btn-search">
+        <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="SynchronizationRole()"><i class="fa fa-sava"></i>同步角色</a>
+        <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="SynchronizationRoleUser()"><i class="fa fa-sava"></i>同步角色人员</a>
+        <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+    </div>
+</div>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="left">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="middle">
+        <div class="topPanel">
+            <div class="search" style="width:100%">
+                <table id="search1" style="width:100%">
+                    <tr>
+                        <td>
+                            <div class="input-group" style="float:left;padding-top:9px;">
+                                <input id="DepartmentName" type="text" class="form-control" placeholder="部门名称">
+                            </div>
+                            <div class="btn-search" style="float:left;padding-left:8px;">
+                                <a class="btn btn-primary" id="btn_search1">查询</a>
+                                <a class="btn btn-primary" onclick="reload1()">刷新</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+    <div class="right">
+        <div class="topPanel">
+            <div class="search" style="width:100%">
+                <table id="search2" style="width:100%">
+                    <tr>
+                        <td>
+                            <div class="input-group" style="float:left;padding-top:9px;">
+                                <input id="RoleName" type="text" class="form-control" placeholder="角色名称">
+                            </div>
+                            <div class="btn-search" style="float:left;padding-left:8px;">
+                                <a class="btn btn-primary" id="btn_search2">查询</a>
+                                <a class="btn btn-primary" onclick="reload2()">刷新</a>
+                                <a class="btn btn-primary" onclick="SetUpRoleAuthority();">设置角色权限</a>
+                                <a class="btn btn-primary" onclick="RoleUser();">角色人员</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <table id="gridList1"></table>
+        <div id="gridPager1"></div>
+    </div>
+</div>

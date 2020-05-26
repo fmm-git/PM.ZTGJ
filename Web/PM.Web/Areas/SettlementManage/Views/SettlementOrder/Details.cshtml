@@ -1,0 +1,246 @@
+﻿@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        height: 34px;
+        line-height: 1.42857;
+        color: rgb(85, 85, 85);
+        background-color: rgb(255, 255, 255);
+        padding: 6px 0px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgb(221, 221, 221);
+    }
+    #MXXXInfo .ui-jqgrid .table-bordered .ui-jqgrid-labels th {
+        border-left: 0px none !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-weight: normal;
+        background: #eee;
+        border: 1px solid #ddd;
+    }
+</style>
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var lastsel;
+    var index = 1;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();//加载明细信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "SettlementOrder")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    var mydata = data.Item2;
+                    lodeList(mydata);
+                }
+            });
+        }
+    });
+
+    //---明细
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '签收对账单号', name: 'BalanceOfAccountCode', width: 130, align: "left", sortable: false },
+                { label: '对账日期', name: 'SignforTime', width: 130, align: "left", sortable: false },
+                { label: '重量(T)', name: 'SteelWeight', width: 120, align: "right", sortable: false },
+                { label: '单价(元/T)', name: 'UnitPrice', width: 120, align: "right", sortable: false },
+                { label: '金额(元)', name: 'AmountOfMoney', width: 120, align: "right", sortable: false },
+                { label: '重量(T)', name: 'GeGouZhongLiWeight', width: 120, align: "right", sortable: false },
+                { label: '单价(元/T)', name: 'GUnitPrice', width: 120, align: "right", sortable: false },
+                { label: '金额(元)', name: 'GAmountOfMoney', width: 120, align: "right", sortable: false },
+                { label: '重量(T)', name: 'HSectionSteelWeight', width: 120, align: "right", sortable: false },
+                { label: '单价(元/T)', name: 'HUnitPrice', width: 120, align: "right", sortable: false },
+                { label: '金额(元)', name: 'HAmountOfMoney', width: 120, align: "right", sortable: false },
+                { label: '重量(T)', name: 'AGrille', width: 80, align: "right", sortable: false },
+                { label: '单价(元/T)', name: 'AUnitPrice', width: 120, align: "right", sortable: false },
+                { label: '金额(元)', name: 'AAmountOfMoney', width: 120, align: "right", sortable: false },
+                { label: '总金额(元)', name: 'TotalSum', width: 140, align: "center", sortable: false },
+                { label: '计价单号', name: 'SettlementCode', hidden: true }
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+        $("#gridList").jqGrid('destroyGroupHeader');//最关键的一步、销毁合并表头分组、防止出现表头重叠
+        $("#gridList").jqGrid('setGroupHeaders', {
+            useColSpanStyle: true,
+            groupHeaders: [
+                { startColumnName: 'SteelWeight', numberOfColumns: 3, titleText: '钢筋' },
+                { startColumnName: 'GeGouZhongLiWeight', numberOfColumns: 3, titleText: '格构柱中立柱' },
+                { startColumnName: 'HSectionSteelWeight', numberOfColumns: 3, titleText: 'H型钢' },
+                { startColumnName: 'AGrille', numberOfColumns: 3, titleText: '格栅' }
+            ]
+        });
+    }
+
+    //选项卡切换
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.SigninNuber); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.SigninNuber, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+
+</script>
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">计价单号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ID" name="ID" type="hidden" />
+                        <input id="Examinestatus" name="Examinestatus" type="hidden" value="未发起" />
+                        <input id="SettlementCode" name="SettlementCode" type="text" disabled="disabled" class="form-control required" value="@ViewBag.SettlementCode" />
+                    </td>
+                    <th class="formTitle">所属加工厂<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" value="@ViewBag.ProcessFactoryName" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">站点名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SiteCode" name="SiteCode" hidden="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">开始日期</th>
+                    <td class="formValue">
+                        <input id="StartDate" name="StartDate" disabled="disabled" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">结束日期</th>
+                    <td class="formValue">
+                        <input id="EndDate" name="EndDate" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">总重量(T)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Unit" name="Unit" value="T" type="hidden" />
+                        <input id="TotalWeight" name="TotalWeight" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                    <th class="formTitle">总金额(元/T)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="AmountOfMoney" name="AmountOfMoney" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input type="hidden" name="InsertUserCode" id="InsertUserCode" value="@ViewBag.UserCode" />
+                        <input id="UserName" name="UserName" type="text" disabled="disabled" class="form-control" value="@ViewBag.UserName" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control"
+                               value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" disabled="disabled" class="form-control" style="height: 70px; padding-right:2px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

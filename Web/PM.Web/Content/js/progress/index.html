@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>jQuery会员等级消费进度条代码 - 站长素材</title>
+
+    <link href="css/style.css" rel="stylesheet" />
+    <!--<script src="js/jquery.min.js"></script>-->
+    <script src="../jquery/jquery-2.1.1.min.js"></script>
+    <script src="js/jquery-progress.js"></script>
+
+</head>
+<body>
+
+    <div class="waic progress"></div>
+
+
+    <script type="text/javascript">
+        $(function () {
+            debugger;
+            var geshu = $(".djwai").children(".dengji").length;
+            var wid = $(".djwai").width() / geshu / 2;
+            var widt = wid + "px";
+            $(".xianpa").css({ "padding-left": widt, "padding-right": widt });
+            $(".yixif").css({ "padding-left": widt, "padding-right": widt });
+        });
+
+        $(".progress").startProgress({
+            "nodes": [
+                       { "name": "订单接收", "progress": 0, "progressDate": "2019-05-04 12:30" },
+                       { "name": "领料完成", "progress": 25, "progressDate": "" },
+                       { "name": "加工完成", "progress": 50, "progressDate": "" },
+                       { "name": "配送完成", "progress": 75, "progressDate": "" },
+                       { "name": "签收确认", "progress": 100, "progressDate": "" },
+
+            ],
+            "hasPay": 15,
+            "hasname": "订单接收"
+        });
+    </script>
+
+</body>
+</html>

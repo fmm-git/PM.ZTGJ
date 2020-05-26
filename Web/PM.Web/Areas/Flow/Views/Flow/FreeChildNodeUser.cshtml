@@ -1,0 +1,231 @@
+﻿@{
+    ViewBag.Title = "设置自由选人节点的执行人";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+@*<!DOCTYPE html>
+
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>设置自由选人节点的执行人</title>
+    </head>
+    <body>
+        <table id="FreeNodeUser" name="FreeNodeUser" class="easyui-datagrid"
+               data-options="fit:true,rownumbers:'true',singleSelect:true,onClickRow: onClickRowFreeNodeUser">
+            <thead>
+                <tr>
+                    <th data-options="field:'FlowCode',hidden:true">流程代码</th>
+                    <th data-options="field:'PersonnelCode',hidden:true">执行人代码</th>
+                    <th data-options="field:'FlowNodeCode',hidden:true">审批节点编号</th>
+
+                    <th data-options="field:'FlowNodeName',align:'left'" width="120px">审批节点名称</th>
+                    <th data-options="field:'PersonnelName',align:'left',editor:{
+                                    type:'textbox',
+                                    options:{
+                                        buttonIcon:'pmicon-find-16',
+                                        onClickButton:winPersonnel,
+                                        icons:[{iconCls:'pmicon-delete-16',handler: clearPersonnel}]
+                                    }}"
+                        width="160px">审批执行人</th>
+                </tr>
+            </thead>
+        </table>
+        <script type="text/javascript">
+            var editID = undefined;
+            var isFirst = true;
+            var W;
+            var H;
+            $.parser.onComplete = function () {
+                if (isFirst) {
+                    var nodelist = '@ViewBag.nodelist';
+                    W = '@ViewBag.W';
+                    H = '@ViewBag.H';
+                    $('#FreeNodeUser').datagrid({ data: $.parseJSON(nodelist) });
+                    isFirst = false;
+                }
+            }
+
+            function onClickRowFreeNodeUser(index, row) {
+                if (editID != undefined) {
+                    $('#FreeNodeUser').datagrid('endEdit', editID);
+                }
+                editID = index;
+                $('#FreeNodeUser').datagrid('beginEdit', editID);
+            }
+            function winPersonnel() {
+                WindowFormTextbox('/window/User/1', null, null, function (data) {
+                    var codes = '';
+                    var names = '';
+                    for (var i = 0; i < data.length; i++) {
+                        if (i == 0) {
+                            codes = data[i].UserCode;
+                            names = data[i].UserName;
+                        } else {
+                            codes = codes + ',' + data[i].UserCode;
+                            names = names + ',' + data[i].UserName;
+                        }
+                    }
+                    $('#FreeNodeUser').datagrid('updateRow', {
+                        index: editID,
+                        row: {
+                            PersonnelCode: codes,
+                            PersonnelName: names
+                        }
+                    });
+                    $('#FreeNodeUser').datagrid('endEdit', editID);
+                }, W, H);
+            }
+            function clearPersonnel(e) {
+                $(e.data.target).textbox('clear');
+                $('#FreeNodeUser').treegrid('update', {
+                    id: editID,
+                    row: {
+                        PersonnelCode: '',
+                        PersonnelName: ''
+                    }
+                });
+            }
+
+            function GetFreeNodeUser() {
+                var IsOk = true;
+                var allrows = $('#FreeNodeUser').datagrid('getRows');
+                if (allrows.length == 0) {
+                    $.messager.show({
+                        title: '提示',
+                        msg: '没有选择审批执行人',
+                        timeout: 5000,
+                        showType: 'show',
+                        style: {
+                            left: '',
+                            right: 0,
+                            top: document.body.scrollTop + document.documentElement.scrollTop,
+                            bottom: ''
+                        }
+                    });
+                    return '';
+                }
+                for (var j = 0; j <= allrows.length - 1; j++) {
+                    if (allrows[j].PersonnelCode == '') {
+                        $.messager.show({
+                            title: '提示',
+                            msg: '第' + (j + 1) + '行[' + allrows[j].FlowNodeName + ']还没有选择审批执行人',
+                            timeout: 5000,
+                            showType: 'show',
+                            style: {
+                                left: '',
+                                right: 0,
+                                top: document.body.scrollTop + document.documentElement.scrollTop,
+                                bottom: ''
+                            }
+                        });
+                        IsOk = false;
+                        return '';
+                    }
+                }
+                //if (callback != undefined) {
+                //    callback(JSON.stringify(allrows));
+                //}
+                if (IsOk) {
+                    return JSON.stringify(allrows);
+                } else {
+                    return '';
+                }
+            }
+
+        </script>
+    </body>
+    </html>*@
+
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle"> 审批节点名称</th>
+                    <td class="formValue">
+                        <input id="FlowCode" name="FlowCode" type="hidden">
+                        <input id="FlowNodeCode" name="FlowNodeCode" type="hidden">
+                        <input id="FlowNodeName" name="FlowNodeName" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle"> 审批执行人</th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="PersonnelCode" name="PersonnelCode" type="hidden" class="form-control required">
+                            <input id="PersonnelName" name="PersonnelName" type="text" disabled="disabled" class="form-control required">
+                            <span class="input-group-btn" onclick="ClickUser()">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i style="padding-bottom:8px;padding-top:8px;" class="fa fa-search"> </i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">审批级别</th>
+                    <td class="formValue">
+                        <select id="FlowLevel" name="FlowLevel" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">审批主题</th>
+                    <td class="formValue">
+                        <textarea id="FlowTitle" name="FlowTitle" class="form-control required" style="height: 40px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>
+<script type="text/javascript">
+    var FormCode = $.request("FormCode");
+    var FlowNodeCode = $.request("FlowNodeCode");
+    var FlowNodeName = $.request("FlowNodeName");
+    $(function () {
+        $("#FormCode").val(FormCode);
+        $("#FlowNodeCode").val(FlowNodeCode);
+        $("#FlowNodeName").val(FlowNodeName);
+        //审批级别
+        $("#FlowLevel").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "FlowLevel" })",
+            id: "DictionaryText",
+            text: "DictionaryText"
+        });
+    });
+    //选择人员
+    function ClickUser() {
+        $.modalOpen({
+            id: "FreeChooseFlowUser",
+            title: "自由选人",
+            url: "/Flow/Flow/FreeChooseFlowUser?FormCode=" + FormCode + "&FlowNodeCode=" + FlowNodeCode + "&FlowNodeName=" + FlowNodeName,
+            width: "80%",
+            height: "80%",
+            callBack: function (iframeId) {
+                var BackData = top.frames[iframeId].BackData();
+                var a = BackData.split("|");
+                $("#PersonnelCode").val(a[0]);
+                $("#PersonnelName").val(a[1]);
+                //关闭人员选择窗口
+                var index = top.layer.getFrameIndex(iframeId);
+                top.layer.close(index);
+            }
+        });
+    }
+    //确定发起流程
+    function submitForm() {
+        //关闭窗口
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        //后台操作数据
+        $.submitForm({
+            url: "@Url.Action("LaunchFlow", "Flow")",
+            param: { param: JSON.stringify(formData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+</script>

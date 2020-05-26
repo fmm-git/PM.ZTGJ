@@ -1,0 +1,940 @@
+﻿@{
+    ViewBag.Title = "原材料到货入库编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .ui-jqgrid tr.jqgrow td {
+        vertical-align: middle;
+    }
+</style>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = top.clients.projectId;
+    var CompanyCode = $.request("CompanyCode");
+    var BatchPlanNum = $.request("BatchPlanNum");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();
+        $(".ui-jqgrid-view").css("margin-bottom: 0px");
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "InOrder")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    ProjectId = data.Item1[0].ProjectId;
+                    $("[name='UserName']").val(data.Item1[0].UserName);
+                    $("#SupplierCodeNew").val(data.Item1[0].SupplierCode);
+                    $("#WorkAreaName").val(data.Item1[0].BranchName + "/" + data.Item1[0].WorkAreaName);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    var mydata = data.Item2;
+                    lodeList(mydata);
+                }
+            });
+        }
+    });
+
+    function initControl() {
+        //钢筋类型
+        $("#RebarType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "RebarType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        if (BatchPlanNum) {
+            $.ajax({
+                url: "@Url.Action("GetBatchPlanGridJson", "InOrder")",
+                data: { keyword: BatchPlanNum },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#BatchPlanCode").val(data.rows[0].BatchPlanNum);
+                    $("#WorkAreaCode").val(data.rows[0].WorkAreaCode);
+                    $("#WorkAreaName").val(data.rows[0].BranchName + "/" + data.rows[0].WorkAreaName);
+                    $("#RebarType").val(data.rows[0].SteelsTypeCode).trigger("change");
+                    $("#StorageCode").val(data.rows[0].StorageCode);
+                    $("#StorageName").val(data.rows[0].StorageName);
+                    $("#Address").val(data.rows[0].DeliveryPlace);
+                    $("#UserCode").val(data.rows[0].Acceptor);
+                    $("#DeliverUser").val(data.rows[0].DeliverUser);
+                    $("#Tel").val(data.rows[0].ContactWay);
+                    $("#ProjectId").val(data.rows[0].ProjectId);
+                    //加载批次计划明细
+                    $.ajax({
+                        url: "@Url.Action("GetBatchPlanItemGridJson", "InOrder")",
+                        data: { BatchPlanCode: data.rows[0].BatchPlanNum },
+                        dataType: "json",
+                        async: false,
+                        success: function (retdata) {
+                            if (retdata.rows.length > 0) {
+                                //清空明细表中的数据
+                                $("#gridList").jqGrid('clearGridData');
+                                lodeList(retdata.rows);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        var data = GetParnetCompany(CompanyCode);
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].OrgType == "4") {//工区
+                $("#WorkAreaCode").val(data[i].CompanyCode);
+                $("#WorkAreaName").val(data[i].CompanyFullName);
+            }
+            if (data[i].OrgType == "5") {//站点
+                $("#SiteCode").val(data[i].CompanyCode);
+                $("#SiteName").val(data[i].CompanyFullName);
+            }
+        }
+    }
+    function GetParnetCompany(CompanyCode) {
+        var dataCompany;
+        $.ajax({
+            url: "@Url.Action("GetParentCompany", "RawMonthDemandPlan")",
+            data: { CompanyCode: CompanyCode },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                dataCompany = data;
+            }
+        });
+        return dataCompany;
+    }
+
+    //批次计划选择
+    function selectBatchPlan() {
+        var url = '/RawMaterial/InOrder/GetBatchPlanGridJson&keyValue=ProjectId/' + ProjectId;
+        var str = "BatchPlanCode=BatchPlanNum,UserCode=Acceptor,Tel=ContactWay,RebarType=SteelsTypeCode,Address=DeliveryPlace";
+        var ret = selectClick('win_InOrder_BatchPlan', url, 'Grid', 'InsertTime', '', str, '550px', '450px', function (data) {
+            $("#WorkAreaName").val(data[0].BranchName + "/" + data[0].WorkAreaName);
+            $("#ProjectId").val(data[0].ProjectId);
+            $("#RebarType").val(data[0].SteelsTypeCode).trigger("change");
+            //清空明细信息
+            $("#gridList").jqGrid('clearGridData');
+            $("#InCount").val("0");
+            //加载批次计划明细
+            $.ajax({
+                url: "@Url.Action("GetBatchPlanItemGridJson", "InOrder")",
+                data: { BatchPlanCode: data[0].BatchPlanNum },
+                dataType: "json",
+                async: false,
+                success: function (retdata) {
+                    if (retdata.rows.length > 0) {
+                        //AllMyBack(retdata.rows);
+                        //GetGridRowData();
+                        lodeList(retdata.rows);
+                    }
+                }
+            });
+        })
+    }
+
+    //入库仓库选择
+    function selectStorage() {
+        var factoryCode = $("#ProcessFactoryCode").val();
+        var url = "/RawMaterial/RawMaterialStock/GetStorageGridJson&keyValue=ProcessFactoryCode/" + factoryCode;
+        var str = "Address=StorageAdd";
+        var ret = selectClick('win_MaterialStock_Storage', url, 'Grid', 'InsertTime', '', str, '550px', '450px', function () {
+        })
+    }
+    //选择工区
+    function selectWorkArea() {
+        var url = "/SystemManage/Company/GetWorkAreaByProjectId&keyValue=ProjectId/" + ProjectId + "|ParentCompanyCode/" + $("#BranchCode").val();
+        var str = "WorkAreaCode=CompanyCode,WorkAreaName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+            $("#SiteCode").val("");
+            $("#SiteName").val("");
+        });
+    }
+    //选择站点
+    function selectSite(type) {
+        if ($("#WorkAreaCode").val() == "" || $("#WorkAreaCode").val() == null || $("#WorkAreaCode").val() == undefined) {
+            $.modalMsg("请选择工区信息", "warning");
+        } else {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyWorkAreaOrSiteList&keyValue=parentCode/" + $("#WorkAreaCode").val() + "|type/" + type;
+            var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+        }
+    }
+    //实验室人员选择
+    function selectSiteUser() {
+        if (!$("#BatchPlanCode").val()) {
+            $.modalMsg("请先选择批次计划信息", "warning");
+        } else {
+            var url = "/RawMaterial/InOrder/GetSysUser&keyValue=ProjectId/" + $("#ProjectId").val() + "|BranchCode/" + $("#BranchCode").val() + "|WorkAreaCode/" + $("#WorkAreaCode").val();
+            var str = "SupplierCode=UserCode,SiteUser=UserName";
+            var ret = selectClick('win_WorkAreaSysUser', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+                getTel(row[0].UserId, "#SiteUserTel");
+                $("#SupplierCodeNew").val(row[0].UserCode);
+            });
+        }
+    }
+
+    //// 站点人员选择
+    //function selectSiteUser() {
+    //    var str = "SupplierCode=UserCode,SiteUser=UserName";
+    //    var ret = selectClickNew(str, '75%', '75%', function (obj) {
+    //        getTel(obj[0].UserId, "#SiteUserTel");
+    //        $("#SupplierCodeNew").val(obj[0].UserCode);
+    //    }, false);
+    //}
+    //联系人选择
+    function selectUser() {
+        var str = "UserCode,DeliverUser=UserName";
+        var ret = selectClickNew(str, '75%', '75%', function (obj) {
+            getTel(obj[0].UserId, "#Tel");
+        }, false);
+    }
+    //获取人员电话
+    function getTel(uid, doc) {
+        $.ajax({
+            url: "/RawMaterial/FactoryBatchNeedPlan/GetUserPhone?uid=" + uid,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                $(doc).val("");
+                var dt = JSON.parse(data)
+                $(doc).val(dt.data[0].MobilePhone);
+            }
+        });
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = [];
+        var tableData = GetGridRowData();
+        if (tableData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        formData.SupplierCode = formData.SupplierCodeNew;
+        formData.ChackResult = 0;
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "InOrder")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+                if (BatchPlanNum) {
+                    //调用批次计划查看页面重新加载列表数据方法
+                    top.frames["Details"].reloadItem();
+                }
+            }
+        });
+    }
+
+    //提交数据(发起流程)
+    function submitForm2() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = [];
+        var tableData = GetGridRowData();
+        if (tableData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        formData.SupplierCode = formData.SupplierCodeNew;
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "InOrder")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            close: false,
+            success: function (data) {
+                if (data.state == "success") {
+                    if (type == "add") {
+                        $.ajax({
+                            type: 'Get',
+                            url: "@Url.Action("GetInOrderData", "InOrder")",
+                            data: { InOrderCode: formData.InOrderCode },
+                            async: false,
+                            cache: false,
+                            success: function (data) {
+                                var datajson = JSON.parse(data);
+                                if (datajson.length > 0) {
+                                    var flag = examination(datajson[0].ID, "InOrder", datajson[0].Examinestatus, datajson[0].InOrderCode, datajson[0].ProjectId, datajson[0].InsertUserCode, "");
+                                    if (flag) {
+                                        //发起流程成功
+                                        //给对应工区实验室人员发送通知
+                                        $.ajax({
+                                            type: 'Get',
+                                            url: "@Url.Action("SendNoticeNews", "InOrder")",
+                                            data: { InOrderCode: formData.InOrderCode },
+                                            async: false,
+                                            cache: false,
+                                            success: function (datas) {
+                                                var str_json = JSON.parse(datas);
+                                                if (str_json.state == "success") {
+                                                    console.log("推送通知成功");
+                                                } else {
+                                                    console.log("推送通知失败");
+                                                }
+                                            }
+                                        });
+                                    }
+                                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                                    if (BatchPlanNum) {
+                                        //调用批次计划查看页面重新加载列表数据方法
+                                        top.frames["Details"].reloadItem();
+                                    }
+                                    //关闭页面
+                                    $.modalClose();
+                                } else {
+                                    $.modalMsg("操作失败", "warning");
+                                    return false;
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    $.modalMsg("操作失败", "success");
+                }
+            }
+        });
+    }
+
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 180,
+            rownumbers: false,
+            //colModel: [
+            //    { label: "主键", name: "ID", hidden: true },
+            //    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+            //    { label: '原材料名称', name: 'MaterialName', width: 150, height: 10, align: "left", sortable: false },
+            //    { label: '计量单位', name: 'MeasurementUnitText', width: 80, align: "left", sortable: false },
+            //    { label: '规格', name: 'SpecificationModel', width: 80, align: "left", sortable: false },
+            //    { label: "批次计划数量(kg)", name: "BatchPlanQuantity", width: 100, align: "right", sortable: false },
+            //    { label: "已供货量(kg)", name: "HasSupplier", width: 80, align: "right", sortable: false },
+            //    { label: "已到货量(kg)", name: "InOrdeCount", width: 80, align: "right", sortable: false },
+            //    { label: "未到货量(kg)", name: "TotalPassCount", width: 80, align: "right", sortable: false },
+            //    { label: '合格数量(kg)', name: 'PassCount', width: 80, align: "right", sortable: false, editable: true },
+            //    { label: '不合格数量(kg)', name: 'NoPass', width: 80, align: "right", sortable: false },
+            //    { label: '厂家', name: 'Factory', width: 140, align: "left", sortable: false, editable: true },
+            //    { label: '炉批号', name: 'BatchNumber', width: 120, align: "left", sortable: false, editable: true },
+            //    { label: '供应商', name: 'SupplierName', width: 140, align: "left", sortable: false, editable: true },
+            //    { label: '供应商编号', name: 'SupplierCode', hidden: true },
+            //    { label: '不合格原因', name: 'NoPassReason', width: 140, align: "left", sortable: false, editable: true },
+            //    { label: '计量单位', name: 'MeasurementUnit', hidden: true },
+            //    { label: '批次计划明细Id', name: 'BatchPlanItemId', hidden: true },
+            //],
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                {
+                    label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MaterialCode' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '原材料名称', name: 'MaterialName', width: 150, height: 10, align: "left", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MaterialName' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '计量单位', name: 'MeasurementUnitText', width: 80, align: "left", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MeasurementUnitText' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '规格', name: 'SpecificationModel', width: 80, align: "left", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'SpecificationModel' + rowId + "\'";
+                    }
+                },
+                {
+                    label: "批次计划数量(kg)", name: "BatchPlanQuantity", width: 95, align: "right", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'BatchPlanQuantity' + rowId + "\'";
+                    }
+                },
+                {
+                    label: "已完成供货量(kg)", name: "HasSupplier", width: 95, align: "right", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'HasSupplier' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '计量单位', name: 'MeasurementUnit', hidden: true,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MeasurementUnit' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '批次计划明细Id', name: 'BatchPlanItemId', hidden: true,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'BatchPlanItemId' + rowId + "\'";
+                    }
+                },
+                { label: "供货历史记录编号", name: "BatchPlanItemNewCode", hidden: true },
+                { label: "历史到货时间", name: "ThisTime", width: 80, align: "right", sortable: false, formatter: formatDatebox },
+                { label: "历史到货量(kg)", name: "InOrdeCount", width: 90, align: "right", sortable: false },
+                { label: '合格入库量(kg)', name: 'PassCount', width: 90, align: "right", sortable: false, editable: true },
+                { label: '不合格量(kg)', name: 'NoPass', width: 90, align: "right", sortable: false },
+                { label: '不合格原因', name: 'NoPassReason', width: 140, align: "left", sortable: false, editable: true },
+                { label: '厂家', name: 'Factory', width: 140, align: "left", sortable: false, editable: true },
+                { label: '炉批号', name: 'BatchNumber', width: 120, align: "left", sortable: false, editable: true },
+                { label: '供应商', name: 'SupplierName', width: 140, align: "left", sortable: false, editable: true },
+                { label: '供应商编号', name: 'SupplierCode', hidden: true },
+                { label: '选择', name: 'SearchSupplierName', width: 80, align: "left", sortable: false },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+                var gridName = "gridList";
+                Merger(gridName, 'MaterialCode');
+                Merger(gridName, 'MaterialName');
+                Merger(gridName, 'MeasurementUnitText');
+                Merger(gridName, 'SpecificationModel');
+                Merger(gridName, 'BatchPlanQuantity');
+                Merger(gridName, 'HasSupplier');
+                Merger(gridName, 'MeasurementUnit');
+                Merger(gridName, 'BatchPlanItemId');
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                ////获取表格最后一行Id
+                //var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                //var id = selectedRowIds[selectedRowIds.length - 1];
+                //if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                //    $gridList.jqGrid('saveRow', lastsel);
+                //    $gridList.jqGrid('editRow', rowid, true);
+                //    lastsel = rowid;
+
+                //    $("#gridList>tbody").find("input:text").each(function () {
+                //        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                //        $(this).css("height", "20px").css("width", width + "px");
+                //    });
+                //}
+                valid(rowid);
+            },
+            beforeSelectRow: function (rowid, e) {
+                $gridList.jqGrid('setSelection', rowid);
+                valid(rowid);
+            }
+        });
+    }
+    //合并单元格
+    function Merger(gridName, CellName) {
+        //得到显示到界面的id集合
+        var mya = $("#" + gridName + "").getDataIDs();
+        //数据总行数
+        var length = mya.length;
+        //定义合并行数
+        var rowSpanTaxCount = 1;
+        for (var i = 0; i < length; i += rowSpanTaxCount) {
+            //从当前行开始比对下面的信息
+            var before = $("#" + gridName + "").jqGrid('getRowData', mya[i]);
+            rowSpanTaxCount = 1;
+            for (j = i + 1; j <= length; j++) {
+                //和上边的信息对比 如果值一样就合并行数+1 然后设置rowspan 让当前单元格隐藏
+                var end = $("#" + gridName + "").jqGrid('getRowData', mya[j]);
+                if (before[CellName] == end[CellName] && before["BatchPlanItemId"] == end["BatchPlanItemId"]) {
+                    rowSpanTaxCount++;
+                    $("#" + gridName + "").setCell(mya[j], CellName, '', { display: 'none' });
+                } else {
+                    break;
+                }
+            }
+            $("#" + gridName + "").setCell(mya[i], CellName, '', '', { rowspan: rowSpanTaxCount });
+        }
+    };
+
+    ////批量添加
+    //function btn_add() {
+    //    var url = "/RawMaterial/RawMaterialStock/GetMaterialGridJson";
+    //    var winid = "win_MaterialStock_RawMaterial";
+    //    var batchPlanCode = $("#BatchPlanCode").val();
+    //    if (batchPlanCode != "") {
+    //        url = "/RawMaterial/InOrder/GetBatchPlanItemGridJson&keyValue=BatchPlanCode/" + batchPlanCode;
+    //        winid = "win_InOrder_BatchPlanItem";
+    //    }
+    //    var ret = selectClick(winid, url, 'Grid', '', '', '', '50%', '500px', function (row) {
+    //        AllMyBack(row);
+    //    }, true);
+    //}
+    ////删除行
+    //function btn_delete() {
+    //    var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+    //    if (!rowId) {
+    //        $.modalMsg("请选择数据", "warning");
+    //        return false;
+    //    }
+    //    $("#gridList").jqGrid('delRowData', rowId);
+    //}
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        var rkzl = 0;
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            rkzl += item.PassCount;
+            item.SearchSupplierName = "<a id=\"a_"+index+"\" href=\"javascript:void(0);\" style=\"color:blue\" onclick=\"selectSupplier("+index+")\">选择</a>"
+            $("#gridList").jqGrid('addRowData', index, item);
+            $("#gridList").jqGrid('editRow', index, true);
+        });
+        editRow(1);
+        $("#InCount").val(rkzl);
+    }
+    ////批量添加回调函数
+    //function AllMyBack(row) {
+    //    var rowData = [];
+    //    if (row && row.length > 0) {
+    //        for (var i = 0; i < row.length; i++) {
+    //            var mydata = {
+    //                id: 0,
+    //                MaterialCode: row[i].MaterialCode,
+    //                MaterialName: row[i].MaterialName,
+    //                SpecificationModel: row[i].SpecificationModel,
+    //                MeasurementUnitText: row[i].MeasurementUnitText,
+    //                HasSupplier: row[i].HasSupplier == undefined ? 0 : row[i].HasSupplier,
+    //                PassCount: isNaN(parseFloat(row[i].HasSupplier - row[i].TotalPassCount)) ? 0 : parseFloat(row[i].HasSupplier - row[i].TotalPassCount),
+    //                Factory: "",
+    //                BatchNumber: "",
+    //                NoPass: 0,
+    //                MeasurementUnit: row[i].MeasurementUnit,
+    //                BatchPlanQuantity: row[i].BatchPlanQuantity == undefined ? 0 : row[i].BatchPlanQuantity,
+    //                TotalPassCount: isNaN(parseFloat(row[i].HasSupplier - row[i].TotalPassCount)) ? 0 : parseFloat(row[i].HasSupplier - row[i].TotalPassCount),
+    //                InOrdeCount: row[i].TotalPassCount == undefined ? 0 : row[i].TotalPassCount,
+    //                BatchPlanItemId: row[i].BatchPlanItemId == undefined ? 0 : row[i].BatchPlanItemId,
+    //            };
+    //            rowData.push(mydata);
+    //        }
+    //    }
+    //    lodeList(rowData);
+    //}
+    ////去除重复表格数据
+    //function filterGridData(data) {
+    //    var columnData = [];
+    //    $("#gridList").jqGrid('saveRow', lastsel);
+    //    var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+    //    if (ids.length < 1) {
+    //        columnData = data;
+    //    }
+    //    $(ids).each(function (index, item) {
+    //        var rowData = $("#gridList").jqGrid("getRowData", item);
+    //        columnData.unshift(rowData);
+    //    });
+    //    var codearry = [];
+    //    columnData.forEach(function (v) { codearry.push(v.MaterialCode); });
+    //    $.each(data, function (index, item) {
+    //        var r = $.inArray(item.MaterialCode, codearry)
+    //        if (r <= -1) {
+    //            columnData.push(item);
+    //        }
+    //    });
+    //    return columnData;
+    //}
+    //获取表格数据
+    function GetGridRowData() {
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        //全部结束编辑
+        if (ids.length > 0) {
+            for (var i = 0; i < ids.length; i++) {
+                $("#gridList").jqGrid('saveRow', ids[i]);
+            }
+        }
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var inOrderCode = $("#InOrderCode").val();
+        var columnData = [];
+        var sumPassCount = 0;
+        var sumNoPass = 0;
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.InOrderCode = inOrderCode;
+            rowData.ChackState = 1;
+            var passCount = parseFloat(rowData.PassCount);
+            if (isNaN(passCount)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            }
+            if (!rowData.Factory) {
+                $.modalMsg("请填写厂家信息", "warning");
+                columnData = [];
+                return false;
+            }
+            if (!rowData.BatchNumber) {
+                $.modalMsg("请填写炉批号信息", "warning");
+                columnData = [];
+                return false;
+            }
+            if (!rowData.SupplierName) {
+                $.modalMsg("请填写供应商信息", "warning");
+                columnData = [];
+                return false;
+            }
+            if (!rowData.SupplierCode) {
+                rowData.SupplierCode = rowData.SupplierName;
+            }
+
+            delete rowData.SearchSupplierName;
+            sumPassCount += passCount;
+            var noPass = parseFloat(rowData.NoPass);
+            if (noPass > 0 && rowData.NoPassReason == "") {
+                $.modalMsg("请填写不合格原因", "warning");
+                columnData = [];
+                return false;
+            }
+            sumNoPass += noPass;
+            columnData.push(rowData);
+        });
+        $("#InCount").val(sumPassCount.toFixed(5));
+        $("#NoPassTotal").val(sumNoPass.toFixed(5));
+        editRow(2);//重新启动编辑
+        return columnData;
+    }
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        validMoneyNew(rowid);
+        $("#" + rowid + "_PassCount")
+               .keyup(function () { regTextBox(this, true); })
+               .bind("paste", function () { regTextBox(this, true); })
+               .blur(function () { validMoney(this, rowid); }).css("ime-mode", "disabled");
+
+        //$("#" + rowid + "_SupplierName").focus(function () {
+        //    $(this).removeAttr("readonly");
+        //    selectSupplier(this);
+        //    $(this).attr("readonly", "readonly");
+        //});
+    }
+    //供应商选择
+    function selectSupplier(index) {
+        var url = "/RawMaterial/InOrder/GetSupplierGridJson";
+        var ret = selectClick('win_Supplier', url, 'Grid', '', '', '', '550px', '450px', function (data) {
+            if (data[0] != null) {
+                var datatd = $("#gridList #" + index + ">td");
+                datatd[17].children[0].value = data[0].SupplierName;
+                datatd[18].innerText = data[0].SupplierCode;
+            }
+        });
+    }
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    function validMoney(obj, rowid) {
+        var PassCount = parseFloat($(obj).val());//合格数
+        var rowData = $("#gridList").jqGrid("getRowData", rowid);
+        var HasSupplier = parseFloat(rowData.HasSupplier);//已供货量
+        var InOrdeCount = parseFloat(rowData.InOrdeCount);//本次到货数量
+        var BatchPlanCode = $("#BatchPlanCode").val();
+        if (BatchPlanCode != "") {
+            if (!isNaN(PassCount) && !isNaN(InOrdeCount)) {
+                if (PassCount > InOrdeCount) {
+                    $.modalMsg("合格入库量已超出本次到货量", "warning");
+                    $(obj).val(InOrdeCount);
+                    return false;
+                }
+                var noPass = InOrdeCount - PassCount;
+                $(obj).parent().parent().children()[13].innerText = noPass; //不合格数
+                if (noPass > 0) {
+                    $($(obj).parent().parent().children()[14]).children().removeAttr("readonly");
+                } else {
+                    $($($(obj).parent().parent().children()[14]).children()).val("");
+                    $($(obj).parent().parent().children()[14]).children().attr("readonly", "readonly");
+                }
+            }
+        }
+    }
+    function validMoneyNew(rowid) {
+        var rowData = $("#gridList").jqGrid("getRowData", rowid);
+        var fileid = $($($(rowData.NoPassReason)[0])[0]).context.id;
+        var PassCount = parseFloat($($("#" + fileid + "").parent().parent().children()[12]).children().val());//合格数
+        var InOrdeCount = parseFloat(rowData.InOrdeCount);//本次到货数量
+        var BatchPlanCode = $("#BatchPlanCode").val();
+        if (BatchPlanCode != "") {
+            if (!isNaN(PassCount) && !isNaN(InOrdeCount)) {
+                if (PassCount > InOrdeCount) {
+                    $.modalMsg("合格入库量已超出本次到货量", "warning");
+                    $($("#" + fileid + "").parent().parent().children()[12]).children().val(InOrdeCount);
+                    return false;
+                }
+                var noPass = InOrdeCount - PassCount;
+                $("#" + fileid + "").parent().parent().children()[13].innerText = noPass; //不合格数
+                if (noPass > 0) {
+                    $($("#" + fileid + "").parent().parent().children()[14]).children().removeAttr("readonly");
+                } else {
+                    $($("#" + fileid + "").parent().parent().children()[14]).children().val("")
+                    $($("#" + fileid + "").parent().parent().children()[14]).children().attr("readonly", "readonly");
+                }
+            }
+        }
+    }
+    //编辑行
+    function editRow(type) {
+        if (type == 1) {
+            $("#gridList>tbody").find("input:text").each(function () {
+                var width = 65;
+                if ($(this)[0].name == "PassCount") {
+                    width = 65;
+                } else if ($(this)[0].name == "NoPassReason") {
+                    width = 115;
+                } else if ($(this)[0].name == "Factory") {
+                    width = 115;
+                } else if ($(this)[0].name == "BatchNumber") {
+                    width = 95;
+                } else if ($(this)[0].name == "SupplierName") {
+                    width = 115;
+                }
+                $(this).css("height", "20px").css("width", width + "px");
+
+            });
+        }
+        else {
+            var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+            for (var i = 0; i < ids.length; i++) {
+                $("#gridList").jqGrid('editRow', ids[i], true);
+            }
+            editRow(1);
+        }
+    }
+</script>
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "InOrder");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "InOrder");
+    }
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        else {
+            GetGridRowData();
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+            <input id="NoPassTotal" name="NoPassTotal" type="hidden" />
+            <input id="BranchCode" name="BranchCode" type="hidden" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">入库单号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="InOrderCode" name="InOrderCode" type="text" value="@ViewBag.InOrderCode" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">批次计划编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="BatchPlanCode" name="BatchPlanCode" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn" onclick="selectBatchPlan();">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">工区名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="WorkAreaCode" name="WorkAreaCode" hidden="hidden" />
+                        <input id="WorkAreaName" name="WorkAreaName" class="form-control required" disabled="disabled" />
+                        @*<div class="input-group input-group-with">
+                                <input id="WorkAreaName" name="WorkAreaName" type="text" readonly="readonly" class="form-control required" disabled="disabled" />
+                                <span class="input-group-btn" onclick="selectWorkArea()">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>*@
+                    </td>
+                    <th class="formTitle">钢材类型<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="RebarType" name="RebarType" class="form-control required" disabled="disabled"></select>
+                    </td>
+                    @*<th class="formTitle">站点名称</th>
+                        <td class="formValue">
+                            <div class="input-group input-group-with">
+                                <input id="SiteCode" name="SiteCode" type="hidden" />
+                                <input id="SiteName" name="SiteName" type="text" readonly="readonly" class="form-control" />
+                                <span class="input-group-btn" onclick="selectSite('5')">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </td>*@
+                </tr>
+                <tr>
+                    <th class="formTitle">工区实验室人员<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SupplierCodeNew" name="SupplierCodeNew" type="hidden" />
+                            <input id="SupplierCode" name="SupplierCode" type="hidden" />
+                            <input id="SiteUser" name="SiteUser" type="text" disabled="disabled" class="form-control" />
+                            <span class="input-group-btn" onclick="selectSiteUser()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">联系方式<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SiteUserTel" name="SiteUserTel" class="form-control required" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">入库仓库<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="StorageCode" name="StorageCode" type="hidden">
+                            <input id="StorageName" name="StorageName" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn" onclick="selectStorage();">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">交货地点</th>
+                    <td class="formValue">
+                        <input id="Address" name="Address" type="text" class="form-control" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">收货人<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="UserCode" name="UserCode" type="hidden" />
+                            <input id="DeliverUser" name="DeliverUser" type="text" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectUser()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">联系方式<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Tel" name="Tel" class="form-control required" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                    <th class="formTitle">入库总量(kg)</th>
+                    <td class="formValue">
+                        <input id="InCount" name="InCount" value="0" type="text" class="form-control" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input type="hidden" id="InsertUserCode" name="InsertUserCode" />
+                        <input id="InsertUserName" name="InsertUserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        @*<div class="toolbar">
+                <div class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+                </div>
+                <div class="btn-group">
+                    <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+                </div>
+            </div>*@
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+

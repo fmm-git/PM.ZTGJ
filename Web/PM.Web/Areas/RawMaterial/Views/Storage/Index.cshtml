@@ -1,0 +1,152 @@
+﻿@{
+    ViewBag.Title = "仓库管理列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    $(function () {
+        $.LodeMenuBtn("/RawMaterial/Storage/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "Storage")",
+            height: $(window).height() - 178,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '仓库名称', name: 'StorageName', width: 180, align: 'left', sortable: false },
+                { label: "仓库归属", name: "ProcessFactoryName", width: 180, align: 'left', sortable: false },
+                { label: '仓库属性', name: 'StorageAttributeText', width: 100, align: 'left', sortable: false },
+                { label: "仓库区域", name: "AreaCode", width: 150, align: 'left', sortable: false },
+                { label: '仓库地址', name: 'StorageAdd', width: 150, align: 'left', sortable: false },
+                { label: "管理员", name: "UserName", width: 80, align: 'left', sortable: false },
+                { label: '联系方式', name: 'Tel', width: 100, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'InsertUserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 200, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增仓库信息", "@Url.Action("Form", "Storage")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改仓库",
+            url: "@Url.Action("Form", "Storage")",
+            anyUrl: "@Url.Action("AnyInfo", "Storage")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "Storage")",
+            anyUrl: "@Url.Action("AnyInfo", "Storage")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看仓库",
+            url: "@Url.Action("Details", "Storage")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "480px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //加工厂选择
+    function selectFactory() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/1";
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "Storage")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+    </div>
+    <div class="topPanel">
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="StorageName">仓库名称</option>
+                                <option value="ProcessFactoryCode">加工厂</option>
+                            </select>
+                            <input id="StorageName" name="StorageName" type="text" placeholder="仓库名称" class="form-control SearchContent hidSearchContent">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                            <input id="ProcessFactoryName" name="ProcessFactoryCode" type="text" class="form-control SearchContent hidSearchContent" readonly="readonly" placeholder="加工厂">
+                            <span class="input-group-btn input-group-btn-search SearchContent hidSearchContent" name="ProcessFactoryCode">
+                                <button type="button" class="btn  btn-primary" onclick="selectFactory();"><i class="fa fa-search"></i></button>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                            <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

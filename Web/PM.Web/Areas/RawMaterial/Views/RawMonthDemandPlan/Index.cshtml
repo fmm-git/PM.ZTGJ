@@ -1,0 +1,1318 @@
+﻿@{
+    ViewBag.Title = "原材料月度需求计划";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<script src="~/Content/js/indextab.js?v=1.1" charset="gbk"></script>
+<script src="~/Content/js/Highcharts-8.0.0/highcharts.js"></script>
+<style>
+    .ui-jqgrid .table-bordered th {
+        border-left: 0px none !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-weight: normal;
+        background: #eee;
+        border: 1px solid #ddd;
+    }
+
+    .jhbz {
+        padding: 2px;
+    }
+
+    .zzjgtj {
+        color: #6c6c6c;
+    }
+
+    .down {
+        float: left;
+        width: 0;
+        height: 0;
+        border-width: 25px;
+        border-style: solid;
+        border-color: #FFCCCC transparent transparent transparent;
+    }
+
+    .up {
+        float: left;
+        width: 0;
+        height: 0;
+        border-width: 25px;
+        border-style: solid;
+        border-color: #FFCCCC transparent transparent transparent;
+        transform: rotate(180deg); /*顺时针旋转90°*/
+        margin-top: 2px;
+    }
+</style>
+<script>
+    $(function () {
+        var llqHeight = $(window).height(); //浏览器当前窗口可视区域高度
+        //设置统计图形的高度
+        var screenHeight = $("body").height();
+        $(".highchartImg").each(function () {
+            $(this).height(screenHeight * 0.4);
+        });
+        $.LodeMenuBtn("/RawMaterial/RawMonthDemandPlan/Index");
+        $('#layout').layout();
+        $(".ui-layout-center").css("padding", "10px");
+        leftList();
+        $(".ui-layout-pane-west").css('overflow', 'hidden');
+        gridList();
+        $(".ui-jqgrid-view").css("margin-bottom", "20px");
+        //钢筋类型
+        $("#RebarType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "RebarType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                //maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var DemandMonth = dp.cal.getNewDateStr();
+                    var param = $(".search").GetSearchCondition();
+                    param.RebarType = RebarType;
+                    param.HistoryMonth = DemandMonth;
+                    //重新加载组织机构
+                    $("#leftgridList").jqGrid('setGridParam',
+                        {
+                            postData: { RebarType: RebarType, HistoryMonth: DemandMonth }
+                        }).trigger('reloadGrid');
+                    //重新加载报表
+                    LoadAllImg(param, llqHeight);
+                    param.RebarType = "";
+                    //重新加载列表数据
+                    $("#gridList").jqGrid('setGridParam',
+                       {
+                           postData: param,
+                           page: 1
+                       }).trigger('reloadGrid');
+                }
+            });
+        });
+
+        //折叠ibox
+        $('.collapse-link').click(function () {
+            var ibox = $(this).closest('div.ibox');
+            var button = $(this).find('i');
+            var content = ibox.find('div.ibox-content');
+            content.slideToggle(150);
+            button.toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
+            ibox.toggleClass('').toggleClass('border-bottom');
+        });
+        //钢筋类型
+        $("input[type='radio']").on("click",
+            function () {
+                var RebarType = $("input[name='RebarType1']:checked").val();
+                var DemandMonth = $("#HistoryMonth").val();
+                if (!DemandMonth) {
+                    DemandMonth = (new Date()).Format("yyyy-MM");
+                }
+                var param = $(".search").GetSearchCondition();
+                param.RebarType = RebarType;
+                param.HistoryMonth = DemandMonth;
+                LoadAllImg(param, llqHeight);
+                $("#leftgridList").jqGrid('setGridParam',
+                    {
+                        postData: { RebarType: RebarType, HistoryMonth: DemandMonth }
+                    }).trigger('reloadGrid');
+            });
+        var RebarType = $("input[name='RebarType1']:checked").val();
+        var DemandMonth = $("#HistoryMonth").val();
+        if (!DemandMonth) {
+            DemandMonth = (new Date()).Format("yyyy-MM");
+        }
+        var param = $(".search").GetSearchCondition();
+        param.RebarType = RebarType;
+        param.HistoryMonth = DemandMonth;
+        LoadAllImg(param, llqHeight);
+    });
+
+    function LoadAllImg(param, llqHeight) {
+        loadImg1(param, llqHeight);
+        loadImg2(param, llqHeight);
+        loadImg3(param, llqHeight);
+        loadImg4(param, llqHeight);
+    }
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompanyNoSiteNew",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                { label: '组织机构', name: 'CompanyFullName', width: '220' },
+                { label: '组织机构类型', name: 'OrgType', hidden: true },
+                { label: '项目id', name: 'ProjectId', hidden: true },
+                { label: 'Wtj', name: 'Wtj', hidden: true },
+                { label: 'Cswtj', name: 'Cswtj', hidden: true },
+                { label: 'Cstj', name: 'Cstj', hidden: true },
+                { label: 'Astj', name: 'Astj', hidden: true },
+                { label: 'JhHl', name: 'JhHl', hidden: true },
+                { label: 'JhBz', name: 'JhBz', hidden: true },
+                { label: 'JhGd', name: 'JhGd', hidden: true },
+                { label: 'ParentCompanyCode', name: 'ParentCompanyCode', hidden: true },
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            sortname: 'CompanyCode',
+            onCellSelect: function (id) {//单击
+                var siteCode = getOrganizationalCode(id);
+                var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+                var RebarType = $("input[name='RebarType1']:checked").val();
+                var DemandMonth = $("#HistoryMonth").val();
+                if (!DemandMonth) {
+                    DemandMonth = (new Date()).Format("yyyy-MM");
+                }
+                var param = $(".search").GetSearchCondition();
+                param.SiteCode = siteCode;
+                param.ProjectId = CompanyId.ProjectId;
+                param.OrgType = CompanyId.OrgType;
+                param.RebarType = RebarType;
+                param.HistoryMonth = DemandMonth;
+                var llqHeight = $(window).height(); //浏览器当前窗口可视区域高度
+                LoadAllImg(param, llqHeight);
+            },
+            gridComplete: function () {
+                var ids = $("#leftgridList").getDataIDs();
+                for (var i = 0; i < ids.length; i++) {
+                    var rowData = $("#leftgridList").getRowData(ids[i]);
+                    if (rowData.OrgType == "4") {
+                        var IsXg = false;
+                        var data = rowData.CompanyFullName;
+                        if (rowData.Astj > 0) {
+                            data += "  <span style='color:green;font-size:12px;'>按时提交</span>";
+                            if (rowData.JhHl > 0) {
+                                data += "/" + "<span style='color:green;font-size:12px;'>合理</span>";
+                            }
+                            if (rowData.JhBz > 0) {
+                                data += "/" + "<span style='color:red;font-size:12px;'>不足</span>";
+                            }
+                            if (rowData.JhGd > 0) {
+                                data += "/" + "<span style='color:red;font-size:12px;'>过多</span>";
+                            }
+                            IsXg = true;
+                        }
+                        if (rowData.Cstj > 0) {
+                            data += "  <span style='color:red;font-size:12px;'>超时提交</span>";
+                            if (rowData.JhHl > 0) {
+                                data += "/" + "<span style='color:green;font-size:12px;'>合理</span>";
+                            }
+                            if (rowData.JhBz > 0) {
+                                data += "/" + "<span style='color:red;font-size:12px;'>不足</span>";
+                            }
+                            if (rowData.JhGd > 0) {
+                                data += "/" + "<span style='color:red;font-size:12px;'>过多</span>";
+                            }
+
+                            IsXg = true;
+                        }
+                        if (rowData.Cswtj > 0) {
+                            data += "  <span style='color:red;font-size:12px;'>超时未提交</span>";
+                            IsXg = true;
+                        }
+                        //if (rowData.Wtj > 0) {
+                        //    data += "  <span style='color:red;font-size:12px;'>未提交</span>";
+                        //    IsXg = true;
+                        //}
+                        if (IsXg == true) {
+                            $("#leftgridList").jqGrid('setCell', ids[i], "CompanyFullName", data);
+                        }
+                    } else if (rowData.OrgType == "2" || rowData.OrgType == "3") {
+                        if (rowData.Cswtj > 0 || rowData.JhBz > 0 || rowData.JhGd > 0) {
+                            var datastr = rowData.CompanyFullName + "<br/>";
+                            datastr += "<span class='zzjgtj' style='padding-left:18px;'>超时未提交</span> <span style='color:red'>" + rowData.Cswtj + "</span> / <span class='zzjgtj'>不足</span> <span style='color:red'>" + rowData.JhBz + "</span> / <span class='zzjgtj'>过多</span> <span style='color:red'>" + rowData.JhGd + "</span>";
+                            $("#leftgridList").jqGrid('setCell', ids[i], "CompanyFullName", datastr);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "RawMonthDemandPlan")",
+            height: $(window).height() * 0.68,
+            colModel: [
+                //{ label: "主键", name: "ID", hidden: true, key: true },
+                //{ label: '需求月份', name: 'DemandMonth', width: 80, align: 'left', sortable: false },
+                //{ label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false },
+                //{ label: "需求计划编号", name: "DemandPlanCode", width: 120, align: 'left', sortable: false },
+                //{ label: '钢筋类型', name: 'RebarTypeNew', width: 80, align: 'left', sortable: false },
+                //{ label: '分部编号', name: 'BranchCode', hidden: true },
+                //{ label: "分部名称", name: "BranchName", width: 100, align: 'left', sortable: false },
+                //{ label: "工区名称", name: "WorkAreaName", width: 100, align: 'left', sortable: false },
+                //{ label: '站点编号', name: 'SiteCode', hidden: true },
+                //{ label: '加工厂编号', name: 'ProcessFactoryCode', hidden: true },
+                //{ label: '加工厂名称', name: 'ProcessFactoryName', width: 140, align: 'left', sortable: false },
+                //{ label: "计划总量(kg)", name: "PlanTotal", width: 80, align: 'left', sortable: false },
+                //{ label: '交货地点', name: 'DeliveryAdd', width: 150, align: 'left', sortable: false },
+                //{ label: '录入人', name: 'InsertUserCode', hidden: true },
+                //{ label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                //{ label: '录入时间', name: 'InsertTime', width: 140, align: 'left', sortable: false },
+                //{ label: '项目id', name: 'ProjectId', hidden: true }
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '需求月份', name: 'DemandMonth', width: 80, align: 'center', sortable: false },
+                {
+                    label: "工区",
+                    name: "WorkAreaName",
+                    width: 120,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellOrgOrEx
+                },
+                {
+                    label: "计划编号及类型",
+                    name: "DemandPlanCodeNew",
+                    width: 120,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellCodeOrType
+                },
+                {
+                    label: "计划总量(kg)",
+                    name: "PlanTotal",
+                    width: 180,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellJhOrBcZl
+                },
+                {
+                    label: '提交时间',
+                    name: 'InsertTime',
+                    width: 140,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellTjSjorJgc
+                },
+                {
+                    label: '批次需求计划',
+                    ame: 'PcJhCount',
+                    width: 140,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellPcXqJh
+                },
+                {
+                    label: '供应量',
+                    name: 'GhCount',
+                    width: 140,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellGyl
+                },
+                {
+                    label: '入库情况',
+                    name: 'RkCount',
+                    width: 140,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellRkQk
+                },
+                {
+                    label: '取样送检',
+                    name: 'QyCount',
+                    width: 140,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellQySj
+                },
+                { label: '项目id', name: 'ProjectId', hidden: true },
+                { label: '计划编号', name: 'DemandPlanCode', hidden: true },
+                { label: '审批状态', name: 'Examinestatus', hidden: true },
+                { label: '批次计划编号', name: 'SupplyPlanCode', hidden: true },
+                { label: '批次计划ID', name: 'SupplyID', hidden: true },
+                { label: '钢筋类型', name: 'RebarType', hidden: true }
+            ],
+            ondblClickRow: function (id) { //双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+            footerrow: true,
+            gridComplete: function () {
+                var userData = $gridList.jqGrid('getGridParam').userData;
+                $gridList.footerData("set",
+                    {
+                        "DemandMonth": "合计重量(kg)：",
+                    });
+                $($(".ui-jqgrid-sdiv .ui-jqgrid-hbox table tbody tr td")[3]).css('text-align', 'right');
+                $(".ui-jqgrid-sdiv .ui-jqgrid-hbox table tbody tr td")[3].innerText =
+                   "建筑钢筋:";
+                $($(".ui-jqgrid-sdiv .ui-jqgrid-hbox table tbody tr td")[4]).css('text-align', 'left');
+                $(".ui-jqgrid-sdiv .ui-jqgrid-hbox table tbody tr td")[4].innerText =
+                    "" + userData.BuildingSteel + "";
+                $($(".ui-jqgrid-sdiv .ui-jqgrid-hbox table tbody tr td")[5]).css('text-align', 'left');
+                $(".ui-jqgrid-sdiv .ui-jqgrid-hbox table tbody tr td")[5].innerText =
+                    "型钢:" + userData.SectionSteel + "";
+                $('.aTable').on('click', $.nfinetab.syaddtab);
+            }
+        });
+        $("#gridList").jqGrid('setGroupHeaders',
+            {
+                useColSpanStyle: true,
+                groupHeaders: [
+                    { startColumnName: 'WorkAreaName', numberOfColumns: 4, titleText: '原材料月度需求计划' }
+                ]
+            });
+
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam',
+                {
+                    postData: param,
+                    page: 1
+                }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    //分部、工区、审批状态
+    function NewCellOrgOrEx(cellValue, options, rowObject) {
+        var tdhtml = rowObject.BranchName + "/" + rowObject.WorkAreaName + "</br>";
+        if (rowObject.Examinestatus == "审核完成") {
+            tdhtml += "<span style='color:green;'>" + rowObject.Examinestatus + "</span>"
+        } else {
+            tdhtml += "&nbsp;&nbsp;" + rowObject.Examinestatus;
+        }
+        return tdhtml;
+    }
+
+    //原材料月度需求编号、钢筋类型
+    function NewCellCodeOrType(cellValue, options, rowObject) {
+        var tdhtml = rowObject.DemandPlanCode + "</br>" + rowObject.RebarTypeNew
+        return tdhtml;
+    }
+
+    //计划重量、补充计划重量、补充计划审批状态
+    function NewCellJhOrBcZl(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.Examinestatus && rowObject.Examinestatus != "已退回" && rowObject.Examinestatus != "已撤销") {
+            if (rowObject.PlanIsAmple == "计划不足") {
+                tdhtml += "<span style='color:red;'>" +
+                    rowObject.PlanTotal +
+                    "</span>" +
+                    "&nbsp;&nbsp;<button type=\"button\" class=\"btn btn-danger jhbz\" style=\"font-size:10px;padding-left: 2px;padding-right: 2px;\">" + rowObject.PlanIsAmple + "</button></br>";
+            } else if (rowObject.PlanIsAmple == "计划过多") {
+                tdhtml += "<span style='color:#2E74B5;'>" +
+                    rowObject.PlanTotal +
+                    "</span>" +
+                    "&nbsp;&nbsp;<button type=\"button\" class=\"btn btn-default jhbz\" style=\"background-color: #2E74B5;color:white;font-size:10px;padding-left: 2px;padding-right: 2px;\">" + rowObject.PlanIsAmple + "</button></br>";
+            } else {
+                tdhtml += "<span style='color:#5CB85C;'>" +
+                    rowObject.PlanTotal +
+                    "</span>" +
+                    "&nbsp;&nbsp;<button type=\"button\" class=\"btn btn-default jhbz\" style=\"background-color: #5CB85C;color:white;font-size:10px;padding-left: 2px;padding-right: 2px;\">" + rowObject.PlanIsAmple + "</button></br>";
+            }
+        } else {
+            tdhtml += "<span>" +
+                    rowObject.PlanTotal +
+                    "</span></br>";
+        }
+        if (rowObject.SupplyPlanCode) {
+            var url = '@Url.Action("Details", "RawMonthDemandSupplyPlan")' +
+                "?keyValue=" +
+                rowObject.DemandPlanCode;
+            tdhtml += '<a href="javascript:void(0);" style="color:blue" onclick="CommonOpen(\'Details\',\'原材料月度需求补充计划查看\',\'' + url + '\')">补充计划量(kg):' + rowObject.SupplyPlanNum + '</a>';
+            if (rowObject.SupplyExaminestatus == "审核完成") {
+                tdhtml += "&nbsp;&nbsp;<span style='color:green;'>" + rowObject.SupplyExaminestatus + "</span>"
+            } else {
+                tdhtml += '&nbsp;&nbsp;<a onclick="SeeExamination(\'' + rowObject.SupplyID + '\',\'RawMonthDemandSupplyPlan\',\'' + rowObject.SupplyExaminestatus + '\',\'' + rowObject.SupplyPlanCode + '\')">' + rowObject.SupplyExaminestatus + '</a>';
+            }
+        } else {
+            tdhtml += "<span style='color:#bfbfbf;'>补充计划量(kg):<span>";
+        }
+        return tdhtml;
+    }
+    //提交时间、加工厂
+    function NewCellTjSjorJgc(cellValue, options, rowObject) {
+        var tdhtml = "";
+        var date1 = formatDatebox(rowObject.InsertTime);
+        if (rowObject.Examinestatus && rowObject.Examinestatus != "已退回" && rowObject.Examinestatus != "已撤销") {
+            if (rowObject.IsAsTj == "超时提交") {
+                tdhtml += "<span style='color:red;'>" +
+                    date1 +
+                    "</span>" +
+                    "&nbsp;&nbsp;<button type=\"button\" class=\"btn btn-danger jhbz\" style=\"font-size:10px;padding-left: 2px;padding-right: 2px;\">" + rowObject.IsAsTj + "</button></br>";
+            } else {
+                tdhtml += "<span style='color:#5CB85C;'>" +
+                    date1 +
+                    "</span>" +
+                    "&nbsp;&nbsp;<button type=\"button\" class=\"btn btn-default jhbz\" style=\"background-color: #5CB85C;color:white;font-size:10px;padding-left: 2px;padding-right: 2px;\">" + rowObject.IsAsTj + "</button></br>";
+            }
+        } else {
+            tdhtml += date1 + "</br>";
+        }
+        tdhtml += rowObject.ProcessFactoryName;
+        return tdhtml;
+    }
+    //批次需求计划
+    function NewCellPcXqJh(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.PcJhCount > 0) {
+            tdhtml += "提交次数:" + rowObject.PcJhCount + "</br>"
+            tdhtml += "<a class='aTable' data-id='FactoryBatchNeedPlan'  href='/RawMaterial/FactoryBatchNeedPlan/Index?DemandPlanCode=" + rowObject.DemandPlanCode + "'>总量(kg):" + rowObject.BatchPlanTotal + "</a>"
+
+        } else {
+            tdhtml += "<span style='color:#bfbfbf;'>提交次数:</br>总量(kg):</span>"
+        }
+        return tdhtml;
+    }
+    //供应量
+    function NewCellGyl(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.GhCount > 0) {
+            tdhtml += "供货次数:" + rowObject.GhCount + ""
+            if (rowObject.GhCe < 0) {
+                tdhtml += "&nbsp;&nbsp;<button type=\"button\" class=\"btn btn-danger jhbz\" style=\"font-size:10px;padding-left: 2px;padding-right: 2px;\">供货不足</button></br>";
+                tdhtml += "<a class='aTable' data-id='SupplyList'  href='/RawMaterial/SupplyList/Index?DemandPlanCode=" + rowObject.DemandPlanCode + "'>总量(kg):" + rowObject.HasSupplierTotal + "</a>&nbsp;&nbsp;<span style=\"color:red\">(" +
+                    rowObject.GhCe +
+                    ")</span>"
+            } else {
+                tdhtml +=
+                    "&nbsp;&nbsp;<button type=\"button\" class=\"btn btn-default jhbz\" style=\"background-color: #5CB85C;color:white;font-size:10px;padding-left: 2px;padding-right: 2px;\">供货完成</button></br>";
+                tdhtml += "<a class='aTable' data-id='SupplyList'  href='/RawMaterial/SupplyList/Index?DemandPlanCode=" + rowObject.DemandPlanCode + "'>总量(kg):" + rowObject.HasSupplierTotal + "</a>&nbsp;&nbsp;<span style=\"color:#5CB85C\">(+" +
+                    rowObject.GhCe +
+                    ")</span>";
+            }
+        } else {
+            tdhtml += "<span style='color:#bfbfbf;'>供货次数:</br>总量(kg):</span>"
+        }
+        return tdhtml;
+    }
+    //入库情况
+    function NewCellRkQk(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.RkCount > 0) {
+            tdhtml += "入库次数：" + rowObject.RkCount + "</br>";
+            var rkce = rowObject.InCount - rowObject.HasSupplierTotal;
+            tdhtml += "<a class='aTable' data-id='InOrder'  href='/RawMaterial/InOrder/Index?DemandPlanCode=" + rowObject.DemandPlanCode + "'>总量(kg):" + rowObject.InCount + "</a>";
+            if (rkce < 0) {
+                tdhtml + "<span style=\"color:red\">(" + rkce + ")</span>";
+            }
+        }
+        else {
+            tdhtml += "<span style='color:#bfbfbf;'>入库次数:</br>总量(kg):</span>"
+        }
+        return tdhtml;
+    }
+    //取样送检
+    function NewCellQySj(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.QyCount > 0) {
+            tdhtml += "取样次数：" + rowObject.QyCount + "</br>";
+            if (rowObject.BhgZl > 0) {
+                tdhtml += "<a class='aTable' data-id='SampleOrder'  href='/RawMaterial/SampleOrder/Index?DemandPlanCode=" + rowObject.DemandPlanCode + "'>不合格量(kg):<span style=\"color:red\">" + rowObject.BhgZl + "</span></a>"
+            } else {
+                tdhtml += "<span style=\"color:#bfbfbf\">不合格量(kg)：</span>"
+            }
+        } else {
+            tdhtml += "<span style='color:#bfbfbf;'>取样次数:</br>不合格量(kg):</span>"
+        }
+        return tdhtml;
+    }
+
+    function btn_add() {
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+        var where = "?type=add&OrgType=" +
+            CompanyId.OrgType +
+            "&CompanyCode=" +
+            CompanyId.CompanyCode +
+            "&CompanyFullName=" +
+            CompanyId.CompanyFullName;
+        CommonOpenAdd({
+            id: "Form",
+            title: "新增原材料月度需求计划",
+            url: "@Url.Action("Form", "RawMonthDemandPlan")" + where,
+        });
+    }
+
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改原材料月度需求计划",
+            url: "@Url.Action("Form", "RawMonthDemandPlan")",
+            anyUrl: "@Url.Action("AnyInfo", "RawMonthDemandPlan")",
+        });
+    }
+
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "RawMonthDemandPlan")",
+            anyUrl: "@Url.Action("AnyInfo", "RawMonthDemandPlan")",
+            isdel: true,
+        });
+    }
+
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看原材料月度需求计划",
+            url: "@Url.Action("Details", "RawMonthDemandPlan")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "RawMonthDemandPlan")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var DataId = rowData.ID;
+        if (DataId) {
+            if (rowData.Examinestatus != "未发起") {
+                SeeApproval("RawMonthDemandPlan", DataId);
+            }
+            else {
+                var LoginUserCode = '@ViewBag.LoginUserCode';
+                examination(DataId, 'RawMonthDemandPlan', rowData.Examinestatus, rowData.DemandPlanCode, rowData.ProjectId, LoginUserCode, rowData.RebarType);
+            }
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+
+
+    //月度需求补充计划
+    function btn_other1() {
+        var rowData = $("#gridList").jqGridRowValue();
+        var DemandPlanCode = rowData.DemandPlanCode;
+        if (rowData.Examinestatus == "审核完成" && (rowData.SupplyPlanCode == undefined || rowData.SupplyPlanCode == null || rowData.SupplyPlanCode == "")) {
+            var where = "?type=add&DemandPlanCode=" + DemandPlanCode;
+            CommonOpenAdd({
+                id: "Form",
+                title: "新增月度需求补充计划",
+                url: "@Url.Action("Form", "RawMonthDemandSupplyPlan", new { area = "RawMaterial" })" + where,
+                windowType: 2,
+                btnText: "确认并发起",
+            });
+        } else {
+            $.modalMsg("请选择审核完成同时未提交补充计划的数据", "warning");
+            return false;
+        }
+    }
+    function OpenForLC() {
+        var data = { width: "55%", height: "600px" };
+        return data;
+    }
+
+    //月度需求补充计划审批流程
+    function SeeExamination(Id, FormCode, Examinestatus, Code) {
+        $.ajax({
+            type: 'Get',
+            url: "@Url.Action("GetDemSupplyPlanData", "RawMonthDemandSupplyPlan")",
+            data: { SupplyPlanCode: Code },
+            async: false,
+            cache: false,
+            success: function (data) {
+                var datajson = JSON.parse(data);
+                if (datajson.length > 0) {
+                    if (Examinestatus=="未发起") {
+                        var flag = examination(datajson[0].ID, "RawMonthDemandSupplyPlan", datajson[0].Examinestatus, datajson[0].SupplyPlanCode, datajson[0].ProjectId, datajson[0].InsertUserCode, datajson[0].RebarType);
+                        if (flag) {
+                            $.modalMsg("发起流程成功", "warning");
+                        }
+                        $.currentWindow().$("#gridList").trigger("reloadGrid");
+                    }
+                    else {
+                        SeeApproval("RawMonthDemandSupplyPlan", datajson[0].ID);
+                    }
+                } else {
+                    $.modalMsg("发起流程失败", "warning");
+                    return false;
+                }
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    //选择加工厂
+    function selectCompanyProcessFactory(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+    //选择分部
+    function selectCompanyBranch(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "BranchCode=CompanyCode,BranchName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) { });
+    }
+    //选择站点
+    function selectCompanyWorkAreaOrSite(type) {
+        if ($("#BranchCode").val() == "" || $("#BranchCode").val() == null || $("#BranchCode").val() == undefined) {
+            $.modalMsg("请选择分部信息", "warning");
+        } else {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyWorkAreaOrSiteList&keyValue=parentCode/" + $("#BranchCode").val() + "|type/" + type;
+            var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+        }
+
+    }
+    //选择供应商
+    function selectSupplier() {
+        var url = "/RawMaterial/InOrder/GetSupplierGridJson";
+        var str = "SupplierCode,SupplierName";
+        var ret = selectClick('	win_Supplier', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+</script>
+<script>
+    //图表1
+    function loadImg1(param, llqHeight) {
+        var DemandMonth = param.HistoryMonth;
+        if (!DemandMonth) {
+            DemandMonth = (new Date()).Format("yyyy-MM");
+        }
+        $("#SeeData").html(DemandMonth);
+        $.ajax({
+            url: "@Url.Action("Img1", "RawMonthDemandPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    $("#ydjhzl").text(data[0]["PlanTotal"] + "kg");
+                    $("#jhce").text(data[0]["xqjhce"] + "kg");
+                    var a = "";
+                    if (data[0]["IsJh"] == "计划合理" && data[0]["PlanTotal"] > 0) {
+                        a +=
+                           "<button type=\"button\" class=\"btn btn-default jhbz\" style=\"background-color: #5CB85C;color:white;margin-left: 30px;\">计划合理</button>";
+                    } else if (data[0]["IsJh"] == "计划不足") {
+                        a +=
+                            "<button type=\"button\" class=\"btn btn-danger jhbz\" style=\"margin-left: 30px;\">" + data[0]["IsJh"] + "</button>";
+                    } else if (data[0]["IsJh"] == "计划过多") {
+                        a +=
+                           "<button type=\"button\" class=\"btn btn-danger jhbz\" style=\"margin-left: 30px;\">" + data[0]["IsJh"] + "</button>";
+                    }
+                    $("#jhce-a").html("");
+                    $("#jhce-a").append(a);
+                    $("#pcxql").text(data[0]["BatchPlanTotal"] + "kg");
+                    $("#ghce").text(data[0]["ghce"] + "kg");
+                    $("#gyl").text(data[0]["HasSupplierTotal"] + "kg");
+                    var b = "";
+                    if (data[0]["ghce"] >= 0 && data[0]["HasSupplierTotal"] > 0) {
+                        $("#ghce").css('color', 'green')
+                        b +=
+                            "<button type=\"button\" class=\"btn btn-default jhbz\" style=\"background-color: #5CB85C;color:white;margin-left: 30px;\">供货完成</button>";
+                    } else if (data[0]["ghce"] < 0) {
+                        $("#ghce").css('color', 'red')
+                        b += "<button type=\"button\" class=\"btn btn-danger jhbz\" style=\"margin-left: 30px;\">供货不足</button>";
+                    }
+                    $("#ghce-a").html("");
+                    $("#ghce-a").append(b);
+
+                }
+            }
+        });
+    }
+    //图表2
+    function loadImg2(param, llqHeight) {
+        var imgSize = '100%';
+        //if (llqHeight>680) {
+        //    imgSize = '60%';
+        //}
+        var Data1 = [];
+        var gqs = 0;
+        $.ajax({
+            url: "@Url.Action("Img2", "RawMonthDemandPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    gqs = data[0]["gqs"];
+                    Data1.push(
+                    //    {
+                    //    name: "未提交",
+                    //    y: data[0]["wtj"]
+                    //},
+                        {
+                            name: "超时未提交",
+                            y: data[0]["cswtj"]
+                        },
+                        {
+                            name: "超时提交",
+                            y: data[0]["cstj"]
+                        },
+                        {
+                            name: "按时提交",
+                            y: data[0]["astj"]
+                        });
+                }
+
+            }
+        });
+        var chart = Highcharts.chart('Img2',
+            {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie',
+
+                },
+                title: {
+                    text: '',
+                },
+                subtitle: {
+                    text: '<b style="font-size:15px;font-weight:600;">工区数:' + gqs + "</b>",
+                    align: 'left',
+                    color: 'red' //这边是改标题的字体大小和颜色
+                },
+                tooltip: {
+                    pointFormat: '<span style="color:#757575">{point.y}({point.percentage:.0f}%)</span>'
+                },
+                colors: ['#FF0000', '#2E74B5', '#70AB46', '#70AB46'],
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            distance: '-40', //控制饼图外面的线的长短,为负数时文本内容在饼图内部
+                            enabled: true,
+                            //format: '<span style="color:#757575;">{point.name}</span><br/><span style="color:#757575">{point.y}({point.percentage:.0f}%)</span>'
+                            formatter: function () {
+                                var a = null;
+                                if (this.y > 0) {
+                                    a = '<span style="color:white">' + this.point.name + '</span><br/><span style="color:white">' + this.point.y.toFixed(0) + '(' + this.point.percentage.toFixed(0) + '%)</span>';
+                                }
+                                return a;
+                            },
+                        },
+                        events: {
+                            click: function (e) {
+                                if (e.point.name != "超时未提交") {
+                                    var RebarType = $("input[name='RebarType1']:checked").val();
+                                    pieClick1(e.point.name, RebarType, param.HistoryMonth);
+                                }
+                            }
+                        }
+
+                    }
+                },
+                credits: {
+                    enabled: false //右下角不显示highcharts的LOGO
+                },
+                series: [
+                    {
+                        size: imgSize,
+                        data: Data1
+                    }
+                ]
+            });
+    }
+
+    function pieClick1(name, RebarType, DemandMonth) {
+        var param = $(".search").GetSearchCondition();
+        param.RebarType = RebarType;
+        param.HistoryMonth = DemandMonth;
+        param.IsAsTj = name;
+        $("#gridList").jqGrid('setGridParam',
+            {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+    }
+
+    //图表3
+    function loadImg3(param, llqHeight) {
+        var imgSize = '100%';
+        //if (llqHeight>680) {
+        //    imgSize = '60%';
+        //}
+        var Data1 = [];
+        var gqs = 0;
+        $.ajax({
+            url: "@Url.Action("Img3", "RawMonthDemandPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        Data1.push({
+                            name: data[i]["JhType"],
+                            y: data[i]["JhTypeCount"]
+                        });
+                        gqs += parseInt(data[i]["JhTypeCount"]);
+                    }
+                }
+            }
+        });
+        var chart = Highcharts.chart('Img3',
+            {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie'
+                },
+                title: {
+                    text: '',
+                },
+                subtitle: {
+                    text: '<b style="font-size:15px;font-weight:600;">工区数:' + gqs + "</b>",
+                    align: 'left'
+                },
+                colors: ['#FF3200', '#2E74B5', '#91CF50'],
+                tooltip: {
+                    pointFormat: '<span style="color:#757575">{point.y}</span>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            distance: '-40', //控制饼图外面的线的长短,为负数时文本内容在饼图内部
+                            enabled: true,
+                            //format: '<span style="color:#757575">{point.name}</span><br/><span style="color:#757575">{point.y}</span>'
+
+                            formatter: function () {
+                                var a = null;
+                                if (this.y > 0) {
+                                    a = '<span style="color:white">' + this.point.name + '</span><br/><span style="color:white">' + this.point.y + '</span>';
+                                }
+                                return a;
+                            },
+                        },
+                        events: {
+                            click: function (e) {
+                                var RebarType = $("input[name='RebarType1']:checked").val();
+                                pieClick2(e.point.name, RebarType, param.HistoryMonth);
+                            }
+                        }
+                    }
+                },
+                credits: {
+                    enabled: false //右下角不显示highcharts的LOGO
+                },
+                series: [
+                    {
+                        colorByPoint: true,
+                        size: imgSize,
+                        data: Data1
+                    }
+                ]
+            });
+    }
+
+    function pieClick2(name, RebarType, DemandMonth) {
+        var param = $(".search").GetSearchCondition();
+        param.RebarType = RebarType;
+        param.HistoryMonth = DemandMonth;
+        param.PlanIsAmple = name;
+        $("#gridList").jqGrid('setGridParam',
+            {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+    }
+
+    function loadImg4(param, llqHeight) {
+        try {
+            var imgSize1 = '100%';
+            var imgSize2 = '80%';
+            //if (llqHeight > 690) {
+            //    imgSize1 = '80%';
+            //    imgSize2 = '60%';
+            //}
+            var wghl = 0;
+            var cqwghl = 0;
+            var yghl = 0;
+            var asgh = 0;
+            var csgh = 0;
+            var pcl = 0;
+            $.ajax({
+                url: "/RawMaterial/RawMonthDemandPlan/Img4",
+                data: param,
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    if (data.length > 0) {
+                        wghl = data[0]["wghl"];
+                        cqwghl = data[0]["cswghl"];
+                        yghl = data[0]["yghl"];
+                        asgh = data[0]["asgh"];
+                        csgh = data[0]["csgh"];
+                        pcl = data[0]["pcl"];
+                    }
+                }
+            });
+            var colors = ['#F4B183', '#FF0000', '#4472C4'],
+            categories = [
+                "未供货",
+                "超期未供货",
+                "已供货"
+            ],
+            data = [
+                {
+                    "y": wghl,
+                    "color": colors[0],
+                    "drilldown": {
+                        "name": "未供货",
+                        "categories": [
+                            "未供货"
+                        ],
+                        "data": [
+                            wghl
+                        ]
+                    }
+                },
+                {
+                    "y": cqwghl,
+                    "color": colors[1],
+                    "drilldown": {
+                        "name": "超期未供货",
+                        "categories": [
+                            "超期未供货"
+                        ],
+                        "data": [
+                            cqwghl
+                        ]
+                    }
+                },
+                {
+                    "y": yghl,
+                    "color": colors[2],
+                    "drilldown": {
+                        "name": "已供货",
+                        "categories": [
+                            "按时供货",
+                            "超时供货",
+                        ],
+                        "data": [
+                            asgh,
+                            csgh
+                        ]
+                    }
+                }
+            ],
+            browserData = [],
+            versionsData = [],
+            i,
+            j,
+            dataLen = data.length,
+            drillDataLen,
+            brightness;
+            for (i = 0; i < dataLen; i += 1) {
+                // 内层数据
+                browserData.push({
+                    name: categories[i],
+                    y: data[i].y,
+                    color: data[i].color
+                });
+                // 外层数据
+                drillDataLen = data[i].drilldown.data.length;
+                for (j = 0; j < drillDataLen; j += 1) {
+                    var color = Highcharts.Color(data[i].color).brighten(brightness).get();
+                    if (data[i].drilldown.categories[j] == "按时供货") {
+                        color = '#aec8f6'
+                    } else if (data[i].drilldown.categories[j] == "超时供货") {
+                        color = '#2a5196'
+                    }
+                    brightness = 0.2 - (j / drillDataLen) / 5;
+                    versionsData.push({
+                        name: data[i].drilldown.categories[j],
+                        y: data[i].drilldown.data[j],
+                        color: color
+                    });
+                }
+            }
+            Highcharts.chart('Img4', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: ''
+                },
+                subtitle: {
+                    text: '<b style="font-size:15px;font-weight:600;">需求总量:' + pcl + 'kg</b>',
+                    align: 'left'
+                },
+                plotOptions: {
+                    pie: {
+                        shadow: false,
+                        center: ['50%', '50%']
+                    }
+                },
+                tooltip: {
+                    pointFormat: '<span style="color:#757575">{point.y:.0f}({point.percentage:.0f}%)</span>'
+                },
+                credits: {
+                    enabled: false //右下角不显示highcharts的LOGO
+                },
+                series: [{
+                    name: 'Browsers',
+                    data: browserData,
+                    size: imgSize2,
+                    colors: ['#5B9BD5', '#92D050', '#FF3399'],
+                    dataLabels: {
+                        formatter: function () {
+                            var a = null;
+                            if (this.y > 0) {
+                                a = this.point.name;
+                            }
+                            return a;
+                        },
+                        color: '#ffffff',
+                        distance: -40
+                    }
+                }, {
+                    name: 'Versions',
+                    data: versionsData,
+                    size: imgSize1,
+                    innerSize: imgSize2,
+                    dataLabels: {
+                        formatter: function () {
+                            var a = null;
+                            if (this.y > 0) {
+                                a = '<span style="color:#757575">' + this.point.name + '</span><br/><span style="color:#757575">' + this.point.y.toFixed(0) + '(' + this.point.percentage.toFixed(0) + '%)</span>';
+                            }
+                            return a;
+                        },
+                        distance: 1
+                    },
+                    id: 'versions'
+                }],
+                responsive: {
+                    rules: [{
+                        condition: {
+                            maxWidth: 398
+                        },
+                        chartOptions: {
+                            series: [{
+                                id: 'versions',
+                                dataLabels: {
+                                    enabled: false
+                                }
+                            }]
+                        }
+                    }]
+                }
+            });
+        } catch (e) {
+        }
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList" style="color: #050505"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div id="toolbar" class="toolbar divwidth2" style="float:left;margin-left:15px;">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="DemandPlanCode">需求计划编号</option>
+                                    <option value="RebarType">钢筋类型</option>
+                                    <option value="HistoryMonth">需求月份</option>
+                                    <option value="PlanType">材料计划类型</option>
+                                    <option value="PlanIsAmple">计划是否充足</option>
+                                    <option value="SupplyAmple">供货是否满足</option>
+                                    <option value="IsAsTj" hidden="hidden">是否按时提交</option>
+                                </select>
+                                <input id="DemandPlanCode" name="DemandPlanCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="需求计划编号">
+                                <select id="RebarType" name="RebarType" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                </select>
+                                <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="需求月份" />
+                                <select id="PlanType" name="PlanType" class="form-control SearchContent hidSearchContent">
+                                    <option value="月度需求计划">月度需求计划</option>
+                                    <option value="月度补充计划">月度补充计划</option>
+                                </select>
+                                <select id="PlanIsAmple" name="PlanIsAmple" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="计划不足">计划不足</option>
+                                    <option value="计划过多">计划过多</option>
+                                    <option value="计划合理">计划合理</option>
+                                </select>
+                                <select id="SupplyAmple" name="SupplyAmple" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="供货不足">供货不足</option>
+                                    <option value="供货合理">供货完成</option>
+                                </select>
+                                <select id="IsAsTj" name="IsAsTj" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="按时提交">按时提交</option>
+                                    <option value="超时提交">超时提交</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel" style="background-color:white">
+            <div class="ibox float-e-margins" style="margin-bottom:5px;">
+                <div class="ibox-title" style="height:40px;padding-top:1px;padding-bottom:3px;">
+                    <h5 id="ReportTitel" style="margin-top:10px;font-size:16px;font-weight:600">报表展示</h5>
+                    <div class="ibox-tools" style="float: left;padding-left:5px;margin-top:7px;">
+                        <a class="collapse-link" style="color:#1490fa">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                    </div>
+                    <div class="imgsearch" style="float:left;margin-top:6px;margin-left:40px;">
+                        <div style="margin-left:5px;float:left;margin-top:3px">
+                            钢筋类型：<input name="RebarType1" type="radio" value="BuildingSteel" checked="checked" />建筑钢筋
+                            <input name="RebarType1" type="radio" value="SectionSteel" />型钢
+                        </div>
+                        @*<div style="float:left;margin-left:15px;">
+                                <div class="input-group input-group-search" style="height:28px;">
+                                    <span style="float:left;margin-top:6px;"> 需求月份：</span><input id="DemandMonth" name="DemandMonth" type="text" class="form-control required input-wdatepicker" placeholder="需求月份" value="@(DateTime.Now.ToString("yyyy-MM"))" style="height:18px;" />
+                                </div>
+                            </div>*@
+                    </div>
+                </div>
+                <div class="ibox-content" style="overflow-x:scroll;padding-top:5px;padding-bottom:5px;background-color:#EEEEEE">
+                    <div class="row" style="margin-top: 10px; margin-right:0px;border:0px solid red;white-space:nowrap;width:1500px">
+                        <div id="Img1" style="float:left;width: 320px;border:0px solid #eee;background-color:white;margin-left:20px;">
+                            <div class="ImgTitle" style="width: 100%; height: 23px; padding-top: 2px; float: left; font-size: 16px; font-weight: 600; color: #7fc0f8">
+                                <label id="SeeData"></label>
+                            </div>
+                            <div style="float:left; width: 300px;padding-left:20px;" class="highchartImg">
+                                <div style="height:80%;padding-top:30px;">
+                                    <div style="width:100%;height:20px;">
+                                        <div style="width:59%;font-size:16px;font-weight:800;float:left">
+                                            月度计划总量
+                                        </div>
+                                        <div style="width:40%;color:blue;font-size:17px;font-weight:800;float:left"><span id="ydjhzl"></span></div>
+                                    </div>
+                                    <div style="width:100%;height:50px;">
+                                        <div style="width:59%;float:left;height:100%">
+                                            @*<div style="border-right:3px solid #979797;height:99%;float:left;width:15%"></div>*@
+                                            <div class="down"></div>
+                                            <div style="float:left;width:59%;line-height:50px;padding-left:5px;">
+                                                <span style="font-size:17px;padding-right:10px;">差额</span> <span id="jhce" style="font-size:17px;font-weight:800;color:red;"></span>
+                                            </div>
+                                        </div>
+                                        <div id="jhce-a" style="width:40%;float:left;line-height:50px"></div>
+                                    </div>
+                                    <div style="width:100%;height:20px;">
+                                        <div style="width:59%;font-size:17px;font-weight:800;float:left">
+                                            批次需求量
+                                        </div>
+                                        <div style="width:40%;color:blue;font-size:17px;font-weight:800;float:left"><span id="pcxql"></span></div>
+                                    </div>
+                                    <div style="width:100%;height:50px;">
+                                        <div style="width:59%;float:left;height:100%">
+                                            @*<div style="border-right:3px solid #979797;height:99%;float:left;width:15%"></div>*@
+                                            <div class="up"></div>
+                                            <div style="float:left;width:59%;line-height:50px;padding-left:5px;">
+                                                <span style="font-size:17px;padding-right:10px;">差额</span>
+                                                <span id="ghce" style="font-size:16px;font-weight:800;color:red;"></span>
+                                            </div>
+                                        </div>
+                                        <div id="ghce-a" style="width:40%;float:left;line-height:50px"></div>
+                                    </div>
+                                    <div style="width:100%;height:20px;">
+                                        <div style="width:59%;font-size:17px;font-weight:800;float:left">
+                                            供应量
+                                        </div>
+                                        <div style="width:40%;color:blue;font-size:17px;font-weight:800;float:left"><span id="gyl"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="float:left; width: 330px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:20px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">工区材料月度计划提交情况</div>
+                                <div style="float:right;padding-right:5px;font-size:16px;font-weight:600;">单位：个</div>
+                            </div>
+                            <div id="Img2" style="float:left; width:300px; margin-left:20px;border:0px solid #eee" class="highchartImg"></div>
+                        </div>
+                        <div style="float:left; width: 330px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:20px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">工区材料月度计划合理性统计</div>
+                                <div style="float:right;padding-right:5px;font-size:16px;font-weight:600;">单位：个</div>
+                            </div>
+                            <div id="Img3" style="float:left; width: 300px;margin-left:20px;border:0px solid #eee" class="highchartImg"></div>
+                        </div>
+                        <div style="float:left; width: 420px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:20px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">原材料供货情况</div>
+                                <div style="float:right;padding-right:5px;font-size:16px;font-weight:600;">单位：kg</div>
+                            </div>
+                            <div id="Img4" style="float:left; width: 400px;border:0px solid #eee" class="highchartImg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager" style="margin-top:30px;position: fixed; bottom: 0; background-color: #F9F9F9;"></div>
+        </div>
+    </div>
+</div>

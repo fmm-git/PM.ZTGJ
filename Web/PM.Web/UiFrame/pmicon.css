@@ -1,0 +1,3746 @@
+
+/************ 定义table边框 ************/
+/*table {border-collapse: collapse;}*/
+/***设置编辑页面布局Table的行间距**/
+/*form table td{padding: 3px 3px 3px 0;}*/
+/******************************************/
+.pmicon-find-16{
+	background:url('pmicons/find_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-add-16{
+	background:url('pmicons/add_16x16.png') no-repeat center center;
+}
+.pmicon-add-GrayScaled-16{
+	background:url('pmicons/add_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-add-32{
+	background:url('pmicons/add_32x32.png') no-repeat center center;
+}
+.pmicon-add-GrayScaled-32{
+	background:url('pmicons/add_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-addfile-16{
+	background:url('pmicons/addfile_16x16.png') no-repeat center center;
+}
+.pmicon-addfile-32{
+	background:url('pmicons/addfile_32x32.png') no-repeat center center;
+}
+.pmicon-addfooter-16{
+	background:url('pmicons/addfooter_16x16.png') no-repeat center center;
+}
+.pmicon-addfooter-32{
+	background:url('pmicons/addfooter_32x32.png') no-repeat center center;
+}
+.pmicon-addgroupfooter-16{
+	background:url('pmicons/addgroupfooter_16x16.png') no-repeat center center;
+}
+.pmicon-addgroupfooter-32{
+	background:url('pmicons/addgroupfooter_32x32.png') no-repeat center center;
+}
+.pmicon-addgrouphead-16{
+	background:url('pmicons/addgroupheader_16x16.png') no-repeat center center;
+}
+.pmicon-addgrouphead-32{
+	background:url('pmicons/addgrouphead_32x32.png') no-repeat center center;
+}
+.pmicon-addheader-16{
+	background:url('pmicons/addheader_16x16.png') no-repeat center center;
+}
+.pmicon-addheader-32{
+	background:url('pmicons/addheader_32x32.png') no-repeat center center;
+}
+.pmicon-additem-16{
+	background:url('pmicons/additem_16x16.png') no-repeat center center;
+}
+.pmicon-additem-GrayScaled-16{
+	background:url('pmicons/additem_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-additem-32{
+	background:url('pmicons/additem_32x32.png') no-repeat center center;
+}
+.pmicon-additem-GrayScaled-32{
+	background:url('pmicons/additem_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-addnewdatasource-16{
+	background:url('pmicons/addnewdatasource_16x16.png') no-repeat center center;
+}
+.pmicon-addnewdatasource-GrayScaled-16{
+	background:url('pmicons/addnewdatasource_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-addnewdatasource-32{
+	background:url('pmicons/addnewdatasource_32x32.png') no-repeat center center;
+}
+.pmicon-addnewdatasource-GrayScaled-32{
+	background:url('pmicons/addnewdatasource_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-addtext-GrayScaled-16{
+	background:url('pmicons/addtext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-addtext-GrayScaled-32{
+	background:url('pmicons/addtext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-aligncenter-16{
+	background:url('pmicons/aligncenter_16x16.png') no-repeat center center;
+}
+.pmicon-aligncenter-GrayScaled-16{
+	background:url('pmicons/aligncenter_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-aligncenter-32{
+	background:url('pmicons/aligncenter_32x32.png') no-repeat center center;
+}
+.pmicon-aligncenter-GrayScaled-32{
+	background:url('pmicons/aligncenter_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignhorizontalbottom-16{
+	background:url('pmicons/alignhorizontalbottom_16x16.png') no-repeat center center;
+}
+.pmicon-alignhorizontalbottom-GrayScaled-16{
+	background:url('pmicons/alignhorizontalbottom_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignhorizontalbottom-32{
+	background:url('pmicons/alignhorizontalbottom_32x32.png') no-repeat center center;
+}
+.pmicon-alignhorizontalbottom-GrayScaled-32{
+	background:url('pmicons/alignhorizontalbottom_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignhorizontalbottom2-16{
+	background:url('pmicons/alignhorizontalbottom2_16x16.png') no-repeat center center;
+}
+.pmicon-alignhorizontalbottom2-32{
+	background:url('pmicons/alignhorizontalbottom2_32x32.png') no-repeat center center;
+}
+.pmicon-alignhorizontalcenter-16{
+	background:url('pmicons/alignhorizontalcenter_16x16.png') no-repeat center center;
+}
+.pmicon-alignhorizontalcenter-GrayScaled-16{
+	background:url('pmicons/alignhorizontalcenter_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignhorizontalcenter-32{
+	background:url('pmicons/alignhorizontalcenter_32x32.png') no-repeat center center;
+}
+.pmicon-alignhorizontalcenter-GrayScaled-32{
+	background:url('pmicons/alignhorizontalcenter_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignhorizontalcenter2-16{
+	background:url('pmicons/alignhorizontalcenter2_16x16.png') no-repeat center center;
+}
+.pmicon-alignhorizontalcenter2-32{
+	background:url('pmicons/alignhorizontalcenter2_32x32.png') no-repeat center center;
+}
+.pmicon-alignhorizontaltop-16{
+	background:url('pmicons/alignhorizontaltop_16x16.png') no-repeat center center;
+}
+.pmicon-alignhorizontaltop-GrayScaled-16{
+	background:url('pmicons/alignhorizontaltop_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignhorizontaltop-32{
+	background:url('pmicons/alignhorizontaltop_32x32.png') no-repeat center center;
+}
+.pmicon-alignhorizontaltop-GrayScaled-32{
+	background:url('pmicons/alignhorizontaltop_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignhorizontaltop2-16{
+	background:url('pmicons/alignhorizontaltop2_16x16.png') no-repeat center center;
+}
+.pmicon-alignhorizontaltop2-32{
+	background:url('pmicons/alignhorizontaltop2_32x32.png') no-repeat center center;
+}
+.pmicon-alignjustify-16{
+	background:url('pmicons/alignjustify_16x16.png') no-repeat center center;
+}
+.pmicon-alignjustify-GrayScaled-16{
+	background:url('pmicons/alignjustify_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignjustify-32{
+	background:url('pmicons/alignjustify_32x32.png') no-repeat center center;
+}
+.pmicon-alignjustify-GrayScaled-32{
+	background:url('pmicons/alignjustify_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignleft-16{
+	background:url('pmicons/alignleft_16x16.png') no-repeat center center;
+}
+.pmicon-alignleft-GrayScaled-16{
+	background:url('pmicons/alignleft_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignleft-32{
+	background:url('pmicons/alignleft_32x32.png') no-repeat center center;
+}
+.pmicon-alignleft-GrayScaled-32{
+	background:url('pmicons/alignleft_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-center-bottom-GrayScaled-16{
+	background:url('pmicons/alignment_center-bottom_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-center-bottom-GrayScaled-32{
+	background:url('pmicons/alignment_center-bottom_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-center-center-GrayScaled-16{
+	background:url('pmicons/alignment_center-center_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-center-center-GrayScaled-32{
+	background:url('pmicons/alignment_center-center_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-center-top-GrayScaled-16{
+	background:url('pmicons/alignment_center-top_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-center-top-GrayScaled-32{
+	background:url('pmicons/alignment_center-top_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-left-buttom-GrayScaled-16{
+	background:url('pmicons/alignment_left-buttom_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-left-buttom-GrayScaled-32{
+	background:url('pmicons/alignment_left-buttom_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-left-center-GrayScaled-16{
+	background:url('pmicons/alignment_left-center_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-left-center-GrayScaled-32{
+	background:url('pmicons/alignment_left-center_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-left-top-GrayScaled-16{
+	background:url('pmicons/alignment_left-top_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-left-top-GrayScaled-32{
+	background:url('pmicons/alignment_left-top_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-right-bottom-GrayScaled-16{
+	background:url('pmicons/alignment_right-bottom_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-right-bottom-GrayScaled-32{
+	background:url('pmicons/alignment_right-bottom_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-right-center-GrayScaled-16{
+	background:url('pmicons/alignment_right-center_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-right-center-GrayScaled-32{
+	background:url('pmicons/alignment_right-center_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-right-top-GrayScaled-16{
+	background:url('pmicons/alignment_right-top_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignment-right-top-GrayScaled-32{
+	background:url('pmicons/alignment_right-top_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignright-16{
+	background:url('pmicons/alignright_16x16.png') no-repeat center center;
+}
+.pmicon-alignright-GrayScaled-16{
+	background:url('pmicons/alignright_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignright-32{
+	background:url('pmicons/alignright_32x32.png') no-repeat center center;
+}
+.pmicon-alignright-GrayScaled-32{
+	background:url('pmicons/alignright_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignverticalcenter-16{
+	background:url('pmicons/alignverticalcenter_16x16.png') no-repeat center center;
+}
+.pmicon-alignverticalcenter-GrayScaled-16{
+	background:url('pmicons/alignverticalcenter_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignverticalcenter-32{
+	background:url('pmicons/alignverticalcenter_32x32.png') no-repeat center center;
+}
+.pmicon-alignverticalcenter-GrayScaled-32{
+	background:url('pmicons/aalignverticalcenter_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignverticalcenter2-16{
+	background:url('pmicons/alignverticalcenter2_16x16.png') no-repeat center center;
+}
+.pmicon-alignverticalcenter2-32{
+	background:url('pmicons/alignverticalcenter2_32x32.png') no-repeat center center;
+}
+.pmicon-alignverticalleft-16{
+	background:url('pmicons/alignverticalleft_16x16.png') no-repeat center center;
+}
+.pmicon-alignverticalleft-GrayScaled-16{
+	background:url('pmicons/alignverticalleft_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignverticalleft-32{
+	background:url('pmicons/alignverticalleft_32x32.png') no-repeat center center;
+}
+.pmicon-alignverticalleft-GrayScaled-32{
+	background:url('pmicons/aalignverticalleft_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignverticalleft2-16{
+	background:url('pmicons/alignverticalleft2_16x16.png') no-repeat center center;
+}
+.pmicon-alignverticalleft2-32{
+	background:url('pmicons/alignverticalleft2_32x32.png') no-repeat center center;
+}
+.pmicon-alignverticalright-16{
+	background:url('pmicons/alignverticalright_16x16.png') no-repeat center center;
+}
+.pmicon-alignverticalright-GrayScaled-16{
+	background:url('pmicons/alignverticalright_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignverticalright-32{
+	background:url('pmicons/alignverticalright_32x32.png') no-repeat center center;
+}
+.pmicon-alignverticalright-GrayScaled-32{
+	background:url('pmicons/aalignverticalright_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-alignverticalright2-16{
+	background:url('pmicons/alignverticalright2_16x16.png') no-repeat center center;
+}
+.pmicon-alignverticalright2-32{
+	background:url('pmicons/alignverticalright2_32x32.png') no-repeat center center;
+}
+.pmicon-all-borders-GrayScaled-16{
+	background:url('pmicons/all_borders_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-all-borders-GrayScaled-32{
+	background:url('pmicons/all_borders_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-announcement-16{
+	background:url('pmicons/announcement_16x16.png') no-repeat center center;
+}
+.pmicon-announcement-32{
+	background:url('pmicons/announcement_32x32.png') no-repeat center center;
+}
+.pmicon-apply-16{
+	background:url('pmicons/apply_16x16.png') no-repeat center center;
+}
+.pmicon-apply-GrayScaled-16{
+	background:url('pmicons/apply_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-apply-32{
+	background:url('pmicons/apply_32x32.png') no-repeat center center;
+}
+.pmicon-apply-GrayScaled-32{
+	background:url('pmicons/apply_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-area-16{
+	background:url('pmicons/area_16x16.png') no-repeat center center;
+}
+.pmicon-area-32{
+	background:url('pmicons/area_32x32.png') no-repeat center center;
+}
+.pmicon-article-16{
+	background:url('pmicons/article_16x16.png') no-repeat center center;
+}
+.pmicon-article-32{
+	background:url('pmicons/article_32x32.png') no-repeat center center;
+}
+.pmicon-assignto-16{
+	background:url('pmicons/assignto_16x16.png') no-repeat center center;
+}
+.pmicon-assignto-32{
+	background:url('pmicons/assignto_32x32.png') no-repeat center center;
+}
+.pmicon-assigntome-16{
+	background:url('pmicons/assigntome_16x16.png') no-repeat center center;
+}
+.pmicon-assigntome-32{
+	background:url('pmicons/assigntome_32x32.png') no-repeat center center;
+}
+.pmicon-attach-16{
+	background:url('pmicons/attach_16x16.png') no-repeat center center;
+}
+.pmicon-attach-GrayScaled-16{
+	background:url('pmicons/attach_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-attach-32{
+	background:url('pmicons/attach_32x32.png') no-repeat center center;
+}
+.pmicon-attach-GrayScaled-32{
+	background:url('pmicons/attach_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-attachment-16{
+	background:url('pmicons/attachment_16x16.png') no-repeat center center;
+}
+.pmicon-attachment-32{
+	background:url('pmicons/attachment_32x32.png') no-repeat center center;
+}
+.pmicon-attachmentobject-GrayScaled-16{
+	background:url('pmicons/attachmentobject_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-attachmentobject-GrayScaled-32{
+	background:url('pmicons/attachmentobject_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-autofit-GrayScaled-16{
+	background:url('pmicons/autofit_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-autofit-GrayScaled-32{
+	background:url('pmicons/autofit_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-autofit-window-GrayScaled-16{
+	background:url('pmicons/autofit_window_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-autofit-window-GrayScaled-32{
+	background:url('pmicons/autofit_window_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-backward-16{
+	background:url('pmicons/backward_16x16.png') no-repeat center center;
+}
+.pmicon-backward-GrayScaled-16{
+	background:url('pmicons/backward_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-backward-32{
+	background:url('pmicons/backward_32x32.png') no-repeat center center;
+}
+.pmicon-backward-GrayScaled-32{
+	background:url('pmicons/backward_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bar-16{
+	background:url('pmicons/bar_16x16.png') no-repeat center center;
+}
+.pmicon-bar-32{
+	background:url('pmicons/bar_32x32.png') no-repeat center center;
+}
+.pmicon-barcode-16{
+	background:url('pmicons/barcode_16x16.png') no-repeat center center;
+}
+.pmicon-barcode-32{
+	background:url('pmicons/barcode_32x32.png') no-repeat center center;
+}
+.pmicon-behindtext-16{
+	background:url('pmicons/behindtext_16x16.png') no-repeat center center;
+}
+.pmicon-behindtext-GrayScaled-16{
+	background:url('pmicons/behindtext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-behindtext-32{
+	background:url('pmicons/behindtext_32x32.png') no-repeat center center;
+}
+.pmicon-behindtext-GrayScaled-32{
+	background:url('pmicons/behindtext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bold-16{
+	background:url('pmicons/bold_16x16.png') no-repeat center center;
+}
+.pmicon-bold-GrayScaled-16{
+	background:url('pmicons/bold_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bold-32{
+	background:url('pmicons/bold_32x32.png') no-repeat center center;
+}
+.pmicon-bold-GrayScaled-32{
+	background:url('pmicons/bold_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bookmark-GrayScaled-16{
+	background:url('pmicons/bookmark_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bookmark-GrayScaled-32{
+	background:url('pmicons/bookmark_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bottom-border-GrayScaled-16{
+	background:url('pmicons/bottom_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bottom-border-GrayScaled-32{
+	background:url('pmicons/bottom_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breakingchange-16{
+	background:url('pmicons/breakingchange_16x16.png') no-repeat center center;
+}
+.pmicon-breakingchange-32{
+	background:url('pmicons/breakingchange_32x32.png') no-repeat center center;
+}
+.pmicon-breaks-column-GrayScaled-16{
+	background:url('pmicons/breaks_column_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-column-GrayScaled-32{
+	background:url('pmicons/breaks_column_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-continuous-GrayScaled-16{
+	background:url('pmicons/breaks_continuous_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-continuous-GrayScaled-32{
+	background:url('pmicons/breaks_continuous_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-evenpage-GrayScaled-16{
+	background:url('pmicons/breaks_evenpage_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-evenpage-GrayScaled-32{
+	background:url('pmicons/breaks_evenpage_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-nextpage-GrayScaled-16{
+	background:url('pmicons/breaks_nextpage_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-nextpage-GrayScaled-32{
+	background:url('pmicons/breaks_nextpage_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-oddpage-GrayScaled-16{
+	background:url('pmicons/breaks_oddpage_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-breaks-oddpage-GrayScaled-32{
+	background:url('pmicons/breaks_oddpage_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bringforward-16{
+	background:url('pmicons/bringforward_16x16.png') no-repeat center center;
+}
+.pmicon-bringforward-GrayScaled-16{
+	background:url('pmicons/bringforward_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bringforward-32{
+	background:url('pmicons/bringforward_32x32.png') no-repeat center center;
+}
+.pmicon-bringforward-GrayScaled-32{
+	background:url('pmicons/bringforward_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bringtofront-16{
+	background:url('pmicons/bringtofront_16x16.png') no-repeat center center;
+}
+.pmicon-bringtofront-GrayScaled-16{
+	background:url('pmicons/bringtofront_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bringtofront-32{
+	background:url('pmicons/bringtofront_32x32.png') no-repeat center center;
+}
+.pmicon-bringtofront-GrayScaled-32{
+	background:url('pmicons/bringtofront_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bringtofrontoftext-16{
+	background:url('pmicons/bringtofrontoftext_16x16.png') no-repeat center center;
+}
+.pmicon-bringtofrontoftext-GrayScaled-16{
+	background:url('pmicons/bringtofrontoftext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bringtofrontoftext-32{
+	background:url('pmicons/bringtofrontoftext_32x32.png') no-repeat center center;
+}
+.pmicon-bringtofrontoftext-GrayScaled-32{
+	background:url('pmicons/bringtofrontoftext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-bubble-16{
+	background:url('pmicons/bubble_16x16.png') no-repeat center center;
+}
+.pmicon-bubble-32{
+	background:url('pmicons/bubble_32x32.png') no-repeat center center;
+}
+.pmicon-bugreport-16{
+	background:url('pmicons/bugreport_16x16.png') no-repeat center center;
+}
+.pmicon-bugreport-32{
+	background:url('pmicons/bugreport_32x32.png') no-repeat center center;
+}
+.pmicon-build-16{
+	background:url('pmicons/build_16x16.png') no-repeat center center;
+}
+.pmicon-build-32{
+	background:url('pmicons/build_32x32.png') no-repeat center center;
+}
+.pmicon-calendar-16{
+	background:url('pmicons/calendar_16x16.png') no-repeat center center;
+}
+.pmicon-calendar-32{
+	background:url('pmicons/calendar_32x32.png') no-repeat center center;
+}
+.pmicon-cancel-16{
+	background:url('pmicons/cancel_16x16.png') no-repeat center center;
+}
+.pmicon-cancel-GrayScaled-16{
+	background:url('pmicons/cancel_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-cancel-32{
+	background:url('pmicons/cancel_32x32.png') no-repeat center center;
+}
+.pmicon-cancel-GrayScaled-32{
+	background:url('pmicons/cancel_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-cards-16{
+	background:url('pmicons/cards_16x16.png') no-repeat center center;
+}
+.pmicon-cards-32{
+	background:url('pmicons/cards_32x32.png') no-repeat center center;
+}
+.pmicon-cellsautoheight-GrayScaled-16{
+	background:url('pmicons/cellsautoheight_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-cellsautoheight-GrayScaled-32{
+	background:url('pmicons/cellsautoheight_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-changefontstyle-16{
+	background:url('pmicons/changefontstyle_16x16.png') no-repeat center center;
+}
+.pmicon-changefontstyle-32{
+	background:url('pmicons/changefontstyle_32x32.png') no-repeat center center;
+}
+.pmicon-changefontstyle-GrayScaled-32{
+	background:url('pmicons/changefontstyle_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-changetextcase-GrayScaled-16{
+	background:url('pmicons/changetextcase_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-changetextcase-GrayScaled-32{
+	background:url('pmicons/changetextcase_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-chart-16{
+	background:url('pmicons/chart_16x16.png') no-repeat center center;
+}
+.pmicon-chart-GrayScaled-16{
+	background:url('pmicons/chart_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-chart-32{
+	background:url('pmicons/chart_32x32.png') no-repeat center center;
+}
+.pmicon-chart-GrayScaled-32{
+	background:url('pmicons/chart_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-chartsrotate-16{
+	background:url('pmicons/chartsrotate_16x16.png') no-repeat center center;
+}
+.pmicon-chartsrotate-32{
+	background:url('pmicons/chartsrotate_32x32.png') no-repeat center center;
+}
+.pmicon-chartsshowlegend-16{
+	background:url('pmicons/chartsshowlegend_16x16.png') no-repeat center center;
+}
+.pmicon-chartsshowlegend-32{
+	background:url('pmicons/chartsshowlegend_32x32.png') no-repeat center center;
+}
+.pmicon-chartyaxissettings-16{
+	background:url('pmicons/chartyaxissettings_16x16.png') no-repeat center center;
+}
+.pmicon-chartyaxissettings-32{
+	background:url('pmicons/chartyaxissettings_32x32.png') no-repeat center center;
+}
+.pmicon-checkbox-16{
+	background:url('pmicons/checkbox_16x16.png') no-repeat center center;
+}
+.pmicon-checkbox-32{
+	background:url('pmicons/checkbox_32x32.png') no-repeat center center;
+}
+.pmicon-clear-16{
+	background:url('pmicons/clear_16x16.png') no-repeat center center;
+}
+.pmicon-clear-GrayScaled-16{
+	background:url('pmicons/clear_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-clear-32{
+	background:url('pmicons/clear_32x32.png') no-repeat center center;
+}
+.pmicon-clear-GrayScaled-32{
+	background:url('pmicons/clear_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-clearfilter-16{
+	background:url('pmicons/clearfilter_16x16.png') no-repeat center center;
+}
+.pmicon-clearfilter-32{
+	background:url('pmicons/clearfilter_32x32.png') no-repeat center center;
+}
+.pmicon-clearformatting-16{
+	background:url('pmicons/clearformatting_16x16.png') no-repeat center center;
+}
+.pmicon-clearformatting-GrayScaled-16{
+	background:url('pmicons/clearformatting_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-clearformatting-32{
+	background:url('pmicons/clearformatting_32x32.png') no-repeat center center;
+}
+.pmicon-clearformatting-GrayScaled-32{
+	background:url('pmicons/clearformatting_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-clip-16{
+	background:url('pmicons/clip_16x16.png') no-repeat center center;
+}
+.pmicon-clip-32{
+	background:url('pmicons/clip_32x32.png') no-repeat center center;
+}
+.pmicon-close-16{
+	background:url('pmicons/close_16x16.png') no-repeat center center;
+}
+.pmicon-close-GrayScaled-16{
+	background:url('pmicons/close_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-close-32{
+	background:url('pmicons/close_32x32.png') no-repeat center center;
+}
+.pmicon-close-GrayScaled-32{
+	background:url('pmicons/close_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-colors-16{
+	background:url('pmicons/colors_16x16.png') no-repeat center center;
+}
+.pmicon-colors-32{
+	background:url('pmicons/colors_32x32.png') no-repeat center center;
+}
+.pmicon-columns-16{
+	background:url('pmicons/columns_16x16.png') no-repeat center center;
+}
+.pmicon-columns-GrayScaled-16{
+	background:url('pmicons/columns_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columns-32{
+	background:url('pmicons/columns_32x32.png') no-repeat center center;
+}
+.pmicon-columns-GrayScaled-32{
+	background:url('pmicons/columns_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsleft-GrayScaled-16{
+	background:url('pmicons/columnsleft_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsleft-GrayScaled-32{
+	background:url('pmicons/columnsleft_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsone-GrayScaled-16{
+	background:url('pmicons/columnsone_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsone-GrayScaled-32{
+	background:url('pmicons/columnsone_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsright-GrayScaled-16{
+	background:url('pmicons/columnsright_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsright-GrayScaled-32{
+	background:url('pmicons/columnsright_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsthree-GrayScaled-16{
+	background:url('pmicons/columnsthree_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnsthree-GrayScaled-32{
+	background:url('pmicons/columnsthree_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnstwo-GrayScaled-16{
+	background:url('pmicons/columnstwo_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-columnstwo-GrayScaled-32{
+	background:url('pmicons/columnstwo_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-comment-16{
+	background:url('pmicons/comment_16x16.png') no-repeat center center;
+}
+.pmicon-comment-32{
+	background:url('pmicons/comment_32x32.png') no-repeat center center;
+}
+.pmicon-compressweekend-GrayScaled-16{
+	background:url('pmicons/compressweekend_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-compressweekend-GrayScaled-32{
+	background:url('pmicons/compressweekend_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-contact-16{
+	background:url('pmicons/contact_16x16.png') no-repeat center center;
+}
+.pmicon-contact-32{
+	background:url('pmicons/contact_32x32.png') no-repeat center center;
+}
+.pmicon-content-16{
+	background:url('pmicons/content_16x16.png') no-repeat center center;
+}
+.pmicon-content-GrayScaled-16{
+	background:url('pmicons/content_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-content-32{
+	background:url('pmicons/content_32x32.png') no-repeat center center;
+}
+.pmicon-content-GrayScaled-32{
+	background:url('pmicons/content_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-contentarrangeincolums-16{
+	background:url('pmicons/contentarrangeincolums_16x16.png') no-repeat center center;
+}
+.pmicon-contentarrangeincolums-32{
+	background:url('pmicons/contentarrangeincolums_32x32.png') no-repeat center center;
+}
+.pmicon-contentarrangeinrows-16{
+	background:url('pmicons/contentarrangeinrows_16x16.png') no-repeat center center;
+}
+.pmicon-contentarrangeinrows-32{
+	background:url('pmicons/contentarrangeinrows_32x32.png') no-repeat center center;
+}
+.pmicon-contentautoarrange-16{
+	background:url('pmicons/contentautoarrange_16x16.png') no-repeat center center;
+}
+.pmicon-contentautoarrange-32{
+	background:url('pmicons/contentautoarrange_32x32.png') no-repeat center center;
+}
+.pmicon-convert-16{
+	background:url('pmicons/convert_16x16.png') no-repeat center center;
+}
+.pmicon-convert-32{
+	background:url('pmicons/convert_32x32.png') no-repeat center center;
+}
+.pmicon-converttoparagraphs-16{
+	background:url('pmicons/converttoparagraphs_16x16.png') no-repeat center center;
+}
+.pmicon-converttoparagraphs-32{
+	background:url('pmicons/converttoparagraphs_32x32.png') no-repeat center center;
+}
+.pmicon-copy-16{
+	background:url('pmicons/copy_16x16.png') no-repeat center center;
+}
+.pmicon-copy-GrayScaled-16{
+	background:url('pmicons/copy_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-copy-32{
+	background:url('pmicons/copy_32x32.png') no-repeat center center;
+}
+.pmicon-copy-GrayScaled-32{
+	background:url('pmicons/copy_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-country-16{
+	background:url('pmicons/country_16x16.png') no-repeat center center;
+}
+.pmicon-country-32{
+	background:url('pmicons/country_32x32.png') no-repeat center center;
+}
+.pmicon-crossdatasourcefiltering-16{
+	background:url('pmicons/crossdatasourcefiltering_16x16.png') no-repeat center center;
+}
+.pmicon-crossdatasourcefiltering-32{
+	background:url('pmicons/crossdatasourcefiltering_32x32.png') no-repeat center center;
+}
+.pmicon-csharp-16{
+	background:url('pmicons/csharp_16x16.png') no-repeat center center;
+}
+.pmicon-csharp-32{
+	background:url('pmicons/csharp_32x32.png') no-repeat center center;
+}
+.pmicon-currency-16{
+	background:url('pmicons/currency_16x16.png') no-repeat center center;
+}
+.pmicon-currency-GrayScaled-16{
+	background:url('pmicons/currency_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-currency-32{
+	background:url('pmicons/currency_32x32.png') no-repeat center center;
+}
+.pmicon-currency-GrayScaled-32{
+	background:url('pmicons/currency_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-customer-16{
+	background:url('pmicons/customer_16x16.png') no-repeat center center;
+}
+.pmicon-customer-32{
+	background:url('pmicons/customer_32x32.png') no-repeat center center;
+}
+.pmicon-customization-16{
+	background:url('pmicons/customization_16x16.png') no-repeat center center;
+}
+.pmicon-customization-GrayScaled-16{
+	background:url('pmicons/customization_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-customization-32{
+	background:url('pmicons/customization_32x32.png') no-repeat center center;
+}
+.pmicon-customization-GrayScaled-32{
+	background:url('pmicons/customization_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-customizegrid-16{
+	background:url('pmicons/customizegrid_16x16.png') no-repeat center center;
+}
+.pmicon-customizegrid-GrayScaled-16{
+	background:url('pmicons/customizegrid_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-customizegrid-32{
+	background:url('pmicons/customizegrid_32x32.png') no-repeat center center;
+}
+.pmicon-customizegrid-GrayScaled-32{
+	background:url('pmicons/customizegrid_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-customizemergefield-GrayScaled-16{
+	background:url('pmicons/customizemergefield_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-customizemergefield-GrayScaled-32{
+	background:url('pmicons/customizemergefield_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-cut-16{
+	background:url('pmicons/cut_16x16.png') no-repeat center center;
+}
+.pmicon-cut-GrayScaled-16{
+	background:url('pmicons/cut_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-cut-32{
+	background:url('pmicons/cut_32x32.png') no-repeat center center;
+}
+.pmicon-cut-GrayScaled-32{
+	background:url('pmicons/cut_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-database-16{
+	background:url('pmicons/database_16x16.png') no-repeat center center;
+}
+.pmicon-database-32{
+	background:url('pmicons/database_32x32.png') no-repeat center center;
+}
+.pmicon-dayview-16{
+	background:url('pmicons/dayview_16x16.png') no-repeat center center;
+}
+.pmicon-dayview-GrayScaled-16{
+	background:url('pmicons/dayview_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-dayview-32{
+	background:url('pmicons/dayview_32x32.png') no-repeat center center;
+}
+.pmicon-dayview-GrayScaled-32{
+	background:url('pmicons/dayview_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-delete-16{
+	background:url('pmicons/delete_16x16.png') no-repeat center center;
+}
+.pmicon-delete-GrayScaled-16{
+	background:url('pmicons/delete_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-delete-32{
+	background:url('pmicons/delete_32x32.png') no-repeat center center;
+}
+.pmicon-delete-GrayScaled-32{
+	background:url('pmicons/delete_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-delete-hyperlink-GrayScaled-16{
+	background:url('pmicons/delete_hyperlink_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-delete-hyperlink-GrayScaled-32{
+	background:url('pmicons/delete_hyperlink_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletecells-GrayScaled-16{
+	background:url('pmicons/deletecells_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletecells-GrayScaled-32{
+	background:url('pmicons/deletecells_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletecolumn-GrayScaled-16{
+	background:url('pmicons/deletecolumn_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletecolumn-GrayScaled-32{
+	background:url('pmicons/deletecolumn_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletedatasource-16{
+	background:url('pmicons/deletedatasource_16x16.png') no-repeat center center;
+}
+.pmicon-deletedatasource-GrayScaled-16{
+	background:url('pmicons/deletedatasource_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletedatasource-32{
+	background:url('pmicons/deletedatasource_32x32.png') no-repeat center center;
+}
+.pmicon-deletedatasource-GrayScaled-32{
+	background:url('pmicons/deletedatasource_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletefooter-16{
+	background:url('pmicons/deletefooter_16x16.png') no-repeat center center;
+}
+.pmicon-deletefooter-32{
+	background:url('pmicons/deletefooter_32x32.png') no-repeat center center;
+}
+.pmicon-deletegroupfooter-16{
+	background:url('pmicons/deletegroupfooter_16x16.png') no-repeat center center;
+}
+.pmicon-deletegroupfooter-32{
+	background:url('pmicons/deletegroupfooter_32x32.png') no-repeat center center;
+}
+.pmicon-deletegroupheader-16{
+	background:url('pmicons/deletegroupheader_16x16.png') no-repeat center center;
+}
+.pmicon-deletegroupheader-32{
+	background:url('pmicons/deletegroupheader_32x32.png') no-repeat center center;
+}
+.pmicon-deleteheader-16{
+	background:url('pmicons/deleteheader_16x16.png') no-repeat center center;
+}
+.pmicon-deleteheader-32{
+	background:url('pmicons/deleteheader_32x32.png') no-repeat center center;
+}
+.pmicon-deleteitem-GrayScaled-16{
+	background:url('pmicons/deleteitem_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deleteitem-GrayScaled-32{
+	background:url('pmicons/deleteitem_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletelist-16{
+	background:url('pmicons/deletlist_16x16.png') no-repeat center center;
+}
+.pmicon-deletelist-32{
+	background:url('pmicons/deletelist_32x32.png') no-repeat center center;
+}
+.pmicon-deletelist2-16{
+	background:url('pmicons/deletlist2_16x16.png') no-repeat center center;
+}
+.pmicon-deletelist2-32{
+	background:url('pmicons/deletelist2_32x32.png') no-repeat center center;
+}
+.pmicon-deleterows-GrayScaled-16{
+	background:url('pmicons/deleterows_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deleterows-GrayScaled-32{
+	background:url('pmicons/deleterows_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletetable-GrayScaled-16{
+	background:url('pmicons/deletetable_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-deletetable-GrayScaled-32{
+	background:url('pmicons/deletetable_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-design-16{
+	background:url('pmicons/design_16x16.png') no-repeat center center;
+}
+.pmicon-design-32{
+	background:url('pmicons/design_32x32.png') no-repeat center center;
+}
+.pmicon-diagonal-down-border-GrayScaled-16{
+	background:url('pmicons/diagonal_down_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-diagonal-down-border-GrayScaled-32{
+	background:url('pmicons/diagonal_down_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-diagonal-up-border-GrayScaled-16{
+	background:url('pmicons/diagonal_up_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-diagonal-up-border-GrayScaled-32{
+	background:url('pmicons/diagonal_up_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-differentfirstpage-GrayScaled-16{
+	background:url('pmicons/differentfirstpage_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-differentfirstpage-GrayScaled-32{
+	background:url('pmicons/differentfirstpage_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-differentoddandevenpages-GrayScaled-16{
+	background:url('pmicons/differentoddandevenpages_16x16-_GrayScaled.png') no-repeat center center;
+}
+.pmicon-differentoddandevenpages-GrayScaled-32{
+	background:url('pmicons/differentoddandevenpages_32x32-_GrayScaled.png') no-repeat center center;
+}
+.pmicon-documentmap-16{
+	background:url('pmicons/documentmap_16x16.png') no-repeat center center;
+}
+.pmicon-documentmap-GrayScaled-16{
+	background:url('pmicons/documentmap_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-documentmap-32{
+	background:url('pmicons/documentmap_32x32.png') no-repeat center center;
+}
+.pmicon-documentmap-GrayScaled-32{
+	background:url('pmicons/documentmap_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doublefirst-16{
+	background:url('pmicons/doublefirst_16x16.png') no-repeat center center;
+}
+.pmicon-doublefirst-GrayScaled-16{
+	background:url('pmicons/doublefirst_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doublefirst-32{
+	background:url('pmicons/doublefirst_32x32.png') no-repeat center center;
+}
+.pmicon-doublefirst-GrayScaled-32{
+	background:url('pmicons/doublefirst_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doublelast-16{
+	background:url('pmicons/doublelast_16x16.png') no-repeat center center;
+}
+.pmicon-doublelast-GrayScaled-16{
+	background:url('pmicons/doublelast_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doublelast-32{
+	background:url('pmicons/doublelast_32x32.png') no-repeat center center;
+}
+.pmicon-doublelast-GrayScaled-32{
+	background:url('pmicons/doublelast_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doublenext-16{
+	background:url('pmicons/doublenext_16x16.png') no-repeat center center;
+}
+.pmicon-doublenext-GrayScaled-16{
+	background:url('pmicons/doublenext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doublenext-32{
+	background:url('pmicons/doublenext_32x32.png') no-repeat center center;
+}
+.pmicon-doublenext-GrayScaled-32{
+	background:url('pmicons/doublenext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doubleprev-16{
+	background:url('pmicons/doubleprev_16x16.png') no-repeat center center;
+}
+.pmicon-doubleprev-GrayScaled-16{
+	background:url('pmicons/doubleprev_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-doubleprev-32{
+	background:url('pmicons/doubleprev_32x32.png') no-repeat center center;
+}
+.pmicon-doubleprev-GrayScaled-32{
+	background:url('pmicons/doubleprev_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-download-16{
+	background:url('pmicons/download_16x16.png') no-repeat center center;
+}
+.pmicon-download-32{
+	background:url('pmicons/download_32x32.png') no-repeat center center;
+}
+.pmicon-drilldown-16{
+	background:url('pmicons/drilldown_16x16.png') no-repeat center center;
+}
+.pmicon-drilldown-32{
+	background:url('pmicons/drilldown_32x32.png') no-repeat center center;
+}
+.pmicon-drilldownonarguments-chart-16{
+	background:url('pmicons/drilldownonarguments_chart_32x32.png') no-repeat center center;
+}
+.pmicon-drilldownonarguments-chart-32{
+	background:url('pmicons/drilldownonarguments_chart_32x32.png') no-repeat center center;
+}
+.pmicon-drilldownonarguments-pie-16{
+	background:url('pmicons/drilldownonarguments_pie_32x32.png') no-repeat center center;
+}
+.pmicon-drilldownonarguments-pie-32{
+	background:url('pmicons/drilldownonarguments_pie_32x32.png') no-repeat center center;
+}
+.pmicon-drilldownonseries-chart-16{
+	background:url('pmicons/drilldownonseries_chart_16x16.png') no-repeat center center;
+}
+.pmicon-drilldownonseries-chart-32{
+	background:url('pmicons/drilldownonseries_chart_32x32.png') no-repeat center center;
+}
+.pmicon-drilldownonseries-pie-16{
+	background:url('pmicons/drilldownonseries_pie_16x16.png') no-repeat center center;
+}
+.pmicon-drilldownonseries-pie-32{
+	background:url('pmicons/drilldownonseries_pie_32x32.png') no-repeat center center;
+}
+.pmicon-edit-16{
+	background:url('pmicons/edit_16x16.png') no-repeat center center;
+}
+.pmicon-edit-GrayScaled-16{
+	background:url('pmicons/edit_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-edit-32{
+	background:url('pmicons/edit_32x32.png') no-repeat center center;
+}
+.pmicon-edit-GrayScaled-32{
+	background:url('pmicons/edit_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-editcontact-16{
+	background:url('pmicons/editcontact_16x16.png') no-repeat center center;
+}
+.pmicon-editcontact-32{
+	background:url('pmicons/editcontact_32x32.png') no-repeat center center;
+}
+.pmicon-editdatasource-16{
+	background:url('pmicons/editdatasource_16x16.png') no-repeat center center;
+}
+.pmicon-editdatasource-GrayScaled-16{
+	background:url('pmicons/editdatasource_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-editdatasource-32{
+	background:url('pmicons/editdatasource_32x32.png') no-repeat center center;
+}
+.pmicon-editdatasource-GrayScaled-32{
+	background:url('pmicons/editdatasource_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-editfeed-16{
+	background:url('pmicons/editfeed_16x16.png') no-repeat center center;
+}
+.pmicon-editfeed-32{
+	background:url('pmicons/editfeed_32x32.png') no-repeat center center;
+}
+.pmicon-editpagehf-16{
+	background:url('pmicons/editpagehf_16x16.png') no-repeat center center;
+}
+.pmicon-editpagehf-GrayScaled-16{
+	background:url('pmicons/editpagehf_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-editpagehf-32{
+	background:url('pmicons/editpagehf_32x32.png') no-repeat center center;
+}
+.pmicon-editpagehf-GrayScaled-32{
+	background:url('pmicons/editpagehf_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-edittask-16{
+	background:url('pmicons/edittask_16x16.png') no-repeat center center;
+}
+.pmicon-edittask-32{
+	background:url('pmicons/edittask_32x32.png') no-repeat center center;
+}
+.pmicon-editwrappoints-16{
+	background:url('pmicons/editwrappoints_16x16.png') no-repeat center center;
+}
+.pmicon-editwrappoints-GrayScaled-16{
+	background:url('pmicons/editwrappoints_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-editwrappoints-32{
+	background:url('pmicons/editwrappoints_32x32.png') no-repeat center center;
+}
+.pmicon-editwrappoints-GrayScaled-32{
+	background:url('pmicons/editwrappoints_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-emailtemplate-16{
+	background:url('pmicons/emailtemplate_16x16.png') no-repeat center center;
+}
+.pmicon-emailtemplate-32{
+	background:url('pmicons/emailtemplate_32x32.png') no-repeat center center;
+}
+.pmicon-employee-16{
+	background:url('pmicons/employee_16x16.png') no-repeat center center;
+}
+.pmicon-employee-32{
+	background:url('pmicons/employee_32x32.png') no-repeat center center;
+}
+.pmicon-emptyparagraphseparator-16{
+	background:url('pmicons/emptyparagraphseparator_16x16.png') no-repeat center center;
+}
+.pmicon-emptyparagraphseparator-32{
+	background:url('pmicons/emptyparagraphseparator_32x32.png') no-repeat center center;
+}
+.pmicon-emptytablerowseparator-16{
+	background:url('pmicons/emptytablerowseparator_16x16.png') no-repeat center center;
+}
+.pmicon-emptytablerowseparator-32{
+	background:url('pmicons/emptytablerowseparator_32x32.png') no-repeat center center;
+}
+.pmicon-example-16{
+	background:url('pmicons/example_16x16.png') no-repeat center center;
+}
+.pmicon-example-32{
+	background:url('pmicons/example_32x32.png') no-repeat center center;
+}
+.pmicon-export-16{
+	background:url('pmicons/export_16x16.png') no-repeat center center;
+}
+.pmicon-export-32{
+	background:url('pmicons/export_32x32.png') no-repeat center center;
+}
+.pmicon-exportfile-16{
+	background:url('pmicons/exportfile_16x16.png') no-repeat center center;
+}
+.pmicon-exportfile-GrayScaled-16{
+	background:url('pmicons/exportfile_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exportfile-32{
+	background:url('pmicons/exportfile_32x32.png') no-repeat center center;
+}
+.pmicon-exportfile-GrayScaled-32{
+	background:url('pmicons/exportfile_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttocsv-16{
+	background:url('pmicons/exporttocsv_16x16.png') no-repeat center center;
+}
+.pmicon-exporttocsv-GrayScaled-16{
+	background:url('pmicons/exporttocsv_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttocsv-32{
+	background:url('pmicons/exporttocsv_32x32.png') no-repeat center center;
+}
+.pmicon-exporttocsv-GrayScaled-32{
+	background:url('pmicons/exporttocsv_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttodoc-16{
+	background:url('pmicons/exporttodoc_16x16.png') no-repeat center center;
+}
+.pmicon-exporttodoc-GrayScaled-16{
+	background:url('pmicons/exporttodoc_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttodoc-32{
+	background:url('pmicons/exporttodoc_32x32.png') no-repeat center center;
+}
+.pmicon-exporttodoc-GrayScaled-32{
+	background:url('pmicons/exporttodoc_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttodocx-16{
+	background:url('pmicons/exporttodocx_16x16.png') no-repeat center center;
+}
+.pmicon-exporttodocx-GrayScaled-16{
+	background:url('pmicons/exporttodocx_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttodocx-32{
+	background:url('pmicons/exporttodocx_32x32.png') no-repeat center center;
+}
+.pmicon-exporttodocx-GrayScaled-32{
+	background:url('pmicons/exporttodocx_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoepub-16{
+	background:url('pmicons/exporttoepub_16x16.png') no-repeat center center;
+}
+.pmicon-exporttoepub-GrayScaled-16{
+	background:url('pmicons/exporttoepub_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoepub-32{
+	background:url('pmicons/exporttoepub_32x32.png') no-repeat center center;
+}
+.pmicon-exporttoepub-GrayScaled-32{
+	background:url('pmicons/exporttoepub_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttohtml-16{
+	background:url('pmicons/exporttohtml_16x16.png') no-repeat center center;
+}
+.pmicon-exporttohtml-GrayScaled-16{
+	background:url('pmicons/exporttohtml_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttohtml-32{
+	background:url('pmicons/exporttohtml_32x32.png') no-repeat center center;
+}
+.pmicon-exporttohtml-GrayScaled-32{
+	background:url('pmicons/exporttohtml_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoimg-16{
+	background:url('pmicons/exporttoimg_16x16.png') no-repeat center center;
+}
+.pmicon-exporttoimg-GrayScaled-16{
+	background:url('pmicons/exporttoimg_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoimg-32{
+	background:url('pmicons/exporttoimg_32x32.png') no-repeat center center;
+}
+.pmicon-exporttoimg-GrayScaled-32{
+	background:url('pmicons/exporttoimg_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttomht-16{
+	background:url('pmicons/exporttomht_16x16.png') no-repeat center center;
+}
+.pmicon-exporttomht-GrayScaled-16{
+	background:url('pmicons/exporttomht_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttomht-32{
+	background:url('pmicons/exporttomht_32x32.png') no-repeat center center;
+}
+.pmicon-exporttomht-GrayScaled-32{
+	background:url('pmicons/exporttomht_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoodt-16{
+	background:url('pmicons/exporttoodt_16x16.png') no-repeat center center;
+}
+.pmicon-exporttoodt-GrayScaled-16{
+	background:url('pmicons/exporttoodt_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoodt-32{
+	background:url('pmicons/exporttoodt_32x32.png') no-repeat center center;
+}
+.pmicon-exporttoodt-GrayScaled-32{
+	background:url('pmicons/exporttoodt_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttopdf-16{
+	background:url('pmicons/exporttopdf_16x16.png') no-repeat center center;
+}
+.pmicon-exporttopdf-GrayScaled-16{
+	background:url('pmicons/exporttopdf_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttopdf-32{
+	background:url('pmicons/exporttopdf_32x32.png') no-repeat center center;
+}
+.pmicon-exporttopdf-GrayScaled-32{
+	background:url('pmicons/exporttopdf_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttortf-16{
+	background:url('pmicons/exporttortf_16x16.png') no-repeat center center;
+}
+.pmicon-exporttortf-GrayScaled-16{
+	background:url('pmicons/exporttortf_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttortf-32{
+	background:url('pmicons/exporttortf_32x32.png') no-repeat center center;
+}
+.pmicon-exporttortf-GrayScaled-32{
+	background:url('pmicons/exporttortf_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttotxt-16{
+	background:url('pmicons/exporttotxt_16x16.png') no-repeat center center;
+}
+.pmicon-exporttotxt-GrayScaled-16{
+	background:url('pmicons/exporttotxt_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttotxt-32{
+	background:url('pmicons/exporttotxt_32x32.png') no-repeat center center;
+}
+.pmicon-exporttotxt-GrayScaled-32{
+	background:url('pmicons/exporttotxt_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxls-16{
+	background:url('pmicons/exporttoxls_16x16.png') no-repeat center center;
+}
+.pmicon-exporttoxls-GrayScaled-16{
+	background:url('pmicons/exporttoxls_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxls-32{
+	background:url('pmicons/exporttoxls_32x32.png') no-repeat center center;
+}
+.pmicon-exporttoxls-GrayScaled-32{
+	background:url('pmicons/exporttoxls_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxlsx-16{
+	background:url('pmicons/exporttoxlsx_16x16.png') no-repeat center center;
+}
+.pmicon-exporttoxlsx-GrayScaled-16{
+	background:url('pmicons/exporttoxlsx_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxlsx-32{
+	background:url('pmicons/exporttoxlsx_32x32.png') no-repeat center center;
+}
+.pmicon-exporttoxlsx-GrayScaled-32{
+	background:url('pmicons/exporttoxlsx_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxml-16{
+	background:url('pmicons/exporttoxml_16x16.png') no-repeat center center;
+}
+.pmicon-exporttoxml-GrayScaled-16{
+	background:url('pmicons/exporttoxml_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxml-32{
+	background:url('pmicons/exporttoxml_32x32.png') no-repeat center center;
+}
+.pmicon-exporttoxml-GrayScaled-32{
+	background:url('pmicons/exporttoxml_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxps-16{
+	background:url('pmicons/exporttoxps_16x16.png') no-repeat center center;
+}
+.pmicon-exporttoxps-GrayScaled-16{
+	background:url('pmicons/exporttoxps_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-exporttoxps-32{
+	background:url('pmicons/exporttoxps_32x32.png') no-repeat center center;
+}
+.pmicon-exporttoxps-GrayScaled-32{
+	background:url('pmicons/exporttoxps_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-feature-16{
+	background:url('pmicons/feature_16x16.png') no-repeat center center;
+}
+.pmicon-feature-32{
+	background:url('pmicons/feature_32x32.png') no-repeat center center;
+}
+.pmicon-fillbackground-16{
+	background:url('pmicons/fillbackground_16x16.png') no-repeat center center;
+}
+.pmicon-fillbackground-GrayScaled-16{
+	background:url('pmicons/fillbackground_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fillbackground-32{
+	background:url('pmicons/fillbackground_32x32.png') no-repeat center center;
+}
+.pmicon-fillbackground-GrayScaled-32{
+	background:url('pmicons/fillbackground_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-filter-16{
+	background:url('pmicons/filter_16x16.png') no-repeat center center;
+}
+.pmicon-filter-GrayScaled-16{
+	background:url('pmicons/filter_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-filter-32{
+	background:url('pmicons/filter_32x32.png') no-repeat center center;
+}
+.pmicon-filter-GrayScaled-32{
+	background:url('pmicons/filter_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-filterbyargument-chart-16{
+	background:url('pmicons/filterbyargument_chart_16x16.png') no-repeat center center;
+}
+.pmicon-filterbyargument-chart-32{
+	background:url('pmicons/filterbyargument_chart_32x32.png') no-repeat center center;
+}
+.pmicon-filterbyargument-pie-16{
+	background:url('pmicons/filterbyargument_pie_16x16.png') no-repeat center center;
+}
+.pmicon-filterbyargument-pie-32{
+	background:url('pmicons/filterbyargument_pie_32x32.png') no-repeat center center;
+}
+.pmicon-filterbyseries-chart-16{
+	background:url('pmicons/filterbyseries_chart_16x16.png') no-repeat center center;
+}
+.pmicon-filterbyseries-chart-32{
+	background:url('pmicons/filterbyseries_chart_32x32.png') no-repeat center center;
+}
+.pmicon-filterbyseries-pie-16{
+	background:url('pmicons/filterbyseries_pie_16x16.png') no-repeat center center;
+}
+.pmicon-filterbyseries-pie-32{
+	background:url('pmicons/filterbyseries_pie_32x32.png') no-repeat center center;
+}
+
+.pmicon-find-GrayScaled-16{
+	background:url('pmicons/find_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-find-32{
+	background:url('pmicons/find_32x32.png') no-repeat center center;
+}
+.pmicon-find-GrayScaled-32{
+	background:url('pmicons/find_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-findbyid-16{
+	background:url('pmicons/findbyid_16x16.png') no-repeat center center;
+}
+.pmicon-findbyid-32{
+	background:url('pmicons/findbyid_32x32.png') no-repeat center center;
+}
+.pmicon-findcustomers-16{
+	background:url('pmicons/findcustomers_16x16.png') no-repeat center center;
+}
+.pmicon-findcustomers-32{
+	background:url('pmicons/findcustomers_32x32.png') no-repeat center center;
+}
+.pmicon-first-16{
+	background:url('pmicons/first_16x16.png') no-repeat center center;
+}
+.pmicon-first-GrayScaled-16{
+	background:url('pmicons/first_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-first-32{
+	background:url('pmicons/first_32x32.png') no-repeat center center;
+}
+.pmicon-first-GrayScaled-32{
+	background:url('pmicons/first_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fixed-column-width-GrayScaled-16{
+	background:url('pmicons/fixed_column_width_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fixed-column-width-GrayScaled-32{
+	background:url('pmicons/fixed_column_width_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-font-GrayScaled-16{
+	background:url('pmicons/font_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-font-GrayScaled-32{
+	background:url('pmicons/font_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontcolor-GrayScaled-16{
+	background:url('pmicons/fontcolor_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontcolor-GrayScaled-32{
+	background:url('pmicons/fontcolor_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontsize-16{
+	background:url('pmicons/fontsize_16x16.png') no-repeat center center;
+}
+.pmicon-fontsize-GrayScaled-16{
+	background:url('pmicons/fontsize_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontsize-32{
+	background:url('pmicons/fontsize_32x32.png') no-repeat center center;
+}
+.pmicon-fontsize-GrayScaled-32{
+	background:url('pmicons/fontsize_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontsizedecrease-16{
+	background:url('pmicons/fontsizedecrease_16x16.png') no-repeat center center;
+}
+.pmicon-fontsizedecrease-GrayScaled-16{
+	background:url('pmicons/fontsizedecrease_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontsizedecrease-32{
+	background:url('pmicons/fontsizedecrease_32x32.png') no-repeat center center;
+}
+.pmicon-fontsizedecrease-GrayScaled-32{
+	background:url('pmicons/fontsizedecrease_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontsizeincrease-16{
+	background:url('pmicons/fontsizeincrease_16x16.png') no-repeat center center;
+}
+.pmicon-fontsizeincrease-GrayScaled-16{
+	background:url('pmicons/fontsizeincrease_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fontsizeincrease-32{
+	background:url('pmicons/fontsizeincrease_32x32.png') no-repeat center center;
+}
+.pmicon-fontsizeincrease-GrayScaled-32{
+	background:url('pmicons/fontsizeincrease_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-forcetesting-16{
+	background:url('pmicons/forcetesting_16x16.png') no-repeat center center;
+}
+.pmicon-forcetesting-32{
+	background:url('pmicons/forcetesting_32x32.png') no-repeat center center;
+}
+.pmicon-forward-16{
+	background:url('pmicons/forward_16x16.png') no-repeat center center;
+}
+.pmicon-forward-GrayScaled-16{
+	background:url('pmicons/forward_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-forward-32{
+	background:url('pmicons/forward_32x32.png') no-repeat center center;
+}
+.pmicon-forward-GrayScaled-32{
+	background:url('pmicons/forward_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-fullstackedarea-16{
+	background:url('pmicons/fullstackedarea_16x16.png') no-repeat center center;
+}
+.pmicon-fullstackedarea-32{
+	background:url('pmicons/fullstackedarea_32x32.png') no-repeat center center;
+}
+.pmicon-fullstackedbar-16{
+	background:url('pmicons/fullstackedbar_16x16.png') no-repeat center center;
+}
+.pmicon-fullstackedbar-32{
+	background:url('pmicons/fullstackedbar_32x32.png') no-repeat center center;
+}
+.pmicon-fullstackedline-16{
+	background:url('pmicons/fullstackedline_16x16.png') no-repeat center center;
+}
+.pmicon-fullstackedline-32{
+	background:url('pmicons/fullstackedline_32x32.png') no-repeat center center;
+}
+.pmicon-fullstackedsplinearea-16{
+	background:url('pmicons/fullstackedsplinearea_16x16.png') no-repeat center center;
+}
+.pmicon-fullstackedsplinearea-32{
+	background:url('pmicons/fullstackedsplinearea_32x32.png') no-repeat center center;
+}
+.pmicon-gaugestylefullcircular-16{
+	background:url('pmicons/gaugestylefullcircular_16x16.png') no-repeat center center;
+}
+.pmicon-gaugestylefullcircular-32{
+	background:url('pmicons/gaugestylefullcircular_32x32.png') no-repeat center center;
+}
+.pmicon-gaugestylehalfcircular-16{
+	background:url('pmicons/gaugestylehalfcircular_16x16.png') no-repeat center center;
+}
+.pmicon-gaugestylehalfcircular-32{
+	background:url('pmicons/gaugestylehalfcircular_32x32.png') no-repeat center center;
+}
+.pmicon-gaugestyleleftquartercircular-16{
+	background:url('pmicons/gaugestyleleftquartercircular_16x16.png') no-repeat center center;
+}
+.pmicon-gaugestyleleftquartercircular-32{
+	background:url('pmicons/gaugestyleleftquartercircular_32x32.png') no-repeat center center;
+}
+.pmicon-gaugestylelinearhorizontal-16{
+	background:url('pmicons/gaugestylelinearhorizontal_16x16.png') no-repeat center center;
+}
+.pmicon-gaugestylelinearhorizontal-32{
+	background:url('pmicons/gaugestylelinearhorizontal_32x32.png') no-repeat center center;
+}
+.pmicon-gaugestylelinearvertical-16{
+	background:url('pmicons/gaugestylelinearvertical_16x16.png') no-repeat center center;
+}
+.pmicon-gaugestylelinearvertical-32{
+	background:url('pmicons/gaugestylelinearvertical_32x32.png') no-repeat center center;
+}
+.pmicon-gaugestylerightquartercircular-16{
+	background:url('pmicons/gaugestylerightquartercircular_16x16.png') no-repeat center center;
+}
+.pmicon-gaugestylerightquartercircular-32{
+	background:url('pmicons/gaugestylerightquartercircular_32x32.png') no-repeat center center;
+}
+.pmicon-gaugestylethreeforthcircular-16{
+	background:url('pmicons/gaugestylethreeforthcircular_16x16.png') no-repeat center center;
+}
+.pmicon-gaugestylethreeforthcircular-32{
+	background:url('pmicons/gaugestylethreeforthcircular_32x32.png') no-repeat center center;
+}
+.pmicon-grid-16{
+	background:url('pmicons/grid_16x16.png') no-repeat center center;
+}
+.pmicon-grid-32{
+	background:url('pmicons/grid_32x32.png') no-repeat center center;
+}
+.pmicon-group-16{
+	background:url('pmicons/group_16x16.png') no-repeat center center;
+}
+.pmicon-group-32{
+	background:url('pmicons/group_32x32.png') no-repeat center center;
+}
+.pmicon-groupfieldcollection-16{
+	background:url('pmicons/groupfieldcollection_16x16.png') no-repeat center center;
+}
+.pmicon-groupfieldcollection-32{
+	background:url('pmicons/groupfieldcollection_32x32.png') no-repeat center center;
+}
+.pmicon-groupfooter-16{
+	background:url('pmicons/groupfooter_16x16.png') no-repeat center center;
+}
+.pmicon-groupfooter-32{
+	background:url('pmicons/groupfooter_32x32.png') no-repeat center center;
+}
+.pmicon-groupheader-16{
+	background:url('pmicons/groupheader_16x16.png') no-repeat center center;
+}
+.pmicon-groupheader-32{
+	background:url('pmicons/groupheader_32x32.png') no-repeat center center;
+}
+.pmicon-hiddentext-16{
+	background:url('pmicons/hiddentext_16x16.png') no-repeat center center;
+}
+.pmicon-hiddentext-32{
+	background:url('pmicons/hiddentext_32x32.png') no-repeat center center;
+}
+.pmicon-hide-16{
+	background:url('pmicons/hide_16x16.png') no-repeat center center;
+}
+.pmicon-hide-32{
+	background:url('pmicons/hide_32x32.png') no-repeat center center;
+}
+.pmicon-highlight-GrayScaled-16{
+	background:url('pmicons/highlight_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-highlight-GrayScaled-32{
+	background:url('pmicons/highlight_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-highlightactiveelements-16{
+	background:url('pmicons/highlightactiveelements_16x16.png') no-repeat center center;
+}
+.pmicon-highlightactiveelements-32{
+	background:url('pmicons/highlightactiveelements_32x32.png') no-repeat center center;
+}
+.pmicon-highlightfield-16{
+	background:url('pmicons/highlightfield_16x16.png') no-repeat center center;
+}
+.pmicon-highlightfield-32{
+	background:url('pmicons/highlightfield_32x32.png') no-repeat center center;
+}
+.pmicon-highlowclose-16{
+	background:url('pmicons/highlowclose_16x16.png') no-repeat center center;
+}
+.pmicon-highlowclose-32{
+	background:url('pmicons/highlowclose_32x32.png') no-repeat center center;
+}
+.pmicon-historyitem-16{
+	background:url('pmicons/historyitem_16x16.png') no-repeat center center;
+}
+.pmicon-historyitem-32{
+	background:url('pmicons/historyitem_32x32.png') no-repeat center center;
+}
+.pmicon-home-16{
+	background:url('pmicons/home_16x16.png') no-repeat center center;
+}
+.pmicon-home-GrayScaled-16{
+	background:url('pmicons/home_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-home-32{
+	background:url('pmicons/home_32x32.png') no-repeat center center;
+}
+.pmicon-home-GrayScaled-32{
+	background:url('pmicons/home_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-hyperlink-GrayScaled-16{
+	background:url('pmicons/hyperlink_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-hyperlink-GrayScaled-32{
+	background:url('pmicons/hyperlink_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-ide-16{
+	background:url('pmicons/ide_16x16.png') no-repeat center center;
+}
+.pmicon-ide-32{
+	background:url('pmicons/ide_32x32.png') no-repeat center center;
+}
+.pmicon-ignoremasterfilter-16{
+	background:url('pmicons/ignoremasterfilter_16x16.png') no-repeat center center;
+}
+.pmicon-ignoremasterfilter-32{
+	background:url('pmicons/ignoremasterfilter_32x32.png') no-repeat center center;
+}
+.pmicon-image-16{
+	background:url('pmicons/image_16x16.png') no-repeat center center;
+}
+.pmicon-image-32{
+	background:url('pmicons/image_32x32.png') no-repeat center center;
+}
+.pmicon-importimage-16{
+	background:url('pmicons/importimage_16x16.png') no-repeat center center;
+}
+.pmicon-importimage-32{
+	background:url('pmicons/importimage_32x32.png') no-repeat center center;
+}
+.pmicon-indentdecrease-16{
+	background:url('pmicons/indentdecrease_16x16.png') no-repeat center center;
+}
+.pmicon-indentdecrease-GrayScaled-16{
+	background:url('pmicons/indentdecrease_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-indentdecrease-32{
+	background:url('pmicons/indentdecrease_32x32.png') no-repeat center center;
+}
+.pmicon-indentdecrease-GrayScaled-32{
+	background:url('pmicons/indentdecrease_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-indentincrease-16{
+	background:url('pmicons/indentincrease_16x16.png') no-repeat center center;
+}
+.pmicon-indentincrease-GrayScaled-16{
+	background:url('pmicons/indentincrease_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-indentincrease-32{
+	background:url('pmicons/indentincrease_32x32.png') no-repeat center center;
+}
+.pmicon-indentincrease-GrayScaled-32{
+	background:url('pmicons/indentincrease_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-index-16{
+	background:url('pmicons/index_16x16.png') no-repeat center center;
+}
+.pmicon-index-GrayScaled-16{
+	background:url('pmicons/index_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-index-32{
+	background:url('pmicons/index_32x32.png') no-repeat center center;
+}
+.pmicon-index-GrayScaled-32{
+	background:url('pmicons/index_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-info-16{
+	background:url('pmicons/info_16x16.png') no-repeat center center;
+}
+.pmicon-info-GrayScaled-16{
+	background:url('pmicons/info_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-info-32{
+	background:url('pmicons/info_32x32.png') no-repeat center center;
+}
+.pmicon-info-GrayScaled-32{
+	background:url('pmicons/info_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-infrontoftext-16{
+	background:url('pmicons/infrontoftext_16x16.png') no-repeat center center;
+}
+.pmicon-infrontoftext-GrayScaled-16{
+	background:url('pmicons/infrontoftext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-infrontoftext-32{
+	background:url('pmicons/infrontoftext_32x32.png') no-repeat center center;
+}
+.pmicon-infrontoftext-GrayScaled-32{
+	background:url('pmicons/infrontoftext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-inlinewithtext-16{
+	background:url('pmicons/inlinewithtext_16x16.png') no-repeat center center;
+}
+.pmicon-inlinewithtext-GrayScaled-16{
+	background:url('pmicons/inlinewithtext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-inlinewithtext-32{
+	background:url('pmicons/inlinewithtext_32x32.png') no-repeat center center;
+}
+.pmicon-inlinewithtext-GrayScaled-32{
+	background:url('pmicons/inlinewithtext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-insert-16{
+	background:url('pmicons/insert_16x16.png') no-repeat center center;
+}
+.pmicon-insert-32{
+	background:url('pmicons/insert_32x32.png') no-repeat center center;
+}
+.pmicon-insertfooter-16{
+	background:url('pmicons/insertfooter_16x16.png') no-repeat center center;
+}
+.pmicon-insertfooter-32{
+	background:url('pmicons/insertfooter_32x32.png') no-repeat center center;
+}
+.pmicon-insertheader-16{
+	background:url('pmicons/insertheader_16x16.png') no-repeat center center;
+}
+.pmicon-insertheader-32{
+	background:url('pmicons/insertheader_32x32.png') no-repeat center center;
+}
+.pmicon-insertimage-GrayScaled-16{
+	background:url('pmicons/insertimage_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-insertimage-GrayScaled-32{
+	background:url('pmicons/insertimage_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-insertpagebreak-16{
+	background:url('pmicons/insertpagebreak_16x16.png') no-repeat center center;
+}
+.pmicon-insertpagebreak-32{
+	background:url('pmicons/insertpagebreak_32x32.png') no-repeat center center;
+}
+.pmicon-insertpagebreaks-GrayScaled-16{
+	background:url('pmicons/insertpagebreaks_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-insertpagebreaks-GrayScaled-32{
+	background:url('pmicons/insertpagebreaks_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-insertrangefilter-16{
+	background:url('pmicons/insertrangefilter_16x16.png') no-repeat center center;
+}
+.pmicon-insertrangefilter-32{
+	background:url('pmicons/insertrangefilter_32x32.png') no-repeat center center;
+}
+.pmicon-inside-borders-GrayScaled-16{
+	background:url('pmicons/inside_borders_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-inside-borders-GrayScaled-32{
+	background:url('pmicons/inside_borders_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-inside-horizontal-border-GrayScaled-16{
+	background:url('pmicons/inside_horizontal_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-inside-horizontal-border-GrayScaled-32{
+	background:url('pmicons/inside_horizontal_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-inside-vertical-border-GrayScaled-16{
+	background:url('pmicons/inside_vertical_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-inside-vertical-border-GrayScaled-32{
+	background:url('pmicons/inside_vertical_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-issue-16{
+	background:url('pmicons/issue_16x16.png') no-repeat center center;
+}
+.pmicon-issue-32{
+	background:url('pmicons/issue_32x32.png') no-repeat center center;
+}
+.pmicon-italic-16{
+	background:url('pmicons/italic_16x16.png') no-repeat center center;
+}
+.pmicon-italic-GrayScaled-16{
+	background:url('pmicons/italic_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-italic-32{
+	background:url('pmicons/italic_32x32.png') no-repeat center center;
+}
+.pmicon-italic-GrayScaled-32{
+	background:url('pmicons/italic_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-knowledgebasearticle-16{
+	background:url('pmicons/knowledgebasearticle_16x16.png') no-repeat center center;
+}
+.pmicon-knowledgebasearticle-32{
+	background:url('pmicons/knowledgebasearticle_32x32.png') no-repeat center center;
+}
+.pmicon-kpi-16{
+	background:url('pmicons/kpi_16x16.png') no-repeat center center;
+}
+.pmicon-kpi-32{
+	background:url('pmicons/kpi_32x32.png') no-repeat center center;
+}
+.pmicon-label-GrayScaled-16{
+	background:url('pmicons/label_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-label-GrayScaled-32{
+	background:url('pmicons/label_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-language-16{
+	background:url('pmicons/language_16x16.png') no-repeat center center;
+}
+.pmicon-language-32{
+	background:url('pmicons/language_32x32.png') no-repeat center center;
+}
+.pmicon-last-16{
+	background:url('pmicons/last_16x16.png') no-repeat center center;
+}
+.pmicon-last-GrayScaled-16{
+	background:url('pmicons/last_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-last-32{
+	background:url('pmicons/last_32x32.png') no-repeat center center;
+}
+.pmicon-last-GrayScaled-32{
+	background:url('pmicons/last_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-left-border-GrayScaled-16{
+	background:url('pmicons/left_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-left-border-GrayScaled-32{
+	background:url('pmicons/left_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-left-GrayScaled{
+	background:url('pmicons/left_GrayScaled.png') no-repeat center center;
+}
+.pmicon-line-16{
+	background:url('pmicons/line_16x16.png') no-repeat center center;
+}
+.pmicon-line-32{
+	background:url('pmicons/line_32x32.png') no-repeat center center;
+}
+.pmicon-linespacing-GrayScaled-16{
+	background:url('pmicons/linespacing_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-linespacing-GrayScaled-32{
+	background:url('pmicons/linespacing_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-linespacing2-GrayScaled-16{
+	background:url('pmicons/linespacing2_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-linespacing2-GrayScaled-32{
+	background:url('pmicons/linespacing2_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-listbullets-16{
+	background:url('pmicons/listbullets_16x16.png') no-repeat center center;
+}
+.pmicon-listbullets-GrayScaled-16{
+	background:url('pmicons/listbullets_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-listbullets-32{
+	background:url('pmicons/listbullets_32x32.png') no-repeat center center;
+}
+.pmicon-listbullets-GrayScaled-32{
+	background:url('pmicons/listbullets_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-listmultilevel-16{
+	background:url('pmicons/listmultilevel_16x16.png') no-repeat center center;
+}
+.pmicon-listmultilevel-GrayScaled-16{
+	background:url('pmicons/listmultilevel_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-listmultilevel-32{
+	background:url('pmicons/listmultilevel_32x32.png') no-repeat center center;
+}
+.pmicon-listmultilevel-GrayScaled-32{
+	background:url('pmicons/listmultilevel_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-listnumbers-16{
+	background:url('pmicons/listnumbers_16x16.png') no-repeat center center;
+}
+.pmicon-listnumbers-GrayScaled-16{
+	background:url('pmicons/listnumbers_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-listnumbers-32{
+	background:url('pmicons/listnumbers_32x32.png') no-repeat center center;
+}
+.pmicon-listnumbers-GrayScaled-32{
+	background:url('pmicons/listnumbers_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-loadfrom-16{
+	background:url('pmicons/loadfrom_16x16.png') no-repeat center center;
+}
+.pmicon-loadfrom-32{
+	background:url('pmicons/loadfrom_32x32.png') no-repeat center center;
+}
+.pmicon-loadpagesetup-16{
+	background:url('pmicons/loadpagesetup_16x16.png') no-repeat center center;
+}
+.pmicon-loadpagesetup-32{
+	background:url('pmicons/loadpagesetup_32x32.png') no-repeat center center;
+}
+.pmicon-mail-16{
+	background:url('pmicons/mail_16x16.png') no-repeat center center;
+}
+.pmicon-mail-32{
+	background:url('pmicons/mail_32x32.png') no-repeat center center;
+}
+.pmicon-marginsmoderate-GrayScaled-16{
+	background:url('pmicons/marginsmoderate_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-marginsmoderate-GrayScaled-32{
+	background:url('pmicons/marginsmoderate_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-marginsnarrow-GrayScaled-16{
+	background:url('pmicons/marginsnarrow_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-marginsnarrow-GrayScaled-32{
+	background:url('pmicons/marginsnarrow_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-marginsnormal-GrayScaled-16{
+	background:url('pmicons/marginsnormal_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-marginsnormal-GrayScaled-32{
+	background:url('pmicons/marginsnormal_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-marginswide-GrayScaled-16{
+	background:url('pmicons/marginswide_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-marginswide-GrayScaled-32{
+	background:url('pmicons/marginswide_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-masterfilter-16{
+	background:url('pmicons/masterfilter_16x16.png') no-repeat center center;
+}
+.pmicon-masterfilter-32{
+	background:url('pmicons/masterfilter_32x32.png') no-repeat center center;
+}
+.pmicon-merge-16{
+	background:url('pmicons/merge_16x16.png') no-repeat center center;
+}
+.pmicon-merge-32{
+	background:url('pmicons/merge_32x32.png') no-repeat center center;
+}
+.pmicon-monthview-16{
+	background:url('pmicons/monthview_16x16.png') no-repeat center center;
+}
+.pmicon-monthview-GrayScaled-16{
+	background:url('pmicons/monthview_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-monthview-32{
+	background:url('pmicons/monthview_32x32.png') no-repeat center center;
+}
+.pmicon-monthview-GrayScaled-32{
+	background:url('pmicons/monthview_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-morelayoutoptions-16{
+	background:url('pmicons/morelayoutoptions_16x16.png') no-repeat center center;
+}
+.pmicon-morelayoutoptions-GrayScaled-16{
+	background:url('pmicons/morelayoutoptions_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-morelayoutoptions-32{
+	background:url('pmicons/morelayoutoptions_32x32.png') no-repeat center center;
+}
+.pmicon-morelayoutoptions-GrayScaled-32{
+	background:url('pmicons/morelayoutoptions_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-movedown-16{
+	background:url('pmicons/movedown_16x16.png') no-repeat center center;
+}
+.pmicon-movedown-32{
+	background:url('pmicons/movedown_32x32.png') no-repeat center center;
+}
+.pmicon-moveup-16{
+	background:url('pmicons/moveup_16x16.png') no-repeat center center;
+}
+.pmicon-moveup-32{
+	background:url('pmicons/moveup_32x32.png') no-repeat center center;
+}
+.pmicon-multiplepages-16{
+	background:url('pmicons/multiplepages_16x16.png') no-repeat center center;
+}
+.pmicon-multiplepages-GrayScaled-16{
+	background:url('pmicons/multiplepages_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-multiplepages-32{
+	background:url('pmicons/multiplepages_32x32.png') no-repeat center center;
+}
+.pmicon-multiplepages-GrayScaled-32{
+	background:url('pmicons/multiplepages_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-navigationbar-16{
+	background:url('pmicons/navigationbar_16x16.png') no-repeat center center;
+}
+.pmicon-navigationbar-GrayScaled-16{
+	background:url('pmicons/navigationbar_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-navigationbar-32{
+	background:url('pmicons/navigationbar_32x32.png') no-repeat center center;
+}
+.pmicon-navigationbar-GrayScaled-32{
+	background:url('pmicons/navigationbar_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-new-16{
+	background:url('pmicons/new_16x16.png') no-repeat center center;
+}
+.pmicon-new-GrayScaled-16{
+	background:url('pmicons/new_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-new-32{
+	background:url('pmicons/new_32x32.png') no-repeat center center;
+}
+.pmicon-new-GrayScaled-32{
+	background:url('pmicons/new_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-newcontact-16{
+	background:url('pmicons/newcontact_16x16.png') no-repeat center center;
+}
+.pmicon-newcontact-32{
+	background:url('pmicons/newcontact_32x32.png') no-repeat center center;
+}
+.pmicon-newfeed-16{
+	background:url('pmicons/newfeed_16x16.png') no-repeat center center;
+}
+.pmicon-newfeed-32{
+	background:url('pmicons/newfeed_32x32.png') no-repeat center center;
+}
+.pmicon-newmail-16{
+	background:url('pmicons/newmail_16x16.png') no-repeat center center;
+}
+.pmicon-newmail-32{
+	background:url('pmicons/newmail_32x32.png') no-repeat center center;
+}
+.pmicon-newtask-16{
+	background:url('pmicons/newtask_16x16.png') no-repeat center center;
+}
+.pmicon-newtask-32{
+	background:url('pmicons/newtask_32x32.png') no-repeat center center;
+}
+.pmicon-newwizard-GrayScaled-16{
+	background:url('pmicons/newwizard_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-newwizard-GrayScaled-32{
+	background:url('pmicons/newwizard_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-next-16{
+	background:url('pmicons/next_16x16.png') no-repeat center center;
+}
+.pmicon-next-GrayScaled-16{
+	background:url('pmicons/next_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-next-32{
+	background:url('pmicons/next_32x32.png') no-repeat center center;
+}
+.pmicon-next-GrayScaled-32{
+	background:url('pmicons/next_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-no-border-GrayScaled-16{
+	background:url('pmicons/no_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-no-border-GrayScaled-32{
+	background:url('pmicons/no_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-none-16{
+	background:url('pmicons/none_16x16.png') no-repeat center center;
+}
+.pmicon-none-32{
+	background:url('pmicons/none_32x32.png') no-repeat center center;
+}
+.pmicon-notes-16{
+	background:url('pmicons/notes_16x16.png') no-repeat center center;
+}
+.pmicon-notes-32{
+	background:url('pmicons/notes_32x32.png') no-repeat center center;
+}
+.pmicon-one-GrayScaled{
+	background:url('pmicons/one_GrayScaled.png') no-repeat center center;
+}
+.pmicon-open-16{
+	background:url('pmicons/open_16x16.png') no-repeat center center;
+}
+.pmicon-open-32{
+	background:url('pmicons/open_32x32.png') no-repeat center center;
+}
+.pmicon-openfile-GrayScaled-16{
+	background:url('pmicons/openfile_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-openfile-GrayScaled-32{
+	background:url('pmicons/openfile_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-openhighlowclosecandlestick-16{
+	background:url('pmicons/openhighlowclosecandlestick_16x16.png') no-repeat center center;
+}
+.pmicon-openhighlowclosecandlestick-32{
+	background:url('pmicons/openhighlowclosecandlestick_32x32.png') no-repeat center center;
+}
+.pmicon-openhighlowclosestock-16{
+	background:url('pmicons/openhighlowclosestock_16x16.png') no-repeat center center;
+}
+.pmicon-openhighlowclosestock-32{
+	background:url('pmicons/openhighlowclosestock_32x32.png') no-repeat center center;
+}
+.pmicon-operatingsyste-16{
+	background:url('pmicons/operatingsyste_16x16.png') no-repeat center center;
+}
+.pmicon-operatingsyste-32{
+	background:url('pmicons/operatingsyste_32x32.png') no-repeat center center;
+}
+.pmicon-outside-border-GrayScaled-16{
+	background:url('pmicons/outside_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-outside-border-GrayScaled-32{
+	background:url('pmicons/outside_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-packageproduct-16{
+	background:url('pmicons/packageproduct_16x16.png') no-repeat center center;
+}
+.pmicon-packageproduct-32{
+	background:url('pmicons/packageproduct_32x32.png') no-repeat center center;
+}
+.pmicon-pagemargins-16{
+	background:url('pmicons/pagemargins_16x16.png') no-repeat center center;
+}
+.pmicon-pagemargins-GrayScaled-16{
+	background:url('pmicons/pagemargins_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pagemargins-32{
+	background:url('pmicons/pagemargins_32x32.png') no-repeat center center;
+}
+.pmicon-pagemargins-GrayScaled-32{
+	background:url('pmicons/pagemargins_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pageorientation-16{
+	background:url('pmicons/pageorientation_16x16.png') no-repeat center center;
+}
+.pmicon-pageorientation-GrayScaled-16{
+	background:url('pmicons/pageorientation_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pageorientation-32{
+	background:url('pmicons/pageorientation_32x32.png') no-repeat center center;
+}
+.pmicon-pageorientation-GrayScaled-32{
+	background:url('pmicons/pageorientation_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pageorientationlandscape-32{
+	background:url('pmicons/pageorientationlandscape_32x32.png') no-repeat center center;
+}
+.pmicon-pageorientationlandscape-GrayScaled-32{
+	background:url('pmicons/pageorientationlandscape_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pageorientationportrait-32{
+	background:url('pmicons/pageorientationportrait_32x32.png') no-repeat center center;
+}
+.pmicon-pageorientationportrait-GrayScaled-32{
+	background:url('pmicons/pageorientationportrait_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pagesetup-16{
+	background:url('pmicons/pagesetup_16x16.png') no-repeat center center;
+}
+.pmicon-pagesetup-32{
+	background:url('pmicons/pagesetup_32x32.png') no-repeat center center;
+}
+.pmicon-palette-16{
+	background:url('pmicons/palette_16x16.png') no-repeat center center;
+}
+.pmicon-palette-32{
+	background:url('pmicons/palette_32x32.png') no-repeat center center;
+}
+.pmicon-paperkind-a3{
+	background:url('pmicons/paperkind_a3.png') no-repeat center center;
+}
+.pmicon-paperkind-a3-GrayScaled{
+	background:url('pmicons/paperkind_a3_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paperkind-a4{
+	background:url('pmicons/paperkind_a4.png') no-repeat center center;
+}
+.pmicon-paperkind-a4-GrayScaled{
+	background:url('pmicons/paperkind_a4_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paperkind-a5{
+	background:url('pmicons/paperkind_a5.png') no-repeat center center;
+}
+.pmicon-paperkind-a5-GrayScaled{
+	background:url('pmicons/paperkind_a5_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paperkind-a6{
+	background:url('pmicons/paperkind_a6.png') no-repeat center center;
+}
+.pmicon-paperkind-a6-GrayScaled{
+	background:url('pmicons/paperkind_a6_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paperkind-executive{
+	background:url('pmicons/paperkind_executive.png') no-repeat center center;
+}
+.pmicon-paperkind-executive-GrayScaled{
+	background:url('pmicons/paperkind_executive_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paperkind-legal{
+	background:url('pmicons/paperkind_legal.png') no-repeat center center;
+}
+.pmicon-paperkind-legal-GrayScaled{
+	background:url('pmicons/paperkind_legal_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paperkind-letter{
+	background:url('pmicons/paperkind_letter.png') no-repeat center center;
+}
+.pmicon-paperkind-letter-GrayScaled{
+	background:url('pmicons/paperkind_letter_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paperkind-tabloid{
+	background:url('pmicons/paperkind_tabloid.png') no-repeat center center;
+}
+.pmicon-paperkind-tabloid-GrayScaled{
+	background:url('pmicons/paperkind_tabloid_GrayScaled.png') no-repeat center center;
+}
+.pmicon-papersize-16{
+	background:url('pmicons/papersize_16x16.png') no-repeat center center;
+}
+.pmicon-papersize-GrayScaled-16{
+	background:url('pmicons/papersize_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-papersize-32{
+	background:url('pmicons/papersize_32x32.png') no-repeat center center;
+}
+.pmicon-papersize-GrayScaled-32{
+	background:url('pmicons/papersize_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-parameters-16{
+	background:url('pmicons/parameters_16x16.png') no-repeat center center;
+}
+.pmicon-parameters-GrayScaled-16{
+	background:url('pmicons/parameters_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-parameters-32{
+	background:url('pmicons/parameters_32x32.png') no-repeat center center;
+}
+.pmicon-parameters-GrayScaled-32{
+	background:url('pmicons/parameters_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paste-16{
+	background:url('pmicons/paste_16x16.png') no-repeat center center;
+}
+.pmicon-paste-GrayScaled-16{
+	background:url('pmicons/paste_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-paste-32{
+	background:url('pmicons/paste_32x32.png') no-repeat center center;
+}
+.pmicon-paste-GrayScaled-32{
+	background:url('pmicons/paste_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pictureshapefillcolor-16{
+	background:url('pmicons/pictureshapefillcolor_16x16.png') no-repeat center center;
+}
+.pmicon-pictureshapefillcolor-32{
+	background:url('pmicons/pictureshapefillcolor_32x32.png') no-repeat center center;
+}
+.pmicon-pictureshapeoutlinecolor-16{
+	background:url('pmicons/pictureshapeoutlinecolor_16x16.png') no-repeat center center;
+}
+.pmicon-pictureshapeoutlinecolor-32{
+	background:url('pmicons/pictureshapeoutlinecolor_32x32.png') no-repeat center center;
+}
+.pmicon-pie-16{
+	background:url('pmicons/pie_16x16.png') no-repeat center center;
+}
+.pmicon-pie-GrayScaled-16{
+	background:url('pmicons/pie_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pie-32{
+	background:url('pmicons/pie_32x32.png') no-repeat center center;
+}
+.pmicon-pie-GrayScaled-32{
+	background:url('pmicons/pie_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-pielabelsdatalabels-16{
+	background:url('pmicons/pielabelsdatalabels_16x16.png') no-repeat center center;
+}
+.pmicon-pielabelsdatalabels-32{
+	background:url('pmicons/pielabelsdatalabels_32x32.png') no-repeat center center;
+}
+.pmicon-pielabelstooltips-16{
+	background:url('pmicons/pielabelstooltips_16x16.png') no-repeat center center;
+}
+.pmicon-pielabelstooltips-32{
+	background:url('pmicons/pielabelstooltips_32x32.png') no-repeat center center;
+}
+.pmicon-piestyledonut-16{
+	background:url('pmicons/piestyledonut_16x16.png') no-repeat center center;
+}
+.pmicon-ppiestyledonut-32{
+	background:url('pmicons/piestyledonut_32x32.png') no-repeat center center;
+}
+.pmicon-piestylepie-16{
+	background:url('pmicons/piestylepie_16x16.png') no-repeat center center;
+}
+.pmicon-piestylepie-32{
+	background:url('pmicons/piestylepie_32x32.png') no-repeat center center;
+}
+.pmicon-pivot-16{
+	background:url('pmicons/pivot_16x16.png') no-repeat center center;
+}
+.pmicon-pivot-32{
+	background:url('pmicons/pivot_32x32.png') no-repeat center center;
+}
+.pmicon-point-16{
+	background:url('pmicons/point_16x16.png') no-repeat center center;
+}
+.pmicon-point-32{
+	background:url('pmicons/point_32x32.png') no-repeat center center;
+}
+.pmicon-prev-16{
+	background:url('pmicons/prev_16x16.png') no-repeat center center;
+}
+.pmicon-prev-GrayScaled-16{
+	background:url('pmicons/prev_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-prev-32{
+	background:url('pmicons/prev_32x32.png') no-repeat center center;
+}
+.pmicon-prev-GrayScaled-32{
+	background:url('pmicons/prev_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-preview-16{
+	background:url('pmicons/preview_16x16.png') no-repeat center center;
+}
+.pmicon-preview-GrayScaled-16{
+	background:url('pmicons/preview_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-preview-32{
+	background:url('pmicons/preview_32x32.png') no-repeat center center;
+}
+.pmicon-preview-GrayScaled-32{
+	background:url('pmicons/preview_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-previewchart-16{
+	background:url('pmicons/previewchart_16x16.png') no-repeat center center;
+}
+.pmicon-previewchart-GrayScaled-16{
+	background:url('pmicons/previewchart_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-previewchart-32{
+	background:url('pmicons/previewchart_32x32.png') no-repeat center center;
+}
+.pmicon-previewchart-GrayScaled-32{
+	background:url('pmicons/previewchart_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-previous-16{
+	background:url('pmicons/previous_16x16.png') no-repeat center center;
+}
+.pmicon-previous-GrayScaled-16{
+	background:url('pmicons/previous_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-previous-32{
+	background:url('pmicons/previous_32x32.png') no-repeat center center;
+}
+.pmicon-previous-GrayScaled-32{
+	background:url('pmicons/previous_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-print-16{
+	background:url('pmicons/print_16x16.png') no-repeat center center;
+}
+.pmicon-print-GrayScaled-16{
+	background:url('pmicons/print_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-print-32{
+	background:url('pmicons/print_32x32.png') no-repeat center center;
+}
+.pmicon-print-GrayScaled-32{
+	background:url('pmicons/print_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-printdialog-16{
+	background:url('pmicons/printdialog_16x16.png') no-repeat center center;
+}
+.pmicon-printdialog-GrayScaled-16{
+	background:url('pmicons/printdialog_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-printdialog-32{
+	background:url('pmicons/printdialog_32x32.png') no-repeat center center;
+}
+.pmicon-printdialog-GrayScaled-32{
+	background:url('pmicons/printdialog_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-printviapdf-16{
+	background:url('pmicons/printviapdf_16x16.png') no-repeat center center;
+}
+.pmicon-printviapdf-32{
+	background:url('pmicons/printviapdf_32x32.png') no-repeat center center;
+}
+.pmicon-product-16{
+	background:url('pmicons/product_16x16.png') no-repeat center center;
+}
+.pmicon-product-32{
+	background:url('pmicons/product_32x32.png') no-repeat center center;
+}
+.pmicon-programminglanguage-16{
+	background:url('pmicons/programminglanguage_16x16.png') no-repeat center center;
+}
+.pmicon-programminglanguage-32{
+	background:url('pmicons/programminglanguage_32x32.png') no-repeat center center;
+}
+.pmicon-project-16{
+	background:url('pmicons/project_16x16.png') no-repeat center center;
+}
+.pmicon-project-32{
+	background:url('pmicons/project_32x32.png') no-repeat center center;
+}
+.pmicon-projectdirectory-16{
+	background:url('pmicons/projectdirectory_16x16.png') no-repeat center center;
+}
+.pmicon-projectdirectory-32{
+	background:url('pmicons/projectdirectory_32x32.png') no-repeat center center;
+}
+.pmicon-projectfile-16{
+	background:url('pmicons/projectfile_16x16.png') no-repeat center center;
+}
+.pmicon-projectfile-32{
+	background:url('pmicons/projectfile_32x32.png') no-repeat center center;
+}
+.pmicon-properties-16{
+	background:url('pmicons/properties_16x16.png') no-repeat center center;
+}
+.pmicon-properties-32{
+	background:url('pmicons/properties_32x32.png') no-repeat center center;
+}
+.pmicon-protectdocument-GrayScaled-16{
+	background:url('pmicons/protectdocument_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-protectdocument-GrayScaled-32{
+	background:url('pmicons/protectdocument_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-publicfix-16{
+	background:url('pmicons/publicfix_16x16.png') no-repeat center center;
+}
+.pmicon-publicfix-32{
+	background:url('pmicons/publicfix_32x32.png') no-repeat center center;
+}
+.pmicon-publish-16{
+	background:url('pmicons/publish_16x16.png') no-repeat center center;
+}
+.pmicon-publish-32{
+	background:url('pmicons/publish_32x32.png') no-repeat center center;
+}
+.pmicon-question-16{
+	background:url('pmicons/question_16x16.png') no-repeat center center;
+}
+.pmicon-question-32{
+	background:url('pmicons/question_32x32.png') no-repeat center center;
+}
+.pmicon-rangearea-16{
+	background:url('pmicons/rangearea_16x16.png') no-repeat center center;
+}
+.pmicon-rangearea-32{
+	background:url('pmicons/rangearea_32x32.png') no-repeat center center;
+}
+.pmicon-rangebar-16{
+	background:url('pmicons/rangebar_16x16.png') no-repeat center center;
+}
+.pmicon-rangebar-32{
+	background:url('pmicons/rangebar_32x32.png') no-repeat center center;
+}
+.pmicon-recurrence-16{
+	background:url('pmicons/recurrence_16x16.png') no-repeat center center;
+}
+.pmicon-recurrence-GrayScaled-16{
+	background:url('pmicons/recurrence_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-recurrence-32{
+	background:url('pmicons/recurrence_32x32.png') no-repeat center center;
+}
+.pmicon-recurrence-GrayScaled-32{
+	background:url('pmicons/recurrence_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-redo-16{
+	background:url('pmicons/redo_16x16.png') no-repeat center center;
+}
+.pmicon-redo-GrayScaled-16{
+	background:url('pmicons/redo_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-redo-32{
+	background:url('pmicons/redo_32x32.png') no-repeat center center;
+}
+.pmicon-redo-GrayScaled-32{
+	background:url('pmicons/redo_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-refresh-16{
+	background:url('pmicons/refresh_16x16.png') no-repeat center center;
+}
+.pmicon-refresh-GrayScaled-16{
+	background:url('pmicons/refresh_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-refresh-32{
+	background:url('pmicons/refresh_32x32.png') no-repeat center center;
+}
+.pmicon-refresh-GrayScaled-32{
+	background:url('pmicons/refresh_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-refresh2-16{
+	background:url('pmicons/refresh2_16x16.png') no-repeat center center;
+}
+.pmicon-refresh2-32{
+	background:url('pmicons/refresh2_32x32.png') no-repeat center center;
+}
+.pmicon-remove-16{
+	background:url('pmicons/remove_16x16.png') no-repeat center center;
+}
+.pmicon-remove-GrayScaled-16{
+	background:url('pmicons/remove_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-remove-32{
+	background:url('pmicons/remove_32x32.png') no-repeat center center;
+}
+.pmicon-remove-GrayScaled-32{
+	background:url('pmicons/remove_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-removeitem-16{
+	background:url('pmicons/removeitem_16x16.png') no-repeat center center;
+}
+.pmicon-removeitem-32{
+	background:url('pmicons/removeitem_32x32.png') no-repeat center center;
+}
+.pmicon-replace-16{
+	background:url('pmicons/replace_16x16.png') no-repeat center center;
+}
+.pmicon-replace-GrayScaled-16{
+	background:url('pmicons/replace_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-replace-32{
+	background:url('pmicons/replace_32x32.png') no-repeat center center;
+}
+.pmicon-replace-GrayScaled-32{
+	background:url('pmicons/replace_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-report-16{
+	background:url('pmicons/report_16x16.png') no-repeat center center;
+}
+.pmicon-report-32{
+	background:url('pmicons/report_32x32.png') no-repeat center center;
+}
+.pmicon-right-border-GrayScaled-16{
+	background:url('pmicons/right_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-right-border-GrayScaled-32{
+	background:url('pmicons/right_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-right-GrayScaled{
+	background:url('pmicons/right_GrayScaled.png') no-repeat center center;
+}
+.pmicon-role-16{
+	background:url('pmicons/role_16x16.png') no-repeat center center;
+}
+.pmicon-role-32{
+	background:url('pmicons/role_32x32.png') no-repeat center center;
+}
+.pmicon-rulerhorizontal-GrayScaled-16{
+	background:url('pmicons/rulerhorizontal_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-rulerhorizontal-GrayScaled-32{
+	background:url('pmicons/rulerhorizontal_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-rulervertical-GrayScaled-16{
+	background:url('pmicons/rulervertical_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-rulervertical-GrayScaled-32{
+	background:url('pmicons/rulervertical_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-save-16{
+	background:url('pmicons/save_16x16.png') no-repeat center center;
+}
+.pmicon-save-GrayScaled-16{
+	background:url('pmicons/save_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-save-32{
+	background:url('pmicons/save_32x32.png') no-repeat center center;
+}
+.pmicon-save-GrayScaled-32{
+	background:url('pmicons/save_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveall-16{
+	background:url('pmicons/saveall_16x16.png') no-repeat center center;
+}
+.pmicon-saveall-GrayScaled-16{
+	background:url('pmicons/saveall_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveall-32{
+	background:url('pmicons/saveall_32x32.png') no-repeat center center;
+}
+.pmicon-saveall-GrayScaled-32{
+	background:url('pmicons/saveall_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveandclose-16{
+	background:url('pmicons/saveandclose_16x16.png') no-repeat center center;
+}
+.pmicon-saveandclose-GrayScaled-16{
+	background:url('pmicons/saveandclose_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveandclose-32{
+	background:url('pmicons/saveandclose_32x32.png') no-repeat center center;
+}
+.pmicon-saveandclose-GrayScaled-32{
+	background:url('pmicons/saveandclose_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveandnew-16{
+	background:url('pmicons/saveandnew_16x16.png') no-repeat center center;
+}
+.pmicon-saveandnew-GrayScaled-16{
+	background:url('pmicons/saveandnew_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveandnew-32{
+	background:url('pmicons/saveandnew_32x32.png') no-repeat center center;
+}
+.pmicon-saveandnew-GrayScaled-32{
+	background:url('pmicons/saveandnew_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveas-16{
+	background:url('pmicons/saveas_16x16.png') no-repeat center center;
+}
+.pmicon-saveas-GrayScaled-16{
+	background:url('pmicons/saveas_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-saveas-32{
+	background:url('pmicons/saveas_32x32.png') no-repeat center center;
+}
+.pmicon-saveas-GrayScaled-32{
+	background:url('pmicons/saveas_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-savedialog-16{
+	background:url('pmicons/savedialog_16x16.png') no-repeat center center;
+}
+.pmicon-savedialog-GrayScaled-16{
+	background:url('pmicons/savedialog_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-savedialog-32{
+	background:url('pmicons/savedialog_32x32.png') no-repeat center center;
+}
+.pmicon-savedialog-GrayScaled-32{
+	background:url('pmicons/savedialog_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-savepagesetup-16{
+	background:url('pmicons/savepagesetup_16x16.png') no-repeat center center;
+}
+.pmicon-savepagesetup-32{
+	background:url('pmicons/savepagesetup_32x32.png') no-repeat center center;
+}
+.pmicon-saveto-16{
+	background:url('pmicons/saveto_16x16.png') no-repeat center center;
+}
+.pmicon-saveto-32{
+	background:url('pmicons/saveto_32x32.png') no-repeat center center;
+}
+.pmicon-scripts-16{
+	background:url('pmicons/scripts_16x16.png') no-repeat center center;
+}
+.pmicon-scripts-32{
+	background:url('pmicons/scripts_32x32.png') no-repeat center center;
+}
+.pmicon-select-GrayScaled-16{
+	background:url('pmicons/select_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-select-GrayScaled-32{
+	background:url('pmicons/select_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttable-GrayScaled-16{
+	background:url('pmicons/selecttable_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttable-GrayScaled-32{
+	background:url('pmicons/selecttable_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttablecell-GrayScaled-16{
+	background:url('pmicons/selecttablecell_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttablecell-GrayScaled-32{
+	background:url('pmicons/selecttablecell_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttablecolumn-GrayScaled-16{
+	background:url('pmicons/selecttablecolumn_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttablecolumn-GrayScaled-32{
+	background:url('pmicons/selecttablecolumn_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttablerow-GrayScaled-16{
+	background:url('pmicons/selecttablerow_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-selecttablerow-GrayScaled-32{
+	background:url('pmicons/selecttablerow_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-send-16{
+	background:url('pmicons/send_16x16.png') no-repeat center center;
+}
+.pmicon-send-32{
+	background:url('pmicons/send_32x32.png') no-repeat center center;
+}
+.pmicon-sendbackward-16{
+	background:url('pmicons/sendbackward_16x16.png') no-repeat center center;
+}
+.pmicon-sendbackward-GrayScaled-16{
+	background:url('pmicons/sendbackward_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendbackward-32{
+	background:url('pmicons/sendbackward_32x32.png') no-repeat center center;
+}
+.pmicon-sendbackward-GrayScaled-32{
+	background:url('pmicons/sendbackward_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendbehindtext-16{
+	background:url('pmicons/sendbehindtext_16x16.png') no-repeat center center;
+}
+.pmicon-sendbehindtext-GrayScaled-16{
+	background:url('pmicons/sendbehindtext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendbehindtext-32{
+	background:url('pmicons/sendbehindtext_32x32.png') no-repeat center center;
+}
+.pmicon-sendbehindtext-GrayScaled-32{
+	background:url('pmicons/sendbehindtext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendcsv-16{
+	background:url('pmicons/sendcsv_16x16.png') no-repeat center center;
+}
+.pmicon-sendcsv-GrayScaled-16{
+	background:url('pmicons/sendcsv_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendcsv-32{
+	background:url('pmicons/sendcsv_32x32.png') no-repeat center center;
+}
+.pmicon-sendcsv-GrayScaled-32{
+	background:url('pmicons/sendcsv_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendfile-GrayScaled-16{
+	background:url('pmicons/sendfile_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendfile-GrayScaled-32{
+	background:url('pmicons/sendfile_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendimg-16{
+	background:url('pmicons/sendimg_16x16.png') no-repeat center center;
+}
+.pmicon-sendimg-GrayScaled-16{
+	background:url('pmicons/sendimg_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendimg-32{
+	background:url('pmicons/sendimg_32x32.png') no-repeat center center;
+}
+.pmicon-sendimg-GrayScaled-32{
+	background:url('pmicons/sendimg_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendmht-16{
+	background:url('pmicons/sendmht_16x16.png') no-repeat center center;
+}
+.pmicon-sendmht-GrayScaled-16{
+	background:url('pmicons/sendmht_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendmht-32{
+	background:url('pmicons/sendmht_32x32.png') no-repeat center center;
+}
+.pmicon-sendmht-GrayScaled-32{
+	background:url('pmicons/sendmht_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendpdf-16{
+	background:url('pmicons/sendpdf_16x16.png') no-repeat center center;
+}
+.pmicon-sendpdf-GrayScaled-16{
+	background:url('pmicons/sendpdf_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendpdf-32{
+	background:url('pmicons/sendpdf_32x32.png') no-repeat center center;
+}
+.pmicon-sendpdf-GrayScaled-32{
+	background:url('pmicons/sendpdf_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendrtf-16{
+	background:url('pmicons/sendrtf_16x16.png') no-repeat center center;
+}
+.pmicon-sendrtf-GrayScaled-16{
+	background:url('pmicons/sendrtf_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendrtf-32{
+	background:url('pmicons/sendrtf_32x32.png') no-repeat center center;
+}
+.pmicon-sendrtf-GrayScaled-32{
+	background:url('pmicons/sendrtf_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendtoback-16{
+	background:url('pmicons/sendtoback_16x16.png') no-repeat center center;
+}
+.pmicon-sendtoback-GrayScaled-16{
+	background:url('pmicons/sendtoback_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendtoback-32{
+	background:url('pmicons/sendtoback_32x32.png') no-repeat center center;
+}
+.pmicon-sendtoback-GrayScaled-32{
+	background:url('pmicons/sendtoback_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendtxt-16{
+	background:url('pmicons/sendtxt_16x16.png') no-repeat center center;
+}
+.pmicon-sendtxt-GrayScaled-16{
+	background:url('pmicons/sendtxt_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendtxt-32{
+	background:url('pmicons/sendtxt_32x32.png') no-repeat center center;
+}
+.pmicon-sendtxt-GrayScaled-32{
+	background:url('pmicons/sendtxt_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendxls-16{
+	background:url('pmicons/sendxls_16x16.png') no-repeat center center;
+}
+.pmicon-sendxls-GrayScaled-16{
+	background:url('pmicons/sendxls_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendxls-32{
+	background:url('pmicons/sendxls_32x32.png') no-repeat center center;
+}
+.pmicon-sendxls-GrayScaled-32{
+	background:url('pmicons/sendxls_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendxlsx-16{
+	background:url('pmicons/sendxlsx_16x16.png') no-repeat center center;
+}
+.pmicon-sendxlsx-GrayScaled-16{
+	background:url('pmicons/sendxlsx_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sendxlsx-32{
+	background:url('pmicons/sendxlsx_32x32.png') no-repeat center center;
+}
+.pmicon-sendxlsx-GrayScaled-32{
+	background:url('pmicons/sendxlsx_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-separator-16{
+	background:url('pmicons/separator_16x16.png') no-repeat center center;
+}
+.pmicon-separator-32{
+	background:url('pmicons/separator_32x32.png') no-repeat center center;
+}
+.pmicon-show-16{
+	background:url('pmicons/show_16x16.png') no-repeat center center;
+}
+.pmicon-show-GrayScaled-16{
+	background:url('pmicons/show_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-show-32{
+	background:url('pmicons/show_32x32.png') no-repeat center center;
+}
+.pmicon-show-GrayScaled-32{
+	background:url('pmicons/show_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-showhidden-16{
+	background:url('pmicons/showhidden_16x16.png') no-repeat center center;
+}
+.pmicon-showhidden-GrayScaled-16{
+	background:url('pmicons/showhidden_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-showhidden-32{
+	background:url('pmicons/showhidden_32x32.png') no-repeat center center;
+}
+.pmicon-showhidden-GrayScaled-32{
+	background:url('pmicons/showhidden_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-showtestreport-16{
+	background:url('pmicons/showtestreport_16x16.png') no-repeat center center;
+}
+.pmicon-showtestreport-32{
+	background:url('pmicons/showtestreport_32x32.png') no-repeat center center;
+}
+.pmicon-showworktimeonly-GrayScaled-16{
+	background:url('pmicons/showworktimeonly_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-showworktimeonly-GrayScaled-32{
+	background:url('pmicons/showworktimeonly_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sidebysiderangebar-16{
+	background:url('pmicons/sidebysiderangebar_16x16.png') no-repeat center center;
+}
+.pmicon-sidebysiderangebar-32{
+	background:url('pmicons/sidebysiderangebar_32x32.png') no-repeat center center;
+}
+.pmicon-snaptocells-GrayScaled-16{
+	background:url('pmicons/snaptocells_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-snaptocells-GrayScaled-32{
+	background:url('pmicons/snaptocells_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-solution-16{
+	background:url('pmicons/solution_16x16.png') no-repeat center center;
+}
+.pmicon-solution-32{
+	background:url('pmicons/solution_32x32.png') no-repeat center center;
+}
+.pmicon-sortasc-16{
+	background:url('pmicons/sortasc_16x16.png') no-repeat center center;
+}
+.pmicon-sortasc-GrayScaled-16{
+	background:url('pmicons/sortasc_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sortasc-32{
+	background:url('pmicons/sortasc_32x32.png') no-repeat center center;
+}
+.pmicon-sortasc-GrayScaled-32{
+	background:url('pmicons/sortasc_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sortesc-16{
+	background:url('pmicons/sortesc_16x16.png') no-repeat center center;
+}
+.pmicon-sortesc-GrayScaled-16{
+	background:url('pmicons/sortesc_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sortesc-32{
+	background:url('pmicons/sortesc_32x32.png') no-repeat center center;
+}
+.pmicon-sortesc-GrayScaled-32{
+	background:url('pmicons/sortesc_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-spellcheck-GrayScaled-16{
+	background:url('pmicons/spellcheck_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-spellcheck-GrayScaled-32{
+	background:url('pmicons/spellcheck_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-spellcheckasyoutype-16{
+	background:url('pmicons/spellcheckasyoutype_16x16.png') no-repeat center center;
+}
+.pmicon-spellcheckasyoutype-GrayScaled-16{
+	background:url('pmicons/spellcheckasyoutype_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-spellcheckasyoutype-32{
+	background:url('pmicons/spellcheckasyoutype_32x32.png') no-repeat center center;
+}
+.pmicon-spellcheckasyoutype-GrayScaled-32{
+	background:url('pmicons/spellcheckasyoutype_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-spline-16{
+	background:url('pmicons/spline_16x16.png') no-repeat center center;
+}
+.pmicon-spline-32{
+	background:url('pmicons/spline_32x32.png') no-repeat center center;
+}
+.pmicon-splinearea-16{
+	background:url('pmicons/splinearea_16x16.png') no-repeat center center;
+}
+.pmicon-splinearea-32{
+	background:url('pmicons/splinearea_32x32.png') no-repeat center center;
+}
+.pmicon-splitappointment-GrayScaled-16{
+	background:url('pmicons/splitappointment_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-splitappointment-GrayScaled-32{
+	background:url('pmicons/splitappointment_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sqare-16{
+	background:url('pmicons/sqare_16x16.png') no-repeat center center;
+}
+.pmicon-sqare-GrayScaled-16{
+	background:url('pmicons/sqare_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-sqare-32{
+	background:url('pmicons/sqare_32x32.png') no-repeat center center;
+}
+.pmicon-sqare-GrayScaled-32{
+	background:url('pmicons/sqare_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-squeeze-16{
+	background:url('pmicons/squeeze_16x16.png') no-repeat center center;
+}
+.pmicon-squeeze-GrayScaled-16{
+	background:url('pmicons/squeeze_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-squeeze-32{
+	background:url('pmicons/squeeze_32x32.png') no-repeat center center;
+}
+.pmicon-squeeze-GrayScaled-32{
+	background:url('pmicons/squeeze_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-stackedarea-16{
+	background:url('pmicons/stackedarea_16x16.png') no-repeat center center;
+}
+.pmicon-stackedarea-32{
+	background:url('pmicons/stackedarea_32x32.png') no-repeat center center;
+}
+.pmicon-stackedbar-16{
+	background:url('pmicons/stackedbar_16x16.png') no-repeat center center;
+}
+.pmicon-stackedbar-32{
+	background:url('pmicons/stackedbar_32x32.png') no-repeat center center;
+}
+.pmicon-stackedline-16{
+	background:url('pmicons/stackedline_16x16.png') no-repeat center center;
+}
+.pmicon-stackedline-32{
+	background:url('pmicons/stackedline_32x32.png') no-repeat center center;
+}
+.pmicon-stackedsplinear-16{
+	background:url('pmicons/stackedsplinear_16x16.png') no-repeat center center;
+}
+.pmicon-stackedsplinear-32{
+	background:url('pmicons/stackedsplinear_32x32.png') no-repeat center center;
+}
+.pmicon-status-16{
+	background:url('pmicons/status_16x16.png') no-repeat center center;
+}
+.pmicon-status-GrayScaled-16{
+	background:url('pmicons/status_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-status-32{
+	background:url('pmicons/status_32x32.png') no-repeat center center;
+}
+.pmicon-status-GrayScaled-32{
+	background:url('pmicons/status_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-steparea-16{
+	background:url('pmicons/steparea_16x16.png') no-repeat center center;
+}
+.pmicon-steparea-32{
+	background:url('pmicons/steparea_32x32.png') no-repeat center center;
+}
+.pmicon-stepline-16{
+	background:url('pmicons/stepline_16x16.png') no-repeat center center;
+}
+.pmicon-stepline-32{
+	background:url('pmicons/stepline_32x32.png') no-repeat center center;
+}
+.pmicon-stretch-16{
+	background:url('pmicons/stretch_16x16.png') no-repeat center center;
+}
+.pmicon-stretch-GrayScaled-16{
+	background:url('pmicons/stretch_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-stretch-32{
+	background:url('pmicons/stretch_32x32.png') no-repeat center center;
+}
+.pmicon-stretch-GrayScaled-32{
+	background:url('pmicons/stretch_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-strikeout-16{
+	background:url('pmicons/strikeout_16x16.png') no-repeat center center;
+}
+.pmicon-strikeout-GrayScaled-16{
+	background:url('pmicons/strikeout_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-strikeout-32{
+	background:url('pmicons/strikeout_32x32.png') no-repeat center center;
+}
+.pmicon-strikeout-GrayScaled-32{
+	background:url('pmicons/strikeout_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-strikeoutdouble-16{
+	background:url('pmicons/strikeoutdouble_16x16.png') no-repeat center center;
+}
+.pmicon-strikeoutdouble-GrayScaled-16{
+	background:url('pmicons/strikeoutdouble_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-strikeoutdouble-32{
+	background:url('pmicons/strikeoutdouble_32x32.png') no-repeat center center;
+}
+.pmicon-strikeoutdouble-GrayScaled-32{
+	background:url('pmicons/strikeoutdouble_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-subscript-16{
+	background:url('pmicons/subscript_16x16.png') no-repeat center center;
+}
+.pmicon-subscript-GrayScaled-16{
+	background:url('pmicons/subscript_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-subscript-32{
+	background:url('pmicons/subscript_32x32.png') no-repeat center center;
+}
+.pmicon-subscript-GrayScaled-32{
+	background:url('pmicons/subscript_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-suggestion-16{
+	background:url('pmicons/suggestion_16x16.png') no-repeat center center;
+}
+.pmicon-suggestion-32{
+	background:url('pmicons/suggestion_32x32.png') no-repeat center center;
+}
+.pmicon-summary-16{
+	background:url('pmicons/summary_16x16.png') no-repeat center center;
+}
+.pmicon-summary-GrayScaled-16{
+	background:url('pmicons/summary_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-summary-32{
+	background:url('pmicons/summary_32x32.png') no-repeat center center;
+}
+.pmicon-summary-GrayScaled-32{
+	background:url('pmicons/summary_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-superscript-16{
+	background:url('pmicons/superscript_16x16.png') no-repeat center center;
+}
+.pmicon-superscript-GrayScaled-16{
+	background:url('pmicons/superscript_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-superscript-32{
+	background:url('pmicons/superscript_32x32.png') no-repeat center center;
+}
+.pmicon-superscript-GrayScaled-32{
+	background:url('pmicons/superscript_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-switchtimescalesto-GrayScaled-16{
+	background:url('pmicons/switchtimescalesto_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-switchtimescalesto-GrayScaled-32{
+	background:url('pmicons/switchtimescalesto_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-symbol-GrayScaled-16{
+	background:url('pmicons/symbol_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-symbol-GrayScaled-32{
+	background:url('pmicons/symbol_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-table-GrayScaled-16{
+	background:url('pmicons/table_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-table-GrayScaled-32{
+	background:url('pmicons/table_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-tablecellmargins-GrayScaled-16{
+	background:url('pmicons/tablecellmargins_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-tablecellmargins-GrayScaled-32{
+	background:url('pmicons/tablecellmargins_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-tableofcontents-GrayScaled-16{
+	background:url('pmicons/tableofcontents_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-tableofcontents-GrayScaled-32{
+	background:url('pmicons/tableofcontents_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-tag-16{
+	background:url('pmicons/tag_16x16.png') no-repeat center center;
+}
+.pmicon-tag-32{
+	background:url('pmicons/tag_32x32.png') no-repeat center center;
+}
+.pmicon-task-16{
+	background:url('pmicons/task_16x16.png') no-repeat center center;
+}
+.pmicon-task-32{
+	background:url('pmicons/task_32x32.png') no-repeat center center;
+}
+.pmicon-team-16{
+	background:url('pmicons/team_16x16.png') no-repeat center center;
+}
+.pmicon-team-32{
+	background:url('pmicons/team_32x32.png') no-repeat center center;
+}
+.pmicon-technology-16{
+	background:url('pmicons/technology_16x16.png') no-repeat center center;
+}
+.pmicon-technology-32{
+	background:url('pmicons/technology_32x32.png') no-repeat center center;
+}
+.pmicon-template-16{
+	background:url('pmicons/template_16x16.png') no-repeat center center;
+}
+.pmicon-template-32{
+	background:url('pmicons/template_32x32.png') no-repeat center center;
+}
+.pmicon-textbox-16{
+	background:url('pmicons/textbox_16x16.png') no-repeat center center;
+}
+.pmicon-textbox-32{
+	background:url('pmicons/textbox_32x32.png') no-repeat center center;
+}
+.pmicon-three-GrayScaled{
+	background:url('pmicons/three_GrayScaled.png') no-repeat center center;
+}
+.pmicon-through-16{
+	background:url('pmicons/through_16x16.png') no-repeat center center;
+}
+.pmicon-through-GrayScaled-16{
+	background:url('pmicons/through_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-through-32{
+	background:url('pmicons/through_32x32.png') no-repeat center center;
+}
+.pmicon-through-GrayScaled-32{
+	background:url('pmicons/through_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-tight-16{
+	background:url('pmicons/tight_16x16.png') no-repeat center center;
+}
+.pmicon-tight-GrayScaled-16{
+	background:url('pmicons/tight_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-tight-32{
+	background:url('pmicons/tight_32x32.png') no-repeat center center;
+}
+.pmicon-tight-GrayScaled-32{
+	background:url('pmicons/tight_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-time-16{
+	background:url('pmicons/time_16x16.png') no-repeat center center;
+}
+.pmicon-time-32{
+	background:url('pmicons/time_32x32.png') no-repeat center center;
+}
+.pmicon-timelineview-16{
+	background:url('pmicons/timelineview_16x16.png') no-repeat center center;
+}
+.pmicon-timelineview-GrayScaled-16{
+	background:url('pmicons/timelineview_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-timelineview-32{
+	background:url('pmicons/timelineview_32x32.png') no-repeat center center;
+}
+.pmicon-timelineview-GrayScaled-32{
+	background:url('pmicons/timelineview_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-today-16{
+	background:url('pmicons/today_16x16.png') no-repeat center center;
+}
+.pmicon-today-GrayScaled-16{
+	background:url('pmicons/today_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-today-32{
+	background:url('pmicons/today_32x32.png') no-repeat center center;
+}
+.pmicon-today-GrayScaled-32{
+	background:url('pmicons/today_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-top-border-GrayScaled-16{
+	background:url('pmicons/top_border_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-top-border-GrayScaled-32{
+	background:url('pmicons/top_border_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-topandbuttom-16{
+	background:url('pmicons/topandbuttom_16x16.png') no-repeat center center;
+}
+.pmicon-topandbuttom-GrayScaled-16{
+	background:url('pmicons/topandbuttom_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-topandbuttom-32{
+	background:url('pmicons/topandbuttom_32x32.png') no-repeat center center;
+}
+.pmicon-topandbuttom-GrayScaled-32{
+	background:url('pmicons/topandbuttom_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-two-GrayScaled{
+	background:url('pmicons/two_GrayScaled.png') no-repeat center center;
+}
+.pmicon-underline-16{
+	background:url('pmicons/underline_16x16.png') no-repeat center center;
+}
+.pmicon-underline-GrayScaled-16{
+	background:url('pmicons/underline_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-underline-32{
+	background:url('pmicons/underline_32x32.png') no-repeat center center;
+}
+.pmicon-underline-GrayScaled-32{
+	background:url('pmicons/underline_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-underlinedouble-16{
+	background:url('pmicons/underlinedouble_16x16.png') no-repeat center center;
+}
+.pmicon-underlinedouble-GrayScaled-16{
+	background:url('pmicons/underlinedouble_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-underlinedouble-32{
+	background:url('pmicons/underlinedouble_32x32.png') no-repeat center center;
+}
+.pmicon-underlinedouble-GrayScaled-32{
+	background:url('pmicons/underlinedouble_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-underlineword-16{
+	background:url('pmicons/underlineword_16x16.png') no-repeat center center;
+}
+.pmicon-underlineword-GrayScaled-16{
+	background:url('pmicons/underlineword_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-underlineword-32{
+	background:url('pmicons/underlineword_32x32.png') no-repeat center center;
+}
+.pmicon-underlineword-GrayScaled-32{
+	background:url('pmicons/underlineword_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-undo-16{
+	background:url('pmicons/undo_16x16.png') no-repeat center center;
+}
+.pmicon-undo-GrayScaled-16{
+	background:url('pmicons/undo_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-undo-32{
+	background:url('pmicons/undo_32x32.png') no-repeat center center;
+}
+.pmicon-undo-GrayScaled-32{
+	background:url('pmicons/undo_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-up-16{
+	background:url('pmicons/up_16x16.png') no-repeat center center;
+}
+.pmicon-up-GrayScaled-16{
+	background:url('pmicons/up_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-up-32{
+	background:url('pmicons/up_32x32.png') no-repeat center center;
+}
+.pmicon-up-GrayScaled-32{
+	background:url('pmicons/up_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-updatetable-GrayScaled-16{
+	background:url('pmicons/updatetable_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-updatetable-GrayScaled-32{
+	background:url('pmicons/updatetable_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-usergroup-16{
+	background:url('pmicons/usergroup_16x16.png') no-repeat center center;
+}
+.pmicon-usergroup-32{
+	background:url('pmicons/usergroup_32x32.png') no-repeat center center;
+}
+.pmicon-vb-16{
+	background:url('pmicons/vb_16x16.png') no-repeat center center;
+}
+.pmicon-vb-32{
+	background:url('pmicons/vb_32x32.png') no-repeat center center;
+}
+.pmicon-version-16{
+	background:url('pmicons/version_16x16.png') no-repeat center center;
+}
+.pmicon-version-32{
+	background:url('pmicons/version_32x32.png') no-repeat center center;
+}
+.pmicon-video-16{
+	background:url('pmicons/video_16x16.png') no-repeat center center;
+}
+.pmicon-video-32{
+	background:url('pmicons/video_32x32.png') no-repeat center center;
+}
+.pmicon-viewgridlines-GrayScaled-16{
+	background:url('pmicons/viewgridlines_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-viewgridlines-GrayScaled-32{
+	background:url('pmicons/viewgridlines_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-viewonweb-16{
+	background:url('pmicons/viewonweb_16x16.png') no-repeat center center;
+}
+.pmicon-viewonweb-32{
+	background:url('pmicons/viewonweb_32x32.png') no-repeat center center;
+}
+.pmicon-watermark-16{
+	background:url('pmicons/watermark_16x16.png') no-repeat center center;
+}
+.pmicon-watermark-32{
+	background:url('pmicons/watermark_32x32.png') no-repeat center center;
+}
+.pmicon-weekview-16{
+	background:url('pmicons/weekview_16x16.png') no-repeat center center;
+}
+.pmicon-weekview-GrayScaled-16{
+	background:url('pmicons/weekview_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-weekview-32{
+	background:url('pmicons/weekview_32x32.png') no-repeat center center;
+}
+.pmicon-weekview-GrayScaled-32{
+	background:url('pmicons/weekview_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-windows-16{
+	background:url('pmicons/windows_16x16.png') no-repeat center center;
+}
+.pmicon-windows-32{
+	background:url('pmicons/windows_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomcenter-16{
+	background:url('pmicons/withtextwrapping_bottomcenter_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomcenter-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_bottomcenter_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomcenter-32{
+	background:url('pmicons/withtextwrapping_bottomcenter_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomcenter-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_bottomcenter_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomleft-16{
+	background:url('pmicons/withtextwrapping_bottomleft_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomleft-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_bottomleft_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomleft-32{
+	background:url('pmicons/withtextwrapping_bottomleft_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomleft-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_bottomleft_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomright-16{
+	background:url('pmicons/withtextwrapping_bottomright_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomright-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_bottomright_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomright-32{
+	background:url('pmicons/withtextwrapping_bottomright_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-bottomright-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_bottomright_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centercenter-16{
+	background:url('pmicons/withtextwrapping_centercenter_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centercenter-32{
+	background:url('pmicons/withtextwrapping_centercenter_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centercenter-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_centercenter_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerleft-16{
+	background:url('pmicons/withtextwrapping_centerleft_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerleft-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_centerleft_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerleft-32{
+	background:url('pmicons/withtextwrapping_centerleft_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerleft-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_centerleft_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerright-16{
+	background:url('pmicons/withtextwrapping_centerright_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerright-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_centerright_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerright-32{
+	background:url('pmicons/withtextwrapping_centerright_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-centerright-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_centerright_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topcenter-16{
+	background:url('pmicons/withtextwrapping_topcenter_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topcenter-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_topcenter_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topcenter-32{
+	background:url('pmicons/withtextwrapping_topcenter_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topcenter-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_topcenter_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topleft-16{
+	background:url('pmicons/withtextwrapping_topleft_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topleft-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_topleft_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topleft-32{
+	background:url('pmicons/withtextwrapping_topleft_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topleft-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_topleft_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topright-16{
+	background:url('pmicons/withtextwrapping_topright_16x16.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topright-GrayScaled-16{
+	background:url('pmicons/withtextwrapping_topright_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topright-32{
+	background:url('pmicons/withtextwrapping_topright_32x32.png') no-repeat center center;
+}
+.pmicon-withtextwrapping-topright-GrayScaled-32{
+	background:url('pmicons/withtextwrapping_topright_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-wizard-16{
+	background:url('pmicons/wizard_16x16.png') no-repeat center center;
+}
+.pmicon-wizard-32{
+	background:url('pmicons/wizard_32x32.png') no-repeat center center;
+}
+.pmicon-workweekview-16{
+	background:url('pmicons/workweekview_16x16.png') no-repeat center center;
+}
+.pmicon-workweekview-GrayScaled-16{
+	background:url('pmicons/workweekview_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-workweekview-32{
+	background:url('pmicons/workweekview_32x32.png') no-repeat center center;
+}
+.pmicon-workweekview-GrayScaled-32{
+	background:url('pmicons/workweekview_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-wraptext-16{
+	background:url('pmicons/wraptext_16x16.png') no-repeat center center;
+}
+.pmicon-wraptext-GrayScaled-16{
+	background:url('pmicons/wraptext_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-wraptext-32{
+	background:url('pmicons/wraptext_32x32.png') no-repeat center center;
+}
+.pmicon-wraptext-GrayScaled-32{
+	background:url('pmicons/wraptext_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoom-16{
+	background:url('pmicons/zoom_16x16.png') no-repeat center center;
+}
+.pmicon-zoom-GrayScaled-16{
+	background:url('pmicons/zoom_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoom-32{
+	background:url('pmicons/zoom_32x32.png') no-repeat center center;
+}
+.pmicon-zoom-GrayScaled-32{
+	background:url('pmicons/zoom_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoom2-16{
+	background:url('pmicons/zoom2_16x16.png') no-repeat center center;
+}
+.pmicon-zoom2-GrayScaled-16{
+	background:url('pmicons/zoom2_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoom2-32{
+	background:url('pmicons/zoom2_32x32.png') no-repeat center center;
+}
+.pmicon-zoom2-GrayScaled-32{
+	background:url('pmicons/zoom2_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoom100%25-16{
+	background:url('pmicons/zoom100%25_16x16.png') no-repeat center center;
+}
+.pmicon-zoom100%25-GrayScaled-16{
+	background:url('pmicons/zoom100%25_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoom100%25-32{
+	background:url('pmicons/zoom100%25_32x32.png') no-repeat center center;
+}
+.pmicon-zoom100%25-GrayScaled-32{
+	background:url('pmicons/zoom100%25_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoomin-16{
+	background:url('pmicons/zoomin_16x16.png') no-repeat center center;
+}
+.pmicon-zoomin-GrayScaled-16{
+	background:url('pmicons/zoomin_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoomin-32{
+	background:url('pmicons/zoomin_32x32.png') no-repeat center center;
+}
+.pmicon-zoomin-GrayScaled-32{
+	background:url('pmicons/zoomin_32x32_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoomout-16{
+	background:url('pmicons/zoomout_16x16.png') no-repeat center center;
+}
+.pmicon-zoomout-GrayScaled-16{
+	background:url('pmicons/zoomout_16x16_GrayScaled.png') no-repeat center center;
+}
+.pmicon-zoomout-32{
+	background:url('pmicons/zoomout_32x32.png') no-repeat center center;
+}
+.pmicon-zoomout-GrayScaled-32{
+	background:url('pmicons/zoomout_32x32_GrayScaled.png') no-repeat center center;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

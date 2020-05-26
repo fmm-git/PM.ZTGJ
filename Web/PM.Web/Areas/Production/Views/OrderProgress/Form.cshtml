@@ -1,0 +1,244 @@
+﻿@{
+    ViewBag.Title = "订单进度明细编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="MXXX"><a href="javascript:void(0);">订单进度明细编辑</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="formd">
+            @* OrderCode  可以不要 table *@
+            <!---------标识ID------->
+            <input id="ID" name="ID" type="hidden" />
+            <input id="AccumulativeQuantity" name="AccumulativeQuantity" type="hidden" />
+            <input id="OrderCode" name="OrderCode" type="hidden" />
+            <input id="WeightTotal" name="WeightTotal" type="hidden" />
+            @*<table class="form">
+                    <tr>
+                        <td class="formValue">
+                            <input id="OrderCode" name="OrderCode" type="hidden" disabled="disabled" value="@ViewBag.OrderCode" class="form-control required" />
+                        </td>
+                    </tr>
+                </table>*@
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; margin:10px;  ">
+        <div class="toolbar"> </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <div> <table id="gridList"></table></div>
+
+        </div>
+    </div>
+</div>
+
+<!---------明细信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = top.clients.projectId;
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "OrderProgress")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                    ProjectId = data.Item1[0].ProjectId;
+                    lodeList(data.Item2);//加载明细信息
+                }
+            });
+        }
+        $(window).resize(function () {
+            $("#gridList").setGridHeight($(window).height() - 160);
+            $("#gridList").setGridWidth($(window).width());
+        });
+    });
+
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: '订单编号', name: 'OrderCode', hidden: true },
+                    { label: '订单明细id', name: 'WorkorderdetailId', hidden: true },
+                    { label: '构件名称', name: 'ComponentName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '大样图', name: 'LargePattern', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料编号', name: 'MaterialCode', width: 100, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '规格', name: 'SpecificationModel', width: 100, align: "left", sortable: false },
+                    { label: '单位重量(kg/m,kg/㎡)', name: 'MeasurementUnitZl', width: 120, align: "left", sortable: false },
+                    { label: '单件用量(m,㎡)', name: 'ItemUseNum', width: 120, align: "left", sortable: false },
+                    { label: '件数', name: 'Number', width: 60, align: "left", sortable: false },
+                    { label: '重量小计(kg)', name: 'WeightSmallPlan', width: 120, align: "left", sortable: false },
+                    { label: '订单状态', name: 'DaetailWorkStrat', width: 120, align: "left", sortable: false },
+                    //defaultValue: '0', thousandsSeparator: ",", decimalPlaces: 4
+                    { label: '本次完成量(kg)', name: 'TodayCompleted', width: 120, align: "left", sortable: false, editable: true},
+                    { label: '开累完成量(kg)', name: 'AlreadyCompleted', width: 120, align: "left", sortable: false, formatoptions: { defaultValue: '0', decimalPlaces: 4 } },
+                    { label: '未完成量(kg)', name: 'NoCompleted', width: 120, align: "left", sortable: false, formatoptions: { decimalPlaces: 4 } },
+
+            ],
+            gridComplete: function () {
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                var data = $("#" + rowid + ">td");
+                var jgzt = data[13].innerHTML;
+                if (jgzt != '未加工'&&jgzt!='加工完成') {
+                    $gridList.jqGrid('editRow', rowid, true, null, null, null, null, null, null, null, iCol);
+                    //获取表格最后一行Id
+                    var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                    var id = selectedRowIds[selectedRowIds.length - 1];
+                    if (rowid && (rowid !== lastsel || rowid == id)) {
+                        $gridList.jqGrid('saveRow', lastsel);
+                        $gridList.jqGrid('editRow', rowid, true);
+                        lastsel = rowid;
+                        $("#gridList>tbody").find("input:text").each(function () {
+                            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                            $(this).css("height", "20px").css("width", width + "px");
+                        });
+                    }
+                    valid(rowid);
+                }
+            },
+            rowNum: 2000, //一页显示多少条
+        });
+    };
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        //今日完成量
+        $("#" + rowid + "_TodayCompleted")
+               .keyup(function () { regTextBox(this, 5); })
+               .bind("paste", function () { regTextBox(this, 5); }).blur(function () { CompletedAll($(this).parent().parent()); });
+    }
+
+    //文本框只能输入数字和小数点
+    //isf要保留的小数位数
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    //判断今日完成量跟开累完成量是否超过重量小计
+    function CompletedAll(obj) {
+        var weightXj = $(obj.children()[12]).html();//重量小计
+        var daywcl = $(obj.children()[14]).children().val();//今日完成量
+        var klwcl = $(obj.children()[15]).html();//开累完成量
+        var wwcl = $(obj.children()[16]).html();//未完成量
+        if (!isNaN(daywcl) && !isNaN(klwcl)) {
+            if ((parseFloat(daywcl) + parseFloat(klwcl)) > parseFloat(weightXj)) {
+                $.modalMsg("本次完成量加开累完成量超过了订单的重量小计", "warning");
+                $(obj.children()[14]).children().val(wwcl);
+            }
+        }
+
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        //$.each(mydata, function (i, item) {
+        //    index++;
+        //    item.id = index;
+        //    item.TodayCompleted = 0;
+        //    $("#gridList").jqGrid('addRowData', index, item);
+        //});
+        $("#gridList")[0].addJSONData(data);
+    };
+
+    //汇总明细开累完成量
+    function totalDemandNum() {
+        var data = GetGridRowData();
+        if (data && data.length > 0) {
+            var total = 0;
+            for (var i = 0; i < data.length; i++) {
+                total += parseFloat(data[i].AlreadyCompleted);
+            }
+            $("#AccumulativeQuantity").val(total.toFixed(5));
+        }
+        else {
+            $("#AccumulativeQuantity").val("0.0000");
+        }
+    }
+
+    //提交数据
+    function submitForm() {
+        if (!$('#formd').formValid()) {
+            return false;
+        }
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            return false;
+        }
+        totalDemandNum();
+        var formData = $("#formd").formSerialize();
+        formData.ProjectId = ProjectId;
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "OrderProgress")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+
+    }
+
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids1 = $("#gird").jqGrid('getGridParam', 'selarrrow');
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.AlreadyCompleted = parseFloat(rowData.AlreadyCompleted) + parseFloat(rowData.TodayCompleted);//开累
+            var todCompleted = parseFloat(rowData.TodayCompleted);//今日完成量
+            if (todCompleted < 0) {
+                $.modalMsg("本次完成量", "warning");
+                columnData = [];
+                return false;
+            }
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+</script>

@@ -1,0 +1,69 @@
+﻿@{
+    ViewBag.Title = "UpdateProjectOrg";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/Home/GetAllProjectOrg",
+            height: $(window).height() - 55,
+            colModel: [
+                { label: '组织机构', name: 'ProjectOrgAllName', width: 220, align: 'left', sortable: false, },
+                { label: "组织机构编号", name: "ProjectOrgAllId", hidden: true, key: true },
+                { label: '上级组织机构', name: 'OrgId', hidden: true, width: 200 },
+                { label: '上级组织机构', name: 'OrgName', hidden: true, width: 200 },
+                { label: '上级组织机构', name: 'ProjectId', hidden: true, width: 200 },
+                { label: '上级组织机构', name: 'ProjectName', hidden: true, width: 200 },
+                { label: '上级组织机构', name: 'OrgType', hidden: true, width: 200 },
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'ProjectOrgAllName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (id) {//单击
+                clickProjectOrg(id);
+            },
+            gridComplete: function () {
+                $("#gridList").jqGrid('setSelection', '@ViewBag.ProjectOrgAllId', false);
+            }
+        });
+    }
+    
+    function clickProjectOrg(id) {
+        var ProjectOrg = $("#gridList").jqGrid('getRowData', id);
+        if (ProjectOrg.OrgType == "-1") {
+            $("#gridList").trigger("reloadGrid");
+            $.modalMsg("只能选择项目下的组织机构");
+            return;
+        } else {
+            $.modalConfirm("是否要切换到组织机构:" + ProjectOrg.ProjectOrgAllName + "?全部页面将初始化，请确定信息已保存！", function (r) {
+                if (r) {
+                    SaveProjectOrg(ProjectOrg);
+                }
+            });
+        }
+       
+    }
+
+    function SaveProjectOrg(ProjectOrg) {
+        $.ajax({
+            url: "/Home/SaveProjectOrg",
+            data: { OrgId: ProjectOrg.OrgId, ProjectId: ProjectOrg.ProjectId, OrgType: ProjectOrg.OrgType, OrgName: ProjectOrg.OrgName, ProjectOrgAllId:ProjectOrg.ProjectOrgAllId, ProjectOrgAllName: ProjectOrg.ProjectOrgAllName },
+            type: "get",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                top.location.href = "/Home/Index";
+            }
+        });
+    }
+</script>
+<div class="ui-layout-center">
+    <div class="gridPanel">
+        <table id="gridList"></table>
+    </div>
+</div>

@@ -1,0 +1,310 @@
+﻿@{
+    ViewBag.Title = "交流互动列表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<script src="~/Content/js/pager/jquery.z-pager.js"></script>
+<link href="~/Content/js/pager/pager.css" rel="stylesheet" />
+
+<div class="ui-layout-center">
+    <div class="topPanel page-heading">
+        <div class="toolbar" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <input id="Title" type="text" class="form-control" placeholder="标题/编号" style="width: 200px;">
+                            @*<select id="DataType" name="DataType" class="form-control" style="width: 80px;">
+                                <option value="-1">类型</option>
+                                <option value="1">普通</option>
+                                <option value="2">问题填报</option>
+                                <option value="3">其他</option>
+                            </select>*@
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_search">查询</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="tabs-container" style="padding-top:70px;">
+        <div class="tabs-header-div">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">交流板块</a></li>
+                <li class=""><a id='ysbk' data-toggle="tab" href="#tab-2" aria-expanded="false">运输板块</a></li>
+                <li class=""><a data-toggle="tab" href="#tab-3" aria-expanded="false">我的收藏</a></li>
+            </ul>
+        </div>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    <div class="wrapper wrapper-content  animated fadeInRight blog">
+                        <div class="row" id="row-content1">
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div id="pager1" class="pager clearfix"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-2" class="tab-pane">
+                <div class="panel-body">
+                    <div class="wrapper wrapper-content  animated fadeInRight blog">
+                        <div class="row" id="row-content2">
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div id="pager2" class="pager clearfix"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-3" class="tab-pane">
+                <div class="panel-body">
+                    <div class="wrapper wrapper-content  animated fadeInRight blog">
+                        <div class="row" id="row-content3">
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <div id="pager3" class="pager clearfix"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="new-tr">
+    <div class="col-lg-4">
+        <div class="ibox">
+            <div class="ibox-content">
+                <div class="ibox-title-h">
+                    <input type="hidden" id="InsertUserCode" value="{InsertUserCode}" />
+                    <input type="hidden" id="ID" value="{IDH}" />
+                    <a href="{ID}" class="btn-link">
+                        <h2>
+                            {Title}
+                        </h2>
+                    </a>
+                </div>
+                <div class="small m-b-xs">
+                    <span class="text-muted"><i class="fa fa-clock-o"></i>{InsertTime}</span>
+                </div>
+                <div class="ibox-title-p">
+                    <p>
+                        {Abstract}
+                    </p>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5>作者:</h5>
+                        <button class="btn btn-primary btn-xs" type="button"><strong>{UserName}</strong></button>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="small text-right">
+                            <h5>统计:</h5>
+                            <div> <i class="fa fa-star"> </i>{CollectCount}收藏 </div>
+                            <div> <i class="fa fa-comments-o"> </i> {CommentCount} 评论 </div>
+                            <div> <i class="fa fa-eye"> </i> {BrowseCount} 浏览 </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<script>
+    var OrderCode = $.request("OrderCode");
+    $(function () {
+        $.LodeMenuBtn("/Article/Article/Index");
+        $("#NF-Details").css("display", "none");
+        $("#btn_search").click(function () {
+            lodeData();
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+        //加载数据
+        var DistributionCode = $.request("DistributionCode");
+        if (DistributionCode != null) {
+            $("#Title").val(DistributionCode);
+            lodeData();
+            $("#ysbk").trigger("click");
+        }
+        else {
+            lodeData();
+        }
+    });
+    //加载数据
+    function lodeData() {
+        //交流板块
+        bindData(1);
+        //运输板块
+        setTimeout(function () {
+            bindData(2);
+        }, 1000);
+        //我的收藏
+        setTimeout(function () {
+            bindData(3);
+        }, 1000)
+    }
+    function bindData(type) {
+        var data = $(".search").formSerialize();
+        data.Type = type;
+        if (type=="2") {
+            data.OrderCode = OrderCode;
+        }
+        $("#pager" + type).zPager({
+            url: "@Url.Action("GetGridJson", "Article")",
+            searchData: data,
+            pageData: 15,
+            btnShow: true,
+            ajaxSetData: true,
+            dataRender: function (data) {
+                $("#row-content" + type).html("");
+                if (data.length > 0) {
+                    var url = "@Url.Action("Details", "Article")";
+                    $.each(data, function (index, value) {
+                        var itemRow = $("#new-tr").html()
+                            .replace("{ID}", url + "?keyValue=" + value.ID)
+                            .replace("{InsertUserCode}", value.InsertUserCode)
+                            .replace("{IDH}", value.ID)
+                            .replace("{Title}", showText(value.Title, 30))
+                            .replace("{InsertTime}", value.InsertTime)
+                            .replace("{Abstract}", showText(value.Abstract, 55))
+                            .replace("{UserName}", value.UserName)
+                            .replace("{CollectCount}", value.CollectCount)
+                            .replace("{CommentCount}", value.CommentCount)
+                            .replace("{BrowseCount}", value.BrowseCount);
+                        $("#row-content" + type).append(itemRow);
+                    });
+                    //让滚动条默认回到顶部
+                    $('html,body').animate({ scrollTop: 0 }, 500);
+                    activeDiv();
+                } else {
+                    $("#row-content" + type).append("<div style='text-align:center;height:50px;' >暂无数据</div>");
+                }
+            }
+        });
+    }
+
+    function activeDiv() {
+        $(".ibox-content").on("click", function () {
+            $(".ibox-content").removeClass("active");
+            $(this).addClass("active")
+        });
+    }
+
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增交流互动信息", "@Url.Action("Form", "Article")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改交流互动",
+            url: "@Url.Action("Form", "Article")",
+            anyUrl: "@Url.Action("AnyInfo", "Article")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "Article")",
+            anyUrl: "@Url.Action("AnyInfo", "Article")",
+            isdel: true,
+        });
+    }
+    function CommonView(options) {
+        var defaults = {
+            id: null,//弹框Id
+            title: '删除',//弹框标题
+            url: '',//地址
+            anyUrl: '',//验证url
+            isbtn: true,//是否有按钮
+            isBack: true,//是否回调
+            isAny: true,//是否验证数据
+            isdel: false//是否删除
+        };
+        var options = $.extend(defaults, options);
+
+        var str = options.title.substring(0, 2)
+        var msg = "请选择要" + str + "的信息";
+        options.title = options.title + "信息";
+        var box = $(".ibox-content.active");
+        if (box.length != 0) {
+            //判断数据行是否符合当前登录人
+            var keyValue = $($(box).find("#ID")).val();
+            //var insertUserCode = $($(box).find("#InsertUserCode")).val();
+            //if (top.clients.user != insertUserCode && defaults.isBack) {
+            //    $.modalMsg("该数据不属于当前登录人创建,不能进行此操作", "warning"); return false;
+            //}
+            options.url = options.url + "?keyValue=" + keyValue;
+            var flag = true;
+            if (options.isAny) {
+                //验证是否可以进行操作
+                if (options.anyUrl != "") {
+                    $.ajax({
+                        url: options.anyUrl,
+                        data: { keyValue: keyValue },
+                        dataType: "json",
+                        async: false,
+                        success: function (data) {
+                            if (data.state != "success") {
+                                flag = false;
+                                $.modalAlert(data.message, data.state);
+                                return false;
+                            }
+                        }
+                    });
+                }
+            }
+            if (flag) {
+                if (options.isdel) {//删除信息
+                    $.deleteForm({
+                        url: options.url,
+                        param: { keyValue: keyValue },
+                        success: function () {
+                            $.reload();
+                        }
+                    });
+                }
+                else { CommonOpen(options.id, options.title, options.url, options.isbtn, options.isBack); }
+            }
+        } else { $.modalMsg(msg, "warning"); return false; }
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "65%",
+            height: "700px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //截取字符串
+    function showText(text, numSub) {
+        if (text == null) {
+            return "";
+        }
+        if (text.length > numSub) {
+            return text.substring(0, numSub - 1) + "...";
+        }
+        return text;
+    }
+</script>

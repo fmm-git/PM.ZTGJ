@@ -1,0 +1,198 @@
+﻿@{
+    ViewBag.Title = "产能填报";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    var jgc = $.request("jgc");
+    var month = $.request("month");
+    $(function () {
+        if (!!jgc) {
+            $.ajax({
+                url: "@Url.Action("GetWorkCapacityFormJson", "WorkOrder")",
+                data: { keyValue: jgc, month: month },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                }
+            });
+        }
+        GetWorkCapacityForm($("#CapacityMonth").val());
+        $("#CapacityMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var CapacityMonth = dp.cal.getNewDateStr();
+                    GetWorkCapacityForm(CapacityMonth);
+                }
+            });
+        });
+        $("#Capacity").change("bind", function () {
+            var cn = $(this).val();
+            //查询当月的订单加工完成量
+            var month = $("#CapacityMonth").val();
+            $.ajax({
+                url: "@Url.Action("GetWorkJgwcl", "WorkOrder")",
+                data: { keyValue: jgc, month: month },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#ActualOutputValueNew").val((data.Item1[0]["Jgwcl"]).toFixed(5));
+                    //计算实际负荷
+                    $("#ActualLoadNew").val((Number(data.Item1[0]["Jgwcl"]) / Number(cn)*100).toFixed(2));
+                }
+            });
+        });
+    });
+
+    function GetWorkCapacityForm(month) {
+        $.ajax({
+            url: "@Url.Action("GetWorkCapacityFormJson", "WorkOrder")",
+            data: { keyValue: jgc, month: month },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.Item1.length > 0) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    if (data.Item1[0].IsDefault=="1") {
+                        $("#IsDefault").prop("checked", true);
+                    } else {
+                        $("#IsDefault").prop("checked", false);
+                    }
+                } else {
+                    $("#ID").val("");
+                    $("#CapacityMonth").val(month);
+                    $.ajax({
+                        url: "@Url.Action("GetWorkCapacityIsDefault", "WorkOrder")",
+                        data: { keyValue: jgc},
+                        dataType: "json",
+                        async: false,
+                        success: function(data) {
+                            if (data.length>0) {
+                                $("#Capacity").val(data[0]["Capacity"]);
+                            } else {
+                                $("#Capacity").val("");
+                            }
+                        }
+                    });
+                    $("#IsDefault").prop("checked", false);
+                    $("#ActualOutputValue").val(0);
+                    $("#ActualOutputValueNew").val(0);
+                    $("#ActualLoad").val(0);
+                    $("#ActualLoadNew").val(0);
+                    $("#Remark").val("");
+                }
+            }
+        });
+    }
+
+    function CapacitySubmitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (formData.Capacity <=0) {
+            $.modalMsg("月产能必须大于0", "warning");
+            return false;
+        }
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        var type = "";
+        if (formData.ID != 0) {
+            type = "edit";
+
+        } else {
+            type = "add";
+        }
+        if (formData.IsDefault==true) {
+            formData.IsDefault = 1;
+        } else {
+            formData.IsDefault = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("CapacitySubmitForm", "WorkOrder")",
+            param: { model: JSON.stringify(formData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+    @*//选择加工厂
+    function selectCompanyProcessFactory(type) {
+        var orgType = "@ViewBag.OrgType";
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        if (orgType!="1") {
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+            });
+        }
+    }*@
+
+
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+        <input id="ID" name="ID" type="hidden" />
+        <div style="padding-top: 20px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">产能月份<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CapacityMonth" name="CapacityMonth" type="text" value="@(DateTime.Now.ToString("yyyy-MM"))" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">加工厂<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with" style="width:100%">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" value="@ViewBag.ProcessFactoryName" type="text" disabled="disabled" class="form-control required" />
+                            @*<span class="input-group-btn" onclick="selectCompanyProcessFactory(1)">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>*@
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">月综合产能(kg)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div style="float:left">
+                            <input id="Capacity" name="Capacity" type="text" class="form-control required" value="" placeholder="月最大综合产能" style="width:180px;" />
+                        </div>
+                        <div class="ckbox" style="float:left;margin-top:5px;margin-left:5px;">
+                            <input id="IsDefault" name="IsDefault" type="checkbox"><label for="IsDefault">默认</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">当月未完成总量(kg)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ActualOutputValue" name="ActualOutputValue" value="0" type="hidden"/>
+                        <input id="ActualOutputValueNew" name="ActualOutputValueNew" type="text" class="form-control required" value="0" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">产能负荷(%)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ActualLoad" name="ActualLoad" value="0" type="hidden" />
+                        <input id="ActualLoadNew" name="ActualLoadNew" type="text" class="form-control required" value="0" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>
+

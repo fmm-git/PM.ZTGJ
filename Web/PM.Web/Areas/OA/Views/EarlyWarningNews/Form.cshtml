@@ -1,0 +1,129 @@
+﻿@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+        <input id="ID" name="ID" type="hidden" />
+        <div style="padding-top: 20px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">预警消息编号<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EarlyWarningNewsCode" name="EarlyWarningNewsCode" type="text" class="form-control required" disabled="disabled" value="@ViewBag.EarlyWarningNewsCode" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警标题<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EarlyWarningNewsName" name="EarlyWarningNewsName" type="text" class="form-control required" value="" placeholder="请输入预警标题" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警描述<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EarlyWarningContent" name="EarlyWarningContent" type="text" class="form-control required" value="" placeholder="请输入预警描述" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警方式<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <div class="ckbox">
+                            <input id="App" name="App" type="checkbox"><label for="App">App</label>
+                        </div>
+                        <div class="ckbox">
+                            <input id="Pc" name="Pc" type="checkbox"><label for="Pc">Pc端</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">触发时间<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EarlyWarningFrequency" name="EarlyWarningFrequency" type="number" class="form-control required" value="0" placeholder="消息预警期限" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警时间间隔<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <div>
+                            <input id="TriggerTimeDay" name="TriggerTimeDay" type="number" class="form-control required" value="0" placeholder="请输入预警触发时限天" style="width:80px;float:left" />
+                            <label style="float:left;padding-right:10px;">天</label>
+                        </div>
+                        <div>
+                            <input id="TriggerTimeHour" name="TriggerTimeHour" type="number" class="form-control required" value="0" placeholder="请输入预警触发时限时" style="width:80px;float:left" />
+                            <label style="float: left; padding-right: 10px; ">时</label>
+                        </div>
+                        <div>
+                            <input id="TriggerTimeMinute" name="TriggerTimeMinute" type="number" class="form-control required" value="0" placeholder="请输入预警触发时限分" style="width:80px;float:left" />
+                            <label style="float:left">分</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">是否启用<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <div class="ckbox">
+                            <select id="IsStart" name="IsStart" class="form-control">
+                                <option value="0">禁用</option>
+                                <option value="1">启用</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>
+
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var MenuCode = $.request("MenuCode");
+    $(function () {
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "EarlyWarningNews")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data[0]);
+                    if (data[0].App==1) {
+                        $("#App").prop('checked', true);
+                    }
+                    if (data[0].Pc==1) {
+                        $("#Pc").prop('checked', true);
+                    }
+                }
+            });
+        }
+    });
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+            formData.MenuCode = MenuCode;
+        }
+        if (formData.App == true) {
+            formData.App = 1;
+        } else {
+            formData.App = 0;
+        }
+        if (formData.Pc == true) {
+            formData.Pc = 1;
+        } else {
+            formData.Pc = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "EarlyWarningNews")",
+            param: { model: JSON.stringify(formData), type: type },
+            success: function () {
+                $.currentWindow().$("#rightgridList1").trigger("reloadGrid");
+            }
+        });
+    }
+</script>

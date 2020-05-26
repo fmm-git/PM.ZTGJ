@@ -1,0 +1,402 @@
+﻿@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        height: 34px;
+        line-height: 1.42857;
+        color: rgb(85, 85, 85);
+        background-color: rgb(255, 255, 255);
+        padding: 6px 0px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgb(221, 221, 221);
+    }
+
+    #MXXXInfo .ui-jqgrid .table-bordered .ui-jqgrid-labels th {
+        border-left: 0px none !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-weight: normal;
+        background: #eee;
+        border: 1px solid #ddd;
+    }
+</style>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/Comm.js"></script>
+<!---------基本信息------->
+<script type="text/javascript">
+
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var lastsel;
+    var index = 1;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();//加载明细信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "SettlementOrder")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    var mydata = data.Item2;
+                    lodeList(mydata);
+                }
+            });
+        }
+    });
+
+    //---明细
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: '签收对账单号', name: 'BalanceOfAccountCode', width: 130, align: "left", sortable: false },
+                    { label: '对账日期', name: 'SignforTime', width: 130, align: "left", sortable: false },
+                    { label: '重量(T)', name: 'SteelWeight', width: 120, align: "right", sortable: false },
+                    { label: '单价(元/T)', name: 'UnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'AmountOfMoney', width: 120, align: "right", sortable: false },
+                    { label: '重量(T)', name: 'GeGouZhongLiWeight', width: 120, align: "right", sortable: false },
+                    { label: '单价(元/T)', name: 'GUnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'GAmountOfMoney', width: 120, align: "right", sortable: false },
+                    { label: '重量(T)', name: 'HSectionSteelWeight', width: 120, align: "right", sortable: false },
+                    { label: '单价(元/T)', name: 'HUnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'HAmountOfMoney', width: 120, align: "right", sortable: false },
+                    { label: '重量(T)', name: 'AGrille', width: 80, align: "right", sortable: false },
+                    { label: '单价(元/T)', name: 'AUnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'AAmountOfMoney', width: 120, align: "right", sortable: false },
+                    { label: '总金额(元)', name: 'TotalSum', width: 140, align: "center", sortable: false },
+                    { label: '计价单号', name: 'SettlementCode', hidden: true }
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+        $("#gridList").jqGrid('destroyGroupHeader');//最关键的一步、销毁合并表头分组、防止出现表头重叠
+        $("#gridList").jqGrid('setGroupHeaders', {
+            useColSpanStyle: true,
+            groupHeaders: [
+                { startColumnName: 'SteelWeight', numberOfColumns: 3, titleText: '钢筋' },
+                { startColumnName: 'GeGouZhongLiWeight', numberOfColumns: 3, titleText: '格构柱中立柱' },
+                { startColumnName: 'HSectionSteelWeight', numberOfColumns: 3, titleText: 'H型钢' },
+                { startColumnName: 'AGrille', numberOfColumns: 3, titleText: '格栅' }
+            ]
+        });
+    }
+
+    //加工厂选择
+    function selectProcessFactory(type) {
+        var orgtype = '@ViewBag.OrgType';
+        if (orgtype!="1") {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+            var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+            });
+        }
+    }
+
+    //弹窗所有站点
+    function selectCompanyAllSite() {
+        if (!$("#ProcessFactoryCode").val()) {
+            $.modalMsg("请先选择加工厂信息", "warning");
+            return false;
+        }
+        var url = "/SettlementManage/SignforDuiZhang/GetCompanyCompanyAllSiteList";
+        var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+    }
+
+    //选项卡切换
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        } else {
+            GetGridRowData();
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = [];
+        var tableData = GetGridRowData();
+        if (tableData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "SettlementOrder")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //新增明细
+    function btn_add() {
+        var st = $("#StartDate").val();
+        var end = $("#EndDate").val();
+        var SiteCode = $("#SiteCode").val();
+        var url = "/SettlementManage/SettlementOrder/GetBalanceOfAccountOrder&keyValue=KSdatetime/" + st + "|JSdatetime/" + end + "|CXfbgqzd/" + SiteCode + "|ProcessFactoryCode/" + $("#ProcessFactoryCode").val();
+        var ret = selectClick('win_QSTCOrder', url, 'Grid', '', '', '', '550px', '450px', function (row) {
+            if (row.length > 0) {
+                AllMyBack(row);
+            }
+        }, true,'对账编号')
+    }
+
+    //批量添加回调函数
+    function AllMyBack(row) {
+        var rowData = [];
+        if (row && row.length > 0) {
+            for (var i = 0; i < row.length; i++) {
+                var AmountOfMoney1 = (Number(row[i].SteelWeight) * 389.43).toFixed(5);
+                var GAmountOfMoney1 = (Number(row[i].GeGouZhongLiWeight) * 910.47).toFixed(5);
+                var HAmountOfMoney1 = (Number(row[i].HSectionSteelWeight) * 743.00).toFixed(5);
+                var AAmountOfMoney1 = (Number(row[i].AGrille) * 1113.23).toFixed(5);
+                var TotalSum1 = (Number(AmountOfMoney1) + Number(GAmountOfMoney1) + Number(HAmountOfMoney1) + Number(AAmountOfMoney1)).toFixed(5);
+                var mydata = {
+                    id: 0,
+                    BalanceOfAccountCode: row[i].SigninNuber,
+                    SignforTime: row[i].SignforTime,
+                    SteelWeight: row[i].SteelWeight,
+                    UnitPrice: 389.43,
+                    AmountOfMoney: AmountOfMoney1,
+                    GeGouZhongLiWeight: row[i].GeGouZhongLiWeight,
+                    GUnitPrice: 910.47,
+                    GAmountOfMoney: GAmountOfMoney1,
+                    HSectionSteelWeight: row[i].HSectionSteelWeight,
+                    HUnitPrice: 743.00,
+                    HAmountOfMoney: HAmountOfMoney1,
+                    AGrille: row[i].AGrille,
+                    AUnitPrice: 1113.23,
+                    AAmountOfMoney: AAmountOfMoney1,
+                    TotalSum: TotalSum1,
+                    SettlementCode: ""
+                };
+                rowData.push(mydata);
+            }
+        }
+        lodeList(rowData);
+    }
+
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        var sumPassCount = 0;
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            var passCount = Number(item.TotalSum);
+            sumPassCount += passCount;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+        $("#AmountOfMoney").val(sumPassCount.toFixed(5));
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.SigninNuber); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.SigninNuber, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var SettlementCode = $("#SettlementCode").val();
+        var columnData = [];
+        var sumPassCount = 0;//总金额
+        var sumWeight = 0;//总重量
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.SettlementCode = SettlementCode;
+            var passCount = Number(rowData.TotalSum);
+            if (isNaN(passCount)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            }
+            var weight = Number(rowData.SteelWeight) + Number(rowData.GeGouZhongLiWeight) + Number(rowData.HSectionSteelWeight) + Number(rowData.AGrille);
+            sumWeight += weight;
+            sumPassCount += passCount;
+            columnData.push(rowData);
+        });
+        $("#AmountOfMoney").val(sumPassCount.toFixed(5));
+        $("#TotalWeight").val(sumWeight.toFixed(5));
+        return columnData;
+    }
+
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">计价单号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ID" name="ID" type="hidden" />
+                        <input id="Examinestatus" name="Examinestatus" type="hidden" value="未发起" />
+                        <input id="SettlementCode" name="SettlementCode" type="text" disabled="disabled" class="form-control required" value="@ViewBag.SettlementCode" />
+                    </td>
+                    <th class="formTitle">所属加工厂<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" value="@ViewBag.ProcessFactoryName" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectProcessFactory('1')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">站点名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SiteCode" name="SiteCode" hidden="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectCompanyAllSite()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">开始日期</th>
+                    <td class="formValue">
+                        <input id="StartDate" name="StartDate" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" class="form-control required input-wdatepicker" onfocus="WdatePicker({ dateFmt: 'yyyy-MM-dd HH:mm:ss' })" />
+                    </td>
+                    <th class="formTitle">结束日期</th>
+                    <td class="formValue">
+                        <input id="EndDate" name="EndDate" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" class="form-control required input-wdatepicker" onfocus="WdatePicker({ dateFmt: 'yyyy-MM-dd HH:mm:ss' })" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">总重量(T)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Unit" name="Unit" value="T"  type="hidden" />
+                        <input id="TotalWeight" name="TotalWeight" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                    <th class="formTitle">总金额(元)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="AmountOfMoney" name="AmountOfMoney" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input type="hidden" name="InsertUserCode" id="InsertUserCode" value="@ViewBag.UserCode" />
+                        <input id="UserName" name="UserName" type="text" disabled="disabled" class="form-control" value="@ViewBag.UserName" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control"
+                               value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 70px; padding-right:2px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,191 @@
+﻿@{
+    /*
+     * 首页
+     * 人员工日消耗
+     */
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        $.LodeMenuBtn("/Production/PersonnelWorkDayConsume/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetAllOrBySearch", "PersonnelWorkDayConsume")",
+            height: $(window).height() - 172,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false },
+                { label: "工日消耗单号", name: "ConsumeCode", width: 120, align: 'left', sortable: false },
+                { label: '站点编号', name: 'SiteCode', hidden: true },
+                { label: '站点名称', name: 'SiteName', width: 140, align: 'left', sortable: false },
+                { label: "订单编号", name: "OrderCode", width: 140, align: 'left', sortable: false },
+                { label: '订单名称', name: 'TypeName', width: 140, align: 'left', sortable: false },
+                { label: '接收订单日期', name: 'OrderReceiveDate', width: 140, align: 'left', sortable: false },
+                { label: '加工厂编号', name: 'ProcessFactoryCode', hidden: true },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 140, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 140, align: 'left', sortable: false },
+                { label: '备注', name: 'Remarks', width: 120, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+        $("#btn_cl").click(function () {
+            $("#ProcessFactoryCode").val("");
+            $("#ProcessFactoryName").val("");
+            $("#OrderCode").val("");
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+            }).trigger('reloadGrid');
+        });
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增人员工日消耗", "@Url.Action("Form", "PersonnelWorkDayConsume")" + where, true, true)
+    }
+
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改人员工日消耗",
+            url: "@Url.Action("Form", "PersonnelWorkDayConsume")",
+            anyUrl: "@Url.Action("AnyInfo", "PersonnelWorkDayConsume")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "PersonnelWorkDayConsume")",
+            anyUrl: "@Url.Action("AnyInfo", "PersonnelWorkDayConsume")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看人员工日消耗",
+            url: "@Url.Action("Details", "PersonnelWorkDayConsume")",
+            isbtn: false,
+            isAny: false,
+            isBack:false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'PersonnelWorkDayConsume', rowData.Examinestatus, rowData.ConsumeCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+</script>
+<script type="text/javascript">
+    //选择加工厂
+    function selectCompanyProcessFactory(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar" style="float:left">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+        </div>
+        <div class="topPanel">
+            <div class="search">
+                <table>
+                    <tr>
+                        @*<td>
+                            <div class="input-group">
+                                <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                                <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" class="form-control" placeholder="加工厂" style="width: 140px; margin-left: 5px;" readonly="readonly">
+                                <span class="input-group-btn">
+                                    <button id="btn_search4" type="button" class="btn  btn-primary" onclick="selectCompanyProcessFactory('1')"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </td>*@
+                        <td>
+                            <div class="input-group">
+                                <input id="OrderCode" style="margin-left: 5px;" placeholder="订单号" name="OrderCode" type="text" value="" class="form-control" />
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <div class="btn-group" style="margin-bottom: 2px;">
+                                <a id="btn_search" class="btn btn-primary">查询</a>
+                            </div>
+                        </td>
+                        @*<td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            <div class="btn-group" style="margin-bottom:2px;">
+                                <a id="btn_cl" class="btn btn-primary">清空</a>
+                            </div>
+                        </td>*@
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

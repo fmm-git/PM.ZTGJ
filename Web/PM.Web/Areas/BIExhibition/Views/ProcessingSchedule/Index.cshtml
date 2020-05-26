@@ -1,0 +1,836 @@
+﻿@{
+    /**
+     * 首页
+     * 加工进度展示
+     **/
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<link href="~/Content/css/app.v2.css" rel="stylesheet" />
+@*<script src="~/Content/js/dhtmlxGantt/dhtmlxgantt.js"></script>
+    <script src="~/Content/js/dhtmlxGantt/ext/dhtmlxgantt_critical_path.js"></script>
+
+    <link href="~/Content/js/dhtmlxGantt/dhtmlxgantt.css" rel="stylesheet" />
+    <script src="~/Content/js/dhtmlxGantt/ext/dhtmlxgantt_tooltip.js"></script>
+    <script src="~/Content/js/dhtmlxGantt/ext/dhtmlxgantt_marker.js"></script>
+    <script src="~/Content/js/dhtmlxGantt/locale/locale_cn.js"></script>
+
+    <div class="row">
+        <div class="col-md-12">
+            <section class="panel panel-default">
+                <header class="panel-heading font-bold">
+                    各站点各订单进度分析图
+                </header>
+                <div class="panel-body">
+                    <div id="SiteOrder" style="height: 300px;"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <section class="panel panel-default">
+                <header class="panel-heading font-bold">
+                    加工厂各类订单状态量分析
+                </header>
+                <div class="panel-body">
+                    <div id="PFKOSAnalysis" style="height: 400px;"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7">
+            <section class="panel panel-default">
+                <header class="panel-heading font-bold">
+                    站点订单进度分析
+                </header>
+                <div class="panel-body">
+                    <div id="SiteSchedule" style="height: 300px;"></div>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-5">
+            <section class="panel panel-default">
+                <header class="panel-heading font-bold">
+                    订单进度
+                </header>
+                <div class="panel-body">
+                    <div id="OrderJinDu" style="height: 300px;">
+                        <div>
+                            <div>
+                                <p style="font-weight: bold;font-size:16px;margin-top:10px;margin-left:20px;color:#11d2de;margin-bottom:-15px;">进度超前订单</p>
+                                <hr style="background-color: #11d2de; height: 1px; width: 90%; border: none; " />
+                                <table id="cq" style="margin-left: 40px;width:100%"></table>
+                            </div>
+                            <div style="margin-top:10px;margin-bottom:20px;">
+                                <div>
+                                    <p style="font-weight: bold; font-size: 16px; margin-top: 10px; margin-left: 20px; color: #11d2de; margin-bottom: -15px; ">进度正常订单</p>
+                                    <hr style="background-color: #11d2de; height: 1px; width: 90%; border: none; " />
+                                    <table id="zc" style="margin-left: 40px;width:100%"></table>
+                                </div>
+                            </div>
+                            <div style="margin-top:10px;margin-bottom:20px;">
+                                <div>
+                                    <p style="font-weight: bold; font-size: 16px; margin-top: 10px; margin-left: 20px; color: #11d2de; margin-bottom: -15px; ">进度滞后订单</p>
+                                    <hr style="background-color: #11d2de; height: 1px; width: 90%; border: none; " />
+                                    <table id="zh" style="margin-left: 40px;width:100%"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script>
+        var PId = $.request("PId");
+        $(function () {
+            //加载菜单按钮
+            $.LodeMenuBtn("/BIExhibition/ProcessingSchedule/Index");
+            if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+                $("header").css("background-color", "#1491e4");
+                $("header").css("color", "#ffffff");
+                $(".panel-default").css("border-bottom", "2px solid #dcd260");
+            }
+            //1.各站点各订单进度分析图
+            GetOrderSchedule();
+            //2.站点订单进度分析
+            GetSiteSchedule();
+            //3.加工厂各类订单状态量分析
+            GetPFKOSAnalysis();
+            //4.订单进度
+            GetOrderJinDu();
+        })
+
+        //1.各站点各订单进度分析图
+        function GetOrderSchedule() {
+            var ganttType = "3";
+            /*定义任务列表grid列*/
+            gantt.config.columns = [
+               {
+                   name: "OrderCode", label: "订单号", align: "center", width: 120, resize: true
+               }
+            ];
+            if ("1" == ganttType) {
+                //年
+                gantt.config.scale_unit = "year";
+                gantt.config.step = 1;
+                gantt.config.date_scale = "%Y";
+                gantt.config.readonly = true;
+            } else if ("2" == ganttType) {
+                //月
+                gantt.config.scale_unit = "year";
+                gantt.config.date_scale = "%Y";
+                gantt.config.readonly = true;
+                gantt.config.scale_height = 50;
+                gantt.config.subscales = [
+                    { unit: "month", step: 1, date: "%F" }
+                ];
+            } else if ("3" == ganttType) {
+                //日
+                gantt.config.scale_unit = "month";
+                gantt.config.date_scale = "%F, %Y";
+                gantt.config.readonly = true;
+                gantt.config.scale_height = 50;
+                gantt.config.subscales = [
+                    { unit: "day", step: 1, date: "%j" }
+                ];
+                gantt.config.min_column_width = 20;
+            } else if ("4" == ganttType) {
+                //周
+                var weekScaleTemplate = function (date) {
+                    var dateToStr = gantt.date.date_to_str("%d %M");
+                    var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+                    return dateToStr(date) + " - " + dateToStr(endDate);
+                };
+                gantt.config.readonly = true;
+                gantt.config.scale_unit = "week";
+                gantt.config.step = 1;
+                gantt.templates.date_scale = weekScaleTemplate;
+                gantt.config.subscales = [
+                    { unit: "day", step: 1, date: "%D" }
+                ];
+                gantt.config.min_column_width = 20;
+                gantt.config.scale_height = 50;
+            }
+
+            gantt.templates.tooltip_text = function (t, e, n) {
+                return "<b>开始日期:</b> " + gantt.templates.tooltip_date_format(t) + "<br/><b>完成日期:</b> " + gantt.templates.tooltip_date_format(e) + "<br/><b>完成进度:</b> " + (n.progress * 100) + "%<br/>"
+            };
+
+            gantt.config.xml_date = "%Y-%m-%d";
+            //调整颜色
+            gantt.templates.grid_row_class = function (start, end, item) {
+                return item.$level == 0 ? "gantt_project" : "";
+            };
+            gantt.templates.task_row_class = function (start, end, item) {
+                return item.$level == 0 ? "gantt_project" : "";
+            };
+            gantt.templates.task_class = function (start, end, item) {
+                return item.$level == 0 ? "gantt_project" : "";
+            };
+            //将今天线划出
+            var date_to_str = gantt.date.date_to_str(gantt.config.task_date);
+            var today = new Date();
+            gantt.addMarker({
+                start_date: today,
+                css: "today",
+                text: "Today",
+                title: "Today: " + date_to_str(today)
+            });
+
+            gantt.templates.task_text = function (start, end, task) {
+                if (task.progress != 0) {
+                    return task.progress * 100 + "%";
+                } else {
+                    return " ";
+                }
+            };
+            gantt.init("SiteOrder");
+            LoadProjectTask();
+            //初始化列表数据
+            function LoadProjectTask() {
+                gantt.clearAll();
+                gantt.load("@Url.Action("GetGanttListJson", "ProcessingSchedule")" + "?PId=" + PId);
+            }
+        }
+
+        //2.站点订单进度分析
+        function GetSiteSchedule() {
+            var site = [];
+            var ZNum = [];
+            var YNum = [];
+            var WNum = [];
+            $.get('/BIExhibition/ProcessingSchedule/GetSiteSchedule?PId=' + PId, {}, function (data) {
+                var json = eval('(' + data + ')');
+                for (var i = 0; i < json.length; i++) {
+                    site.push([json[i]["CompanyFullName"]]);
+                    ZNum.push([parseFloat(json[i]["WeightTotal"])]);
+                    YNum.push([parseFloat(json[i]["AccumulativeQuantity"])]);
+                    WNum.push([parseFloat(json[i]["unfinished"])]);
+                }
+                var chart = Highcharts.chart('SiteSchedule', {
+                    chart: {
+                        type: 'line'
+                    },
+                    title: {
+                        text: '站点订单进度分析'
+                    },
+                    xAxis: {
+                        categories: site
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
+                        }
+                    }, credits: {
+                        enabled: false//是否显示版权信息
+                    },
+                    plotOptions: {
+                        line: {
+                            dataLabels: {
+                                // 开启数据标签
+                                enabled: true
+                            },
+                            // 关闭鼠标跟踪，对应的提示框、点击事件会失效
+                            enableMouseTracking: false
+                        }
+                    },
+                    series: [{
+                        name: '总量',
+                        data: ZNum
+                    }, {
+                        name: '已完成量',
+                        data: YNum
+                    }, {
+                        name: '未完成量',
+                        data: WNum
+                    }]
+                });
+            })
+        }
+
+        //3.加工厂各类订单状态量分析
+        function GetPFKOSAnalysis() {
+            var namey = [];
+            $.get('/BIExhibition/ProcessingSchedule/PFKOSAnalysis?PId=' + PId, {}, function (data) {
+                var json = eval('(' + data + ')');
+                for (var i = 0; i < json.length; i++) {
+                    if (json[i]["TypeCode"] == "1") {
+                        namey.push({ name: '总量', y: parseFloat(json[i]["WeightTotal"]) });
+                    } else if (json[i]["TypeCode"] == "2") {
+                        namey.push({ name: '已确认订单', y: parseFloat(json[i]["WeightTotal"]) });
+                    } else if (json[i]["TypeCode"] == "3") {
+                        namey.push({ name: '加工中订单', y: parseFloat(json[i]["WeightTotal"]) });
+                    } else if (json[i]["TypeCode"] == "4") {
+                        namey.push({ name: '未加工订单', y: parseFloat(json[i]["WeightTotal"]) });
+                    } else if (json[i]["TypeCode"] == "5") {
+                        namey.push({ name: '加工完成未配送订单', y: parseFloat(json[i]["WeightTotal"]) });
+                    } else if (json[i]["TypeCode"] == "6") {
+                        namey.push({ name: '已配送订单', y: parseFloat(json[i]["WeightTotal"]) });
+                    }
+                }
+                var chart = Highcharts.chart('PFKOSAnalysis', {
+                    chart: {
+                        type: 'column'
+                    },
+                    title: {
+                        text: '加工厂各类订单状态量分析'
+                    },
+                    xAxis: {
+                        type: 'category'
+                    },
+                    yAxis: {
+                        title: {
+                            text: '单据各状态总量'
+                        }
+                    }, credits: {
+                        enabled: false//是否显示版权信息
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    plotOptions: {
+                        series: {
+                            borderWidth: 0,
+                            dataLabels: {
+                                enabled: true,
+                                format: '{point.y:.1f}kg'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+                        pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f}kg</b><br/>'
+                    },
+                    series: [{
+                        name: '状态量',
+                        colorByPoint: true,
+                        data: namey
+                    }]
+                });
+            })
+        }
+
+        //4.订单进度
+        function GetOrderJinDu() {
+            $.ajax({
+                url: "/BIExhibition/ProcessingSchedule/OrderJinDu?PId=" + PId,
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    if (data.length > 0) {
+                        var cqhtml = "";
+                        var zchtml = "";
+                        var zhhtml = "";
+                        for (var i = 0; i < data.length; i++) {
+                            if (data[i].Sta == "1") {
+                                zchtml += "<tr><td width='20%'>" + data[i].CompanyFullName + "</td><td width='30%'>" + data[i].OrderCode + "</td></tr>";
+                            } else if (data[i].Sta == "2") {
+                                cqhtml += "<tr><td width='20%'>" + data[i].CompanyFullName + "</td><td width='30%'>" + data[i].OrderCode + "</td></tr>";
+                            } else if (data[i].Sta == "3") {
+                                zhhtml += "<tr><td width='20%'>" + data[i].CompanyFullName + "</td><td width='30%'>" + data[i].OrderCode + "</td></tr>";
+                            }
+                        }
+                        $("#cq").html(cqhtml);
+                        $("#zh").html(zhhtml);
+                        $("#zc").html(zchtml);
+                    }
+                }
+            });
+        }
+
+    </script>*@
+<script>
+    var ProjectId = $.request("ProjectId");
+    var OrgType = $.request("OrgType");
+    $(function () {
+        if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+            $("header").css("background-color", "#1491e4");
+            $("header").css("color", "#ffffff");
+            $(".panel-default").css("border-bottom", "2px solid #dcd260");
+        }
+        ReportForm1();
+        ReportForm2();
+        ReportForm3();
+    });
+
+    //当月订单状态量统计
+    function ReportForm1() {
+        var Num = [];
+        $.ajax({
+            url: "@Url.Action("WorkOrderStatusTj", "ProcessingSchedule")",
+            data: { ProjectId: ProjectId, OrgType: OrgType },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < 6; i++) {
+                    if (i == 0) {
+                        Num.push({
+                            name: "订单总量",
+                            data: [data.Item1[0].订单总量, data.Item1[1].订单总量, data.Item1[2].订单总量]
+                        });
+                    }
+                    else if (i == 1) {
+                        Num.push({
+                            name: "已接收订单量",
+                            data: [data.Item1[0].已接收订单量, data.Item1[1].已接收订单量, data.Item1[2].已接收订单量]
+                        });
+                    } else if (i == 2) {
+                        Num.push({
+                            name: "已领料订单量",
+                            data: [data.Item1[0].已领料订单量, data.Item1[1].已领料订单量, data.Item1[2].已领料订单量]
+                        });
+                    } else if (i == 3) {
+                        Num.push({
+                            name: "加工中订单量",
+                            data: [data.Item1[0].加工中订单量, data.Item1[1].加工中订单量, data.Item1[2].加工中订单量]
+                        });
+                    } else if (i == 4) {
+                        Num.push({
+                            name: "未配送订单量",
+                            data: [data.Item1[0].未配送订单量, data.Item1[1].未配送订单量, data.Item1[2].未配送订单量]
+                        });
+                    } else if (i == 5) {
+                        Num.push({
+                            name: "已配送订单量",
+                            data: [data.Item1[0].已配送订单量, data.Item1[1].已配送订单量, data.Item1[2].已配送订单量]
+                        });
+                    }
+                }
+            }
+        });
+        var chart = Highcharts.chart('WorkOrderStatusTj', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: '当月订单状态量统计'
+            },
+            xAxis: {
+                categories: ['一号加工厂', '二号加工厂', '三号加工厂'],
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '订单量(kg)'
+                }
+            },
+            tooltip: {
+                // head + 每个 point + footer 拼接成完整的 table
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                '<td style="padding:0"><b>{point.y:.5f}Kg</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0
+                }
+            },
+            series: Num
+        });
+    }
+
+    //订单加工量统计
+    function ReportForm2() {
+        var Num1 = [];
+        var Weight1 = 0;
+        var Num2 = [];
+        var Weight2 = 0;
+        var Num3 = [];
+        var Weight3 = 0;
+        $.ajax({
+            url: "@Url.Action("WorkOrderWclTj", "ProcessingSchedule")",
+            data: { ProjectId: ProjectId, OrgType: OrgType },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < 3; i++) {
+                    if (i == 0) {
+                        Num1.push(//{
+                        //    name: "订单总量", y: data.Item1[0].WeightSmallPlan
+                        //}, 
+                        {
+                            name: "已完成量", y: data.Item1[0].AlreadyCompleted
+                        }, {
+                            name: "未完成量", y: data.Item1[0].NoCompleted
+                        });
+                        Weight1 = data.Item1[0].WeightSmallPlan;
+                    }
+                    else if (i == 1) {
+                        Num2.push(//{
+                        //    name: "订单总量", y: data.Item1[1].WeightSmallPlan
+                        //}, 
+                        {
+                            name: "已完成量", y: data.Item1[1].AlreadyCompleted
+                        }, {
+                            name: "未完成量", y: data.Item1[1].NoCompleted
+                        });
+
+                        Weight2 = data.Item1[1].WeightSmallPlan;
+                    } else if (i == 2) {
+                        Num3.push(//{
+                        //    name: "订单总量", y: data.Item1[2].WeightSmallPlan
+                        //},
+                        {
+                            name: "已完成量", y: data.Item1[2].AlreadyCompleted
+                        }, {
+                            name: "未完成量", y: data.Item1[2].NoCompleted
+                        });
+
+                        Weight3 = data.Item1[2].WeightSmallPlan;
+                    }
+                }
+            }
+        });
+        ReportFormJgc1(Num1, Weight1);
+        ReportFormJgc2(Num2, Weight2);
+        ReportFormJgc3(Num3, Weight3);
+    }
+    //一号加工厂
+    function ReportFormJgc1(Num1, Weight1) {
+        var chart = Highcharts.chart('WorkOrderProgressTj1', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: '一号加工厂'
+            },
+            subtitle: {
+                text: "订单总量:" + Weight1 + 'Kg',
+                style: {
+                    fontSize: '14px', color: 'red'   //这边是改标题的字体大小和颜色
+                }
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.2f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.2f}%<br>{point.y:.5f}Kg',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            series: [{
+                type: 'pie',
+                name: '加工进度所占比例',
+                data: Num1
+            }],
+            colors: [ '#53f592', '#fa796c']
+        });
+    }
+    //二号加工厂
+    function ReportFormJgc2(Num2, Weight2) {
+        var chart = Highcharts.chart('WorkOrderProgressTj2', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: '二号加工厂'
+            },
+            subtitle: {
+                text: "订单总量:" + Weight2 + 'Kg',
+                style: {
+                    fontSize: '14px', color: 'red'   //这边是改标题的字体大小和颜色
+                }
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.2f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.2f}%<br>{point.y:.5f}Kg',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            series: [{
+                type: 'pie',
+                name: '加工进度所占比例',
+                data: Num2
+            }],
+            colors: ['#53f592', '#fa796c']
+        });
+    }
+    //三号加工厂
+    function ReportFormJgc3(Num3, Weight3) {
+        var chart = Highcharts.chart('WorkOrderProgressTj3', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: '三号加工厂'
+            },
+            subtitle: {
+                text: "订单总量:" + Weight3 + 'Kg',
+                style: {
+                    fontSize: '14px', color: 'red'   //这边是改标题的字体大小和颜色
+                }
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.2f}%</b>'
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.2f}%<br>{point.y:.5f}Kg',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            series: [{
+                type: 'pie',
+                name: '加工进度所占比例',
+                data: Num3
+            }],
+            colors: ['#53f592', '#fa796c']
+        });
+    }
+
+    //订单加工完成进度统计
+    function ReportForm3() {
+        var Num1 = [];
+        var Num2 = [];
+        var Num3 = [];
+        $.ajax({
+            url: "@Url.Action("WorkOrderProgressTj", "ProcessingSchedule")",
+            data: { ProjectId: ProjectId, OrgType: OrgType },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < 3; i++) {
+                    if (i == 0) {
+                        Num1.push({
+                            name: "进度超前订单", y: data.Item1[0].TqPs
+                        }, {
+                            name: "进度滞后订单", y: data.Item1[0].YhPs
+                        }, {
+                            name: "进度正常订单", y: data.Item1[0].ZcPs
+                        });
+                    }
+                    else if (i == 1) {
+                        Num2.push({
+                            name: "进度超前订单", y: data.Item1[1].TqPs
+                        }, {
+                                name: "进度滞后订单", y: data.Item1[1].YhPs
+                        }, {
+                                name: "进度正常订单", y: data.Item1[1].ZcPs
+                        });
+                    } else if (i == 2) {
+                        Num3.push({
+                            name: "进度超前订单", y: data.Item1[2].TqPs
+                        }, {
+                                name: "进度滞后订单", y: data.Item1[2].YhPs
+                        }, {
+                                name: "进度正常订单", y: data.Item1[2].ZcPs
+                        });
+                    }
+                }
+            }
+        });
+        ReportFormJgc4(Num1);
+        ReportFormJgc5(Num2);
+        ReportFormJgc6(Num3);
+    }
+    //一号加工厂
+    function ReportFormJgc4(Num1) {
+        var chart = Highcharts.chart('DistributionProgressTj1', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: '一号加工厂'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.2f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.2f}%<br>{point.y:.5f}Kg',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            colors: ['#53bcf2', '#53f592', '#fa796c'],
+            series: [{
+                type: 'pie',
+                name: '配送进度所占比例',
+                data: Num1
+            }]
+        });
+    }
+    //二号加工厂
+    function ReportFormJgc5(Num2) {
+        var chart = Highcharts.chart('DistributionProgressTj2', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: '二号加工厂'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.2f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.2f}%<br>{point.y:.5f}Kg',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            colors: ['#53bcf2', '#53f592', '#fa796c'],
+            series: [{
+                type: 'pie',
+                name: '配送进度所占比例',
+                data: Num2
+            }]
+        });
+    }
+    //三号加工厂
+    function ReportFormJgc6(Num3) {
+        var chart = Highcharts.chart('DistributionProgressTj3', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: '三号加工厂'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.2f}%</b>'
+            },
+            credits: {
+                enabled: false   //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.2f}%<br>{point.y:.5f}Kg',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            colors: ['#53f592', '#fa796c', '#53bcf2'],
+            series: [{
+                type: 'pie',
+                name: '配送进度所占比例',
+                data: Num3
+            }]
+        });
+    }
+</script>
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                图表1-当月订单状态量统计
+            </header>
+            <div class="panel-body">
+                <div id="WorkOrderStatusTj" style="height: 300px;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                图表2-当月订单加工进度统计
+            </header>
+            <div class="panel-body">
+                <div id="WorkOrderProgressTj1" style="height: 300px;float:left;width:33%;"></div>
+                <div id="WorkOrderProgressTj2" style="height: 300px; float: left; width: 33%;"></div>
+                <div id="WorkOrderProgressTj3" style="height: 300px; float: left; width: 33%;"></div>
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <section class="panel panel-default">
+            <header class="panel-heading font-bold">
+                图表3-订单进度类型展示
+            </header>
+            <div class="panel-body">
+                <div id="DistributionProgressTj1" style="height: 300px; float: left; width: 33%;"></div>
+                <div id="DistributionProgressTj2" style="height: 300px; float: left; width: 33%;"></div>
+                <div id="DistributionProgressTj3" style="height: 300px; float: left; width: 33%;"></div>
+            </div>
+        </section>
+    </div>
+</div>

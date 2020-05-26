@@ -1,0 +1,273 @@
+﻿@{
+    ViewBag.Title = "签收对账查询页Details";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        height: 34px;
+        line-height: 1.42857;
+        color: rgb(85, 85, 85);
+        background-color: rgb(255, 255, 255);
+        padding: 6px 0px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgb(221, 221, 221);
+    }
+
+    .SelectBG {
+        background-color: #cecece;
+        color: #000000;
+    }
+</style>
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var lastsel;
+    var index = 1;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();//加载明细信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "SignforDuiZhang")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    var mydata = data.Item2;
+                    lodeList(mydata);
+                }
+            });
+        }
+    });
+
+
+    //选项卡切换
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+    //---明细
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '订单编号', name: 'OrderCode', width: 130, height: 10, align: "left", sortable: false },
+                { label: '签收单号', name: 'SignForNo', width: 130, height: 10, align: "left", sortable: false },
+                { label: '签收日期', name: 'SignForDate', width: 150, height: 10, align: "left", sortable: false },
+                { label: '钢筋(T)', name: 'SteelWeight', width: 120, align: "right", sortable: false },
+                { label: '格构柱中立柱(T)', name: 'GeGouZhongLiWeight', width: 120, align: "right", sortable: false },
+                { label: 'H型钢(T)', name: 'HSectionSteelWeight', width: 120, align: "right", sortable: false },
+                { label: '格栅(T)', name: 'AGrille', width: 120, align: "right", sortable: false },
+                { label: '总重量(T)', name: 'GratingWeight', width: 120, align: "right", sortable: false },
+                { label: '备注', name: 'Remark', width: 120, align: "left", sortable: false },
+                { label: '添加类型', name: 'AddType', width: 130, height: 10, align: "left", sortable: false }
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+                var ids = $("#gridList").getDataIDs();
+                for (var i = 0; i < ids.length; i++) {
+                    var rowData = $("#gridList").getRowData(ids[i]);
+                    if (rowData.AddType == "手动填报") {//如果为延后配送，则背景色置于灰色
+                        $('#' + ids[i]).find("td").addClass("SelectBG");
+                    }
+                }
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+            },
+        });
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        var sumPassCount = 0;
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            var passCount = Number(item.GratingWeight);
+            sumPassCount += passCount;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+        $("#HavingAmount").val(sumPassCount.toFixed(4));
+    }
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.SignForNo); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.SignForNo, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 20px;">
+        <form id="form1">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">对账编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ID" name="ID" type="hidden" />
+                        <input id="Examinestatus" name="Examinestatus" type="hidden" value="未发起" />
+                        <input id="SigninNuber" name="SigninNuber" value="@ViewBag.SigninNuber" disabled="disabled" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">所属加工厂<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" value="@ViewBag.ProcessFactoryName" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">对账日期</th>
+                    <td class="formValue">
+                        <input id="SignforTime" name="SignforTime" type="text" disabled="disabled" class="form-control required input-wdatepicker" />
+                    </td>
+                    <th class="formTitle">总量(T)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="HavingAmount" name="HavingAmount" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">系统统计(T)</th>
+                    <td class="formValue">
+                        <input id="XtHavingAmount" name="XtHavingAmount" value="0" type="number" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">手动统计(T)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SdHavingAmount" name="SdHavingAmount" value="0" type="number" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">单位(T)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Unit" name="Unit" type="text" disabled="disabled" value="T" class="form-control required" />
+                    </td>
+                    <th class="formTitle">站点名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SiteCode" name="SiteCode" hidden="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">开始日期</th>
+                    <td class="formValue">
+                        <input id="StartDate" name="StartDate" disabled="disabled" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">结束日期</th>
+                    <td class="formValue">
+                        <input id="EndDate" name="EndDate" disabled="disabled" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input type="hidden" name="InsertUserCode" id="InsertUserCode" value="@ViewBag.UserCode" />
+                        <input id="UserName" name="UserName" type="text" disabled="disabled" class="form-control" value="@ViewBag.UserName" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control"
+                               value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" disabled="disabled" style="height: 70px; padding-right:2px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        @*<div class="toolbar">
+                <div class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+                </div>
+                <div class="btn-group">
+                    <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+                </div>
+            </div>*@
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

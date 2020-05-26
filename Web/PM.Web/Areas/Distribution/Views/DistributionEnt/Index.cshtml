@@ -1,0 +1,283 @@
+﻿@{
+    /*
+     * 首页
+     * 配送装车
+     */
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    $(function () {
+        $.LodeMenuBtn("/Distribution/DistributionEnt/Index");
+        gridList();
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+            });
+        });
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetAllOrBySearch", "DistributionEnt")",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "主键", name: "DieEntId", hidden: true },
+                { label: "主键", name: "DisEntOrderId", hidden: true },
+                { label: '装车配送编号', name: 'DistributionCode', width: 120, align: 'left', sortable: false },
+                { label: '订单编号', name: 'OrderCode', width: 120, align: 'left', sortable: false },
+                {
+                    label: '操作', name: 'PrintCount', width: 140, align: 'center', sortable: false,
+                    formatter: function (value, options, row) {
+                        var id = row.DieEntId;
+                        var disEntOrderId = row.DisEntOrderId;
+                        return value = "<a onclick='print(" + id + ",0," + disEntOrderId + ")' style='text-decoration:none;cursor:pointer'><span style='color:blue;'>导出</span></a>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick='print(" + id + ",1," + disEntOrderId + ")' style='text-decoration:none;cursor:pointer'><span style='color:blue;'>打印签收单(" + value + ")</span></a>";
+                    }
+                },
+                { label: '站点编号', name: 'SiteCode', hidden: true },
+                { label: '站点名称', name: 'SiteName', width: 120, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 120, align: 'left', sortable: false, hidden: true },
+                { label: '类型编号', name: 'TypeCode', width: 120, align: 'left', sortable: false },
+                { label: '类型名称', name: 'TypeName', width: 120, align: 'left', sortable: false },
+                { label: '卸货状态', name: 'UnloadingState', width: 100, align: 'left', sortable: false, cellattr: XhZt },
+                { label: '签收状态', name: 'SignState', width: 100, align: 'left', sortable: false, cellattr: QsZt },
+                { label: '使用部位', name: 'UsePart', width: 120, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'PlanDistributionTime', width: 120, align: 'left', sortable: false },
+                { label: '配送地址', name: 'DistributionAddress', width: 140, align: 'left', sortable: false },
+                { label: '合计总量(kg)', name: 'TotalAggregate', width: 140, align: 'left', sortable: false },
+                { label: '车辆编号', name: 'CarCph', width: 100, align: 'left', sortable: false },
+                { label: '驾驶员', name: 'CarUser', width: 100, align: 'left', sortable: false },
+                { label: '装车完成时间', name: 'LoadCompleteTime', width: 120, align: 'left', sortable: false },
+                { label: '联系人Code', name: 'Contacts', hidden: true },
+                { label: '站点联系人', name: 'ContactsName', width: 120, align: 'left', sortable: false },
+                { label: '联系方式', name: 'ContactWay', width: 120, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+            //multiselect: true,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function XhZt(rowId, val, rawObject, cm, rdata) {
+        if (rawObject.UnloadingState == "未完成") {
+            //return "style='background-color:red;color: #ffffff;'";
+            return "style='color:red;'";
+        } else {
+            return "style='color:green;'";
+        }
+    }
+    function QsZt(rowId, val, rawObject, cm, rdata) {
+        if (rawObject.SignState == "未签收") {
+            //return "style='background-color:red;color: #ffffff;'";
+            return "style='color:red;'";
+        } else {
+            return "style='color:green;'";
+        }
+    }
+    //添加
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增配送装车", "@Url.Action("Form", "DistributionEnt")" + where, true, true)
+    }
+    //修改
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().DieEntId;
+        var keyValue1 = $("#gridList").jqGridRowValue().DisEntOrderId;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            var flag = true;
+            $.ajax({
+                url: "/Distribution/DistributionEnt/AnyInfo",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    if (data.state != "success") {
+                        flag = false;
+                        $.modalAlert(data.message, data.state);
+                        return false;
+                    }
+                }
+            });
+            if (flag) {
+                $.modalOpen({
+                    id: "Form",
+                    title: "修改配送装车",
+                    url: "/Distribution/DistributionEnt/Form?keyValue=" + keyValue + "&type=edit" + "&keyValue1=" + keyValue1,
+                    width: "60%",
+                    height: "550px",
+                    callBack: function (iframeId) {
+                        top.frames[iframeId].submitForm();
+                    }
+                });
+            }
+
+        } else {
+            $.modalMsg("请选择要修改的配送装车信息", "warning");
+            return false;
+        }
+    }
+    //查看
+    function btn_details() {
+        var keyValue = $("#gridList").jqGridRowValue().DieEntId;
+        var keyValue1 = $("#gridList").jqGridRowValue().DisEntOrderId;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Details",
+                title: "查看配送装车",
+                url: "/Distribution/DistributionEnt/Details?keyValue=" + keyValue + "&keyValue1=" + keyValue1,
+                width: "60%",
+                height: "550px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要查看的配送装车信息", "warning");
+            return false;
+        }
+    }
+    //删除配送装车信息
+    function btn_delete() {
+        var keyValue = $("#gridList").jqGridRowValue().DieEntId;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            var flag = true;
+            $.ajax({
+                url: "/Distribution/DistributionEnt/AnyInfo",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    if (data.state != "success") {
+                        flag = false;
+                        $.modalAlert(data.message, data.state);
+                        return false;
+                    }
+                }
+            });
+            if (flag) {
+                $.deleteForm({
+                    url: "/Distribution/DistributionEnt/DeleteForm",
+                    param: { keyValue: keyValue },
+                    success: function () {
+                        $.currentWindow().$("#gridList").resetSelection();
+                        $.currentWindow().$("#gridList").trigger("reloadGrid");
+                    }
+                });
+            }
+        } else {
+            $.modalMsg("请选择要删除的配送装车信息", "warning");
+            return false;
+        }
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        //var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        //if (id != null && id != "" && id != undefined) {
+        //    var siteCode = getOrganizationalCode(id);
+        //    //重新加载报表数据
+        //    var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+        //    param.SiteCode = siteCode;
+        //    param.ProjectId = CompanyId.ProjectId;
+        //}
+        var url = "@Url.Action("OutputExcel", "DistributionEnt")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+    function print(id, Exl, disEntOrderId) {
+        var et = "";
+        if (Exl == 1) {
+            et = "打印";
+        } else {
+            et = "导出";
+        }
+        var keyValue = id;
+        var keyValue1 = disEntOrderId;
+        $.modalOpen({
+            id: "Print",
+            title: et,
+            url: "@Url.Action("Print", "DistributionEnt")" + "?keyValue=" + keyValue + "&et=" + et + "&keyValue1=" + keyValue1,
+            width: "68%",
+            height: "700px",
+            btn: null,
+        });
+    }
+</script>
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="CarCph">车牌号</option>
+                                <option value="OrderCode">订单编号</option>
+                                <option value="TypeCode">类型编码</option>
+                                <option value="HistoryMonth">历史月份</option>
+                            </select>
+                            <input id="CarCph" name="CarCph" type="text" class="form-control SearchContent hidSearchContent" placeholder="车牌号" style="width: 140px; margin-left: 5px;">
+                            <input id="OrderCode" name="OrderCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="订单编号" style="width: 140px; margin-left: 5px;">
+                            <input id="TypeCode" name="TypeCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="类型编号" style="width: 140px; margin-left: 5px;">
+                            <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                            <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

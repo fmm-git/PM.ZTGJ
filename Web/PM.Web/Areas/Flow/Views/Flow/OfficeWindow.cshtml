@@ -1,0 +1,256 @@
+﻿@{
+    ViewBag.Title = "我的办文编辑界面";
+}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>我的办文编辑界面</title>
+    <link href="~/UiFrame/EasyUi/themes/default/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+    <link href="~/UiFrame/pmicon.css" rel="stylesheet" />
+    <script src="~/UiFrame/EasyUi/jquery.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/EasyUi/easyui-lang-zh_CN.js"></script>
+    <script src="~/UiFrame/jeasyui.extensions.js"></script>
+    <script src="~/SysConfig/genericOperate.js"></script>
+</head>
+<body>
+    <style>
+        .div1 div {
+            float: left;
+        }
+
+        .formTd1 {
+            width: 15.5%;
+        }
+
+        .formTd2 {
+            width: 16.3%;
+        }
+
+        .divText {
+            /*width: 6.5%;*/
+            margin-left: 2%;
+            text-align: right;
+        }
+
+        .deletedivText {
+        }
+    </style>
+    <div class="easyui-tabs" data-options="fit:true" id="ttOffice">
+        <div title="办文内容">
+            <div style="height: 138px; width: 100%;" id="formDiv">
+                <div style="height: 25px;">
+                    <div id="divToolbar">
+                        <a href="#" class="easyui-linkbutton" id="btnSave" iconcls="pmicon-save-16" plain="true" onclick="javascript:Save()">保存待发</a>
+                        @*<%--<a href="#" class="easyui-linkbutton" iconcls="pmicon-saveall-16" plain="true" onclick="javascript:SaveToTemplate()">保存为模板</a>
+                        <a href="#" class="easyui-linkbutton" iconcls="pmicon-redo-16" plain="true" onclick="javascript:GenerationToTemplate()">从模板生成</a>--%>*@
+                        <a href="#" class="easyui-linkbutton" iconcls="pmicon-editcontact-16" plain="true" onclick="javascript:Approval()" id="Examination">发送</a>
+                        <a href="#" class="easyui-linkbutton" iconcls="pmicon-close-16" plain="true" onclick="javascript:closeOfficeWindow()">关闭</a>
+                        @*<%--<a href="#" id="btnSave" class="easyui-linkbutton" style="width:60px;" onclick="Save()">保存</a> --%>*@
+                    </div>
+                </div>
+                <form id="formOffice" method="post" style="width: 96%; margin: auto">
+                    <input name="id" id="id" type="text" style="display: none" />
+                    <div id="divForms" style="width: 99%; height: 83px; line-height: 22px; margin-left: 8px;">
+                        <div style="width: 100%; height: 27px;" class="div1">
+                            <div id="div1" class="divText">文档代码</div>
+                            <div class="formTd1">
+                                <div style="display: none" hidden="hidden">
+                                    <input class="easyui-textbox" id="OfficeCode1" name="OfficeCode1" required="required" missingmessage="必填项">
+                                </div>
+                                <input class="easyui-textbox" style="width: 100%" name="OfficeCode" required="required" missingmessage="必填项">
+                            </div>
+                            <div class="divText">文档主题</div>
+                            <div class="formTd1">
+                                <input class="easyui-textbox" style="width: 100%" id="OfficeTheme" name="OfficeTheme" required="required" missingmessage="必填项">
+                            </div>
+                            <div style="width: 8.65%; height: 27px;"></div>
+                            <div id="div2" class="divText">归档</div>
+                            <div class="formTd2">
+                                <select class="easyui-combobox" style="width: 100%" data-options="panelHeight:45" id="OfficeArchive" name="OfficeArchive">
+                                    <option value="否">否</option>
+                                    <option value="是">是</option>
+                                </select>
+                            </div>
+                            <div class="divText">重要程度</div>
+                            <div class="formTd2">
+                                <select class="easyui-combobox" data-options="panelHeight:45" style="width: 100%" id="OfficeImportantDegree" name="OfficeImportantDegree">
+                                    <option value="非常重要">非常重要</option>
+                                    <option value="重要">重要</option>
+                                    <option value="一般">一般</option>
+                                    <option value="不重要">不重要</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="width: 100%; height: 27px;" class="div1">
+                            <div class="divText">关联项目</div>
+                            @*<%--<div class="formTd1"><input class="easyui-textbox" style="width:100%" id="OfficeRelatedItems" name="OfficeRelatedItems" required="required" missingmessage="必填项"></div>--%>*@
+                            <div class="formTd1">
+                                <input class="easyui-textbox" style="width: 100%" id="OfficeRelatedItems" name="OfficeRelatedItems">
+                            </div>
+                            <div id="div3" class="divText">任务</div>
+                            <div class="formTd1">
+                                @*<%-- <input class="easyui-textbox" style="width:100%" id="OfficeTask" name="OfficeTask" required="required" missingmessage="必填项">--%>*@
+                                <input class="easyui-textbox" style="width: 100%" id="OfficeTask" name="OfficeTask">
+                            </div>
+                            <div style="width: 8.65%; height: 27px;"></div>
+                            <div class="divText">文档类型</div>
+                            <div class="formTd2">
+                                <select class="easyui-combobox" style="width: 100%" data-options="panelHeight:45" id="OfficeType" name="OfficeType">
+                                    <option value="HTML">HTML</option>
+                                    @*<%--
+                                    <option value="Word">Word</option>--%>*@
+                                </select>
+                            </div>
+                            <div class="divText">修改痕迹</div>
+                            <div class="formTd2">
+                                <select class="easyui-combobox" style="width: 100%" data-options="panelHeight:45" id="OfficeModifiedTrace" name="OfficeModifiedTrace">
+                                    <option value="否">否</option>
+                                    <option value="是">是</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="width: 100%; height: 27px;" class="div1">
+                            <div class="divText">起草部门</div>
+                            <div class="formTd1">
+                                <!--<input class="easyui-textbox" style="" id="" name="OfficeDraftingDepartment" required="required" missingMessage="必填项">-->
+                                <select style="width: 100%" id="OfficeDraftingDepartment" name="OfficeDraftingDepartment" class="easyui-combotree" data-options="url:'<%=ResolveUrl(GetRouteUrl(" treelistbydoubleallcode", new { funcode="getTbDepartmentTree" }))%>',required:true" missingmessage="必填项"></select>
+                            </div>
+                            <div id="div4" class="divText">起草人</div>
+                            <div class="formTd1">
+                                <input class="easyui-textbox" style="width: 100%" id="OfficeDraftman" name="OfficeDraftman" required="required" missingmessage="必填项" readonly="true">
+                            </div>
+                            <div style="width: 8.65%; height: 27px;"></div>
+                            <div class="divText">起草时间</div>
+                            <div class="formTd2">
+                                <input class="easyui-textbox" style="width: 100%" id="OfficeDraftingTime" name="OfficeDraftingTime" readonly="true">
+                            </div>
+                            <div class="divText">发起时间</div>
+                            <div class="formTd2">
+                                <input class="easyui-textbox" style="width: 100%" id="OfficeInitiatingTime" name="OfficeInitiatingTime" readonly="true">
+                            </div>
+                        </div>
+                        <div style="width: 100%; height: 27px;" class="div1">
+                            <div class="divText">文档状态</div>
+                            <div class="formTd1">
+                                <select class="easyui-combobox" style="width: 100%" data-options="panelHeight:90" id="OfficeState" name="OfficeState" readonly="true">
+                                    <option value="0">未发起</option>
+                                    <option value="1">处理中</option>
+                                    <option value="2">已完成</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div id="editerDiv" style="width: 100%; height: 500px; margin-top: 2px; margin: auto">
+                @*<%--
+                <script id="editor" type="text/plain" style="width: 100%; height: 600px;">
+                </script>--%>*@
+                <iframe id="ueditIframe" style="width: 100%; height: 100%; border: none" src="/WebPage/FormManager/pmReportDesignUEditor.aspx"></iframe>
+
+                <div id="officeControl" style="height: 100%; display: none">
+                    <script language="javascript" type="text/javascript" src="~/SysConfig/ntkooffice/ntkoofficecontrol.js"></script>
+                    <script src="~/SysConfig/ntkooffice/ntko.js"></script>
+                </div>
+            </div>
+        </div>
+        <div title="附件">
+            <table style="height: 100%" class="easyui-datagrid" id="attachmentList" data-options="border:false,toolbar:[{text:'上传',iconCls:'pmicon-moveup-16',handler:CommonUpload},'-',{text:'批量下载',iconCls:'pmicon-movedown-16',handler:CommonDownload},'-',{text:'保存附件',iconCls:'pmicon-save-16',handler:SaveFile},'-',{text:'删除',iconCls:'pmicon-delete-GrayScaled-16',handler:CommonDeleteFile}]">
+                <thead>
+                    <tr class="firstRow">
+                        <th data-options="field:'ck',checkbox:true"></th>
+                        <th hidden="hidden" data-options="field:'FileID'">附件ID</th>
+                        <th data-options="field:'FileName',width:200,align:'left'">附件名称</th>
+                        <th data-options="field:'FileSize',width:100,formatter:function(value){return HumanReadableFilesize(value);}">附件大小</th>
+                        <th data-options="field:'UserCode',width:100">上传人</th>
+                        <th data-options="field:'LastTime',width:100">上传日期</th>
+                        <th data-options="field:'StorageOver',width:100,formatter:function(value){return value==0?'完成':'未完成';}">上传状态</th>
+                        <th data-options="field:'download',width:100,formatter:function(value,row){return CommonAttachmentDownloadFormatter(row);}">操作</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+    <div id="uploadDlg" data-options="onClose:UpdateUploadState"></div>
+
+    <script>
+        var _parentUE;
+        $.parser.onComplete = function () {
+            if ("@ViewBag.action" == "PerformFlow") {
+                $("#divToolbar").css("display", "none");
+                // $("#ttOffice").tabs("close", 1);
+                //  $("#ttOffice").tabs("hideHeader");
+            }
+            window.onresize = function () {
+                //DynamicWidth();
+                if (document.documentElement.clientWidth < 820) {
+                    $(".divText").attr("class", "deletedivText");
+                } else {
+                    $(".deletedivText").attr("class", "divText");
+                }
+            }
+        }
+        //动态生成宽度
+        function DynamicWidth() {
+            var allwidth = $("#divForms").css("width");//总宽度
+            var controlwidth = 100 - 200 / parseFloat(allwidth) * 100 - 12;
+            var formTd1width = controlwidth * 2 / 3 / 2;
+            var formTd2width = controlwidth / 3 / 2;
+            //  alert("总宽度:" + allwidth + "\n 剩余宽度:" + controlwidth + "\n 第一个宽度:" + formTd1width + "\n第二个宽度:" + formTd2width);
+        }
+        //百度编辑器加载完成后触发处理（只用于把办文发起流程）
+        function EditerLoadedFlow() {
+            var Eheight = parseInt($("#editerDiv").css("height").substring(0, $("#editerDiv").css("height").length - 2)) - 98;
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "getOfficeInfoFlow" })', { id: "@ViewBag.FormDataID" }, function (result) {
+                $("#formOffice").form('load', result[0]);
+                $("#attachmentList").datagrid({ url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetAttachmentListByFileIDList" })', queryParams: { FileIDList: result[0].OfficeFile } });
+                _parentUE.setHeight(Eheight);
+                _parentUE.execCommand('cleardoc');//清空文档
+                _parentUE.execCommand("inserthtml", result[0].OfficeContent);//向百度编辑器添加内容
+
+            }, 'json');
+        }
+        //保存附件
+        function SaveFile() {
+            var id = $("#id").val();
+            if (id == "") {
+                $.messager.alert('操作提示', "添加状态不能保存附件", 'error');
+            } else {
+                var rows = $("#attachmentList").datagrid('getRows');
+                var filestr = "", splitstr = "";
+                for (var i = 0; i < rows.length; i++) {
+                    filestr += splitstr + rows[i].FileID;
+                    splitstr = ",";
+                }
+                $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "editOfficeFile" })', { OfficeFile: filestr, id: id }, function (data) {
+                    var data = eval('(' + data + ')');
+                    if (data.success) {
+                        $.messager.alert('操作提示', data.message, 'info');
+                    } else {
+                        $.messager.alert('操作提示', data.message, 'error');
+                    }
+                });
+        }
+        }
+        //刷新附件列表
+        function UpdateUploadState() {
+            var rows = $("#attachmentList").datagrid('getRows');
+            var filestr = "", splitstr = "";
+            for (var i = 0; i < rows.length; i++) {
+                filestr += splitstr + rows[i].FileID;
+                splitstr = ",";
+            }
+
+            $("#attachmentList").datagrid('reload', { FileIDList: filestr });
+        }
+    </script>
+</body>
+</html>
+
+

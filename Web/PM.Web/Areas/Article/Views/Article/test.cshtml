@@ -1,0 +1,28 @@
+﻿@{
+    ViewBag.Title = "交流互动列表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<script src="~/Content/js/pager/jquery.z-pager.js"></script>
+<link href="~/Content/js/pager/pager.css" rel="stylesheet" />
+
+<script>
+    $(function () {
+        var param = {};
+        param.ProcessFactoryCode = '6386683214299275264';
+        //param.DisEntOrderId = '46';
+        //param.UserCode = '102747';
+        //param.FlowState = '4';
+        //param.Enclosure = '';
+        $.ajax({
+            url: "/api/Home/GetFactoryInfo",
+            data: param,
+            type:'get',
+            dataType: "json",
+            async: true,
+            success: function (data) {
+
+            }
+        });
+    });
+</script>

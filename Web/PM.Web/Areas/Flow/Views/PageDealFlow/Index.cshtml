@@ -1,0 +1,102 @@
+﻿@{
+    ViewBag.Title = "查看审批";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<link href="~/Content/js/select2/select2.min.css" rel="stylesheet" />
+<script src="~/Content/js/select2/select2.min.js"></script>
+<script>
+    var FormCode = $.request("FormCode");
+    var FormDataCode = $.request("FormDataCode");
+    $(function () {
+        //$('#layout').layout();
+        gridList();
+    })
+
+
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: false,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            url: "/PageDealFlow/GetApprovalInfo?FormCode=" + FormCode + "&FormDataCode=" + FormDataCode,
+            height: 370,
+            rownumbers: false,
+            colModel: [
+                { label: "流程编码", name: "FlowCode", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "流程节点", name: "FlowNodeCode", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "流水号", name: "FlowPerformID", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "数据ID", name: "FormDataCode", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "状态", name: "PerformState", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "表单编码", name: "FormCode", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "流程状态", name: "FlowState", width: 100, align: 'left', sortable: false },
+                { label: "等级", name: "FlowLevel", width: 100, align: 'left', sortable: false },
+                { label: "流程主题", name: "FlowTitle", width: 300, align: 'left', sortable: false },
+                { label: "发起时间", name: "BeginTime", width: 150, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "上一步处理时间", name: "PreNodeCompleteDate", width: 200, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "结束时间", name: "EndTime", width: 150, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "发起人", name: "UserName", width: 150, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (rowid) {
+                Approval(rowid);
+            },
+            pager: "",
+            sortorder: "desc",
+            sortname: 'BeginTime',
+            viewrecords: true,
+
+        });
+
+
+    }
+    function Approval() {
+        var row = $("#gridList").jqGridRowValue();
+        var FlowCode = row.FlowCode;
+        var FormCode = row.FormCode;
+        var ID = row.FormDataCode;
+        var FlowPerformID = row.FlowPerformID;
+        var FlowNodeCode = row.FlowNodeCode;
+        var PerformState = row.PerformState;
+        $.modalOpen({
+            id: "Approval",
+            title: "审批单据信息",
+            url: "/OA/MyApproval/Approval?PerformState=1&FlowNodeCode=" + FlowNodeCode + "&FlowPerformID=" + FlowPerformID + "&ID=" + ID + "&FormCode=" + FormCode + "&FlowCode=" + FlowCode,
+            width: "100%",
+            height: "100%",
+            btn: null,
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+                $.reload();
+            }
+        });
+    }
+    function btn_other1() {
+        var ID = $('#gridList').jqGrid('getGridParam', 'selrow');
+        var FlowPerformID = jQuery("#gridList").jqGrid("getRowData", ID).FlowPerformID;
+        if (FlowPerformID == "" || FlowPerformID == null || FlowPerformID == undefined) {
+            $.modalMsg("请选择一条数据撤销", "warning");
+            return;
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/MyInitiate/Cancel',
+            data: { flowperformid: FlowPerformID },
+            async: false,
+            cache: false,
+            success: function (data) {
+                $.loading(false);
+                var str_json = JSON.parse(data);
+                if (str_json.state == "success") {
+                    $.modalMsg("撤销成功", "success");
+                    $.reload();
+                }
+                else {
+                    $.modalMsg(str_json.message, "warning");
+                }
+            }
+        });
+    }
+</script>
+
+
+<table id="gridList"></table>

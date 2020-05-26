@@ -1,0 +1,454 @@
+﻿@{
+    ViewBag.Title = "加工订单打包列表信息";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/pager/jquery.z-pager.js"></script>
+<script src="~/Content/js/qrcode.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<link href="~/Content/js/pager/pager.css" rel="stylesheet" />
+<style type="text/css">
+    #tabQrCode {
+        width: 100%;
+        height: 500px;
+    }
+
+    .tabQrCodeTh {
+        height: 40px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        border-bottom: 2px solid #d8d5d5;
+    }
+
+    .tr1 {
+        height: 100px;
+        border-bottom: 3px solid #d8d5d5;
+    }
+
+    .tr2 {
+        float: left;
+    }
+
+    .tr3 {
+        float: left;
+        margin-left: 5px;
+        font-size: 14px;
+    }
+
+    .td1 {
+        width: 5%;
+        text-align: center;
+    }
+
+    .td2 {
+        width: 5%;
+        text-align: center;
+    }
+
+    .td3 {
+        width: 25%;
+    }
+
+    .td4 {
+        width: 12.5%;
+        text-align: center;
+    }
+</style>
+<script>
+    var OrderCode = $.request("OrderCode");
+    $(function () {
+        $.LodeMenuBtn("/Production/WorkOrder/OrderPackIndex");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        $('#layout').layout();
+        leftList();
+        var param1 = $(".search").GetSearchCondition();
+        if (OrderCode) {
+            $("#OrderCode").removeClass("hidSearchContent");
+            $(".input-group-btn").removeClass("hidSearchContent");
+            $("#OrderCode").val(OrderCode);
+            param1.OrderCode = OrderCode;
+            //关闭加工订单查看页面
+            var index = top.layer.getFrameIndex("Details");
+            top.layer.close(index);
+        }
+        GetList(param1);
+        //查询
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            GetList(param);
+        });
+        $("#btn_searchOth").click(function () {
+            var postData = $(".search").formSerialize();
+            for (x in postData) {
+                if (x != "ProjectId") {
+                    postData[x] = "";
+                }
+            }
+            var ss = $("#SearchType").children('option:selected').val();
+            if (ss != "") {
+                var cons = $("[name='" + ss + "']");
+                $.each(cons, function (i, item) {
+                    postData[$(item)[0].id] = $(item).val();
+                });
+            }
+            GetList(postData);
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    });
+
+    function GetList(param) {
+        $("#pager").zPager({
+            url: "@Url.Action("GetNowSiteWorkOrderDetailList", "WorkOrder")",
+            searchData: param,
+            pageData: 15, //每页数据条数
+            btnShow: true,
+            ajaxSetData: true,
+            dataRender: function (data) {
+                var pageIndex = (parseInt(this.current) - 1) * 15;
+                //先清空div中的内容
+                $('#tabQrCode').html("");
+                $("#tabQrCode").append($("#new-th").html());
+                $.each(data, function (index, value) {
+                    var itemRow = $("#new-tr").html()
+                            .replace("{Index}", (index + 1) + pageIndex)
+                            .replace("{ID}", value.ID)
+                            .replace("{qrcode}", value.ID)
+                            .replace("{qrcodeH}", value.ID)
+                            .replace("{printbox}", value.ID)
+                            .replace("{IDHH}", value.ID)
+                            .replace("{SiteName}", value.SiteName)
+                            .replace("{OrderCode}", value.OrderCode)
+                            .replace("{TypeName}", value.TypeName)
+                            .replace("{TypeCode}", value.TypeCode)
+                            .replace("{ComponentName}", value.ComponentName)
+                            .replace("{PageTime}", fdate(value.PageTime))
+                            .replace("{DistributionTime}", fdate(value.DistributionTime))
+                            .replace("{lldyNum}", value.lldyNum)
+                            .replace("{ComponentNameH}", value.ComponentName)
+                            .replace("{SpecificationModel}", value.SpecificationModel)
+                            .replace("{ItemUseNum}", value.ItemUseNum)
+                            .replace("{Number}", value.Number)
+                            .replace("{PackNumber}", value.PackNumber)
+                            .replace("{WeightSmallPlan}", value.WeightSmallPlan)
+                            .replace("{FinishProcessingDateTime}", fdate(value.FinishProcessingDateTime))
+                            .replace("{OrgName}", value.OrgName)
+                            .replace("{OrderCodeH}", value.OrderCode)
+                            .replace("{TypeCodeH}", value.TypeCode)
+                            .replace("{UsePart}", value.UsePart)
+                            .replace("{TypeNameH}", value.TypeName)
+                            .replace("{DistributionTimeH}", fdate(value.DistributionTime))
+                            .replace("{printbox2}", value.ID)
+                            .replace("{qrcodeH2}", value.ID)
+                            .replace("{ComponentNameH2}", value.ComponentName)
+                            .replace("{SpecificationModel2}", value.SpecificationModel)
+                            .replace("{ItemUseNum2}", value.ItemUseNum)
+                            .replace("{Number2}", value.Number)
+                            .replace("{PackNumber2}", value.PackNumber)
+                            .replace("{WeightSmallPlan2}", value.WeightSmallPlan)
+                            .replace("{FinishProcessingDateTime2}", fdate(value.FinishProcessingDateTime))
+                            .replace("{OrgName2}", value.OrgName)
+                            .replace("{OrderCodeH2}", value.OrderCode)
+                            .replace("{DistributionTimeH2}", fdate(value.DistributionTime))
+                            .replace("{UsePart2}", value.UsePart)
+                            .replace("{TypeCodeH2}", value.TypeCode)
+                            .replace("{TypeNameH2}", value.TypeName);
+                    $("#tabQrCode").append(itemRow);
+                });
+                LodeQRCode();//加载二维码
+            }
+        });
+    }
+
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 50,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '组织机构类型', name: 'OrgType', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            sortname: 'CompanyCode',
+            onCellSelect: function (id) {//单击
+                var siteCode = getOrganizationalCode(id);
+                var param = $(".search").GetSearchCondition();
+                param.SiteCode = siteCode;
+                GetList(param);
+            }
+        });
+    }
+    function LodeQRCode() {
+        $('[qrcode]').each(function (trindex, tritem) {
+            var value = $(this).attr("qrcode");
+            var isPrint = $(this).attr("isPrint");
+            var isdetail = $(this).attr("isdetail");
+            CreateQRCode(this, "id:" + value, isPrint, isdetail);
+        });
+    }
+    function CreateQRCode(id, value, isPrint, isdetail) {
+        var size = 80;
+        if (isPrint=="true"&&isdetail=="true") {
+            size = 100;
+        } else if (isPrint=="true" && isdetail=="false") {
+            size = 90;
+        }
+        var qrcode = new QRCode(id, {
+            width: size,//设置宽高
+            height: size
+        });
+        qrcode.makeCode(value);
+    }
+    //打印
+    function btn_other1() {
+        var printHtml = "";
+        $("input:checked").each(function () {
+            printHtml += "<div class=\"printDiv\">" + $(this).next().html() + "</div>";
+        });
+        if (printHtml == "") {
+            $.modalMsg("请选择要打印的二维码", "warning");
+            return false;
+        }
+        $.post("/Production/WorkOrder/PrintPackQRCodeInfo?actionCode=SaveHtmlSession", { tablestr: printHtml }, function (data) {
+            window.open('/Production/WorkOrder/PrintPackQRCodeInfo');
+        });
+    }
+    //选择订单
+    function selectWorkOrder() {
+        var url = "/Production/WorkOrder/GetWorkOrderList";
+        var str = "";
+        var ret = selectClick('win_OrderWIN', url, 'Grid', '', '', str, '550px', '450px', function (row) { });
+    }
+    //选择站点
+    function selectCompanyWorkAreaOrSite(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) { });
+    }
+    //清空
+    function btn_Clore() {
+        $("#OrderCode").val("");
+        $("#SiteCode").val("");
+        $("#SiteName").val("");
+        $("#DistributionTime").val("");
+    }
+    function QrcodeDetail(obj) {
+        var id = $(obj).attr("hid");
+        var printHtml = $('[detailbox=' + id + ']').html();
+        layer.open({
+            title: '包件详情',
+            skin: 'layui-layer-molv',
+            area: ['602px', '300px'],
+            type: 1,
+            anim: 2,
+            content: printHtml
+        });
+    }
+</script>
+<script type="text/html" id="new-th">
+    <tr>
+        <th class="tabQrCodeTh">序号</th>
+        <th class="tabQrCodeTh">操作</th>
+        <th class="tabQrCodeTh">构件二维码</th>
+        <th class="tabQrCodeTh">备注</th>
+    </tr>
+</script>
+<script type="text/html" id="new-tr">
+    <tr class="tr1">
+        <td class="td1">{Index}</td>
+        <td class="td2">
+            <input type="checkbox" id="chk_1_{ID}" />
+            <div style="display:none">
+                <div style="width:350px;margin:0 auto;">
+                    <div class="ecodeBox" printbox="{printbox}">
+                        <div class="ecodeBoxTitle" style="line-height: 25px; padding-left: 5px; padding-right: 5px;text-align:left">
+                            <span style="font-weight: 600; ">成品料牌</span><span style="padding-left: 5px; font-size: 11px;color: #000000">{OrgName}</span>
+                        </div>
+                        <div class="ecodeBoxBody">
+                            <div class="ecodeBox ecodeBoxBody-Left" qrcode="{qrcodeH}" isprint="true" isdetail="false" style="margin-top:0px;margin-bottom:0px;"></div>
+                            <div class="ecodeBox ecodeBoxBody-Right" style="margin-left:1px;margin-top:0px;margin-bottom:0px;margin-right:0px;">
+                                <table class="tableText" style="height: 100%;">
+                                    <tr>
+                                        <td rowspan="5" style="width: 10px; padding-right: 5px; font-weight: 600; border-right: 1px solid #000000; ">订单信息</td>
+                                        <td style="padding-left:5px;"><label>订单编号：</label>{OrderCodeH}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-left:5px;"><label>计划配送时间：</label>{DistributionTimeH}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-left:5px;"><label>使用部位：</label>{UsePart}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-left:5px;"><label>类型编号：</label>{TypeCodeH}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="padding-left:5px;"><label>类型名称：</label>{TypeNameH}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="ecodeBox ecodeBoxFoot" style="margin-top:5px;margin-bottom:3px;">
+                            <table class="tableText" style="height: 100%; width: 100%;">
+                                <tr>
+                                    <td rowspan="5" style="width: 10px; padding-right: 5px; font-weight: 600; border-right: 1px solid #000000; ">包件信息</td>
+                                    <td colspan="2"><label>构件名称：</label>{ComponentNameH}</td>
+                                    <td><label>生产日期：</label>{FinishProcessingDateTime}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><label>总数量/当前包数量：</label>{Number}/{PackNumber}</td>
+                                    <td><label>重量小计：</label>{WeightSmallPlan}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3"><label>规格/尺寸：</label>{SpecificationModel}/{ItemUseNum}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:none">
+                <div class="ecodeBox2" detailbox="{printbox2}">
+                    <div class="ecodeBoxTitle2" style="width:100%;line-height:25px;">
+                        <span style="font-weight: 700;font-size:14px;float:left;padding-left:5px;">成品料牌</span>
+                        <span style="padding-left: 5px; font-size: 12px;color: #000000;float:left;">{OrgName2}</span>
+                    </div>
+                    <div class="ecodeBoxBody2">
+                        <div class="ecodeBox2 ecodeBoxBody-Left2" qrcode="{qrcodeH2}" isprint="true" isdetail="true" style="margin-top:0px;margin-bottom:0px;"></div>
+                        <div class="ecodeBox2 ecodeBoxBody-Right2" style="margin-left:0px;margin-top:0px;margin-bottom:0px;margin-right:0px;">
+                            <table class="tableText2" style="height:100%">
+                                <tr>
+                                    <td rowspan="5" style="width: 10px; padding-right: 5px; font-weight: 600; border-right: 1px solid #000000; ">订单信息</td>
+                                    <td style="padding-left:5px;"><label>订单编号：</label>{OrderCodeH2}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-left:5px;"><label>计划配送时间：</label>{DistributionTimeH2}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-left:5px;"><label>使用部位：</label>{UsePart2}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-left:5px;"><label>类型编号：</label>{TypeCodeH2}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-left:5px;"><label>类型名称：</label>{TypeNameH2}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="ecodeBox2 ecodeBoxFoot2" style="margin-top:5px;margin-bottom:3px;">
+                        <table class="tableText2" style="height:100%;width:100%">
+                            <tr>
+                                <td rowspan="5" style="width: 10px; padding-right: 5px; font-weight: 600; border-right: 1px solid #000000; ">包件信息</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><label>构件名称：</label>{ComponentNameH2}</td>
+                                <td><label>生产日期：</label>{FinishProcessingDateTime2}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><label>总数量/当前包数量：</label>{Number2}/{PackNumber2}</td>
+                                <td><label>重量小计：</label>{WeightSmallPlan2}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><label>规格/尺寸：</label>{SpecificationModel2}/{ItemUseNum2}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </td>
+
+
+        <td class="td3">
+            <div class="tr2" qrcode="{qrcode}"></div>
+            <div class="tr3">
+                站点名称：{SiteName}<br />
+                订单编号：{OrderCode}<br />
+                类型名称：{TypeName}<br />
+                打包时间：{PageTime}
+            </div>
+            <div class="tr3">
+                <br />
+                类型编号：{TypeCode}<br />
+                构件名称：{ComponentName}<br />
+                计划配送日期：{DistributionTime}
+            </div>
+        </td>
+        <td class="td4"><a onclick="QrcodeDetail(this)" hid="{IDHH}">包件详情</a><br />应打印张数:{lldyNum}</td>
+    </tr>
+</script>
+<script src="~/Content/js/Comm.js"></script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center" style="height:800px;overflow:hidden">
+        <div class="topPanel">
+            <div class="topPanel-btn" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="OrderCode">订单编号</option>
+                                    <option value="DistributionTime">计划配送时间</option>
+                                    <option value="DistributionStart">配送状态</option>
+                                    <option value="TypeCode">类型编号</option>
+                                </select>
+                                <input id="OrderCode" name="OrderCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="订单编号" style="width: 140px; margin-left: 5px;" readonly="readonly">
+                                <span class="input-group-btn SearchContent hidSearchContent" name="OrderCode">
+                                    <button id="btn_search4" type="button" class="btn  btn-primary" onclick="selectWorkOrder()"><i class="fa fa-search"></i></button>
+                                </span>
+                                <input id="DistributionTime" name="DistributionTime" type="text" placeholder="配送时间" class="form-control required input-wdatepicker SearchContent hidSearchContent" onfocus="WdatePicker()" />
+                                <select id="DistributionStart" name="DistributionStart" class="form-control SearchContent hidSearchContent" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="未配送">未配送</option>
+                                    <option value="部分配送">部分配送</option>
+                                    <option value="配送完成">配送完成</option>
+                                </select>
+                                <input id="TypeCode" name="TypeCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="类型编码" style="width: 140px; margin-left: 5px;">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOth">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <div id="qrcode" style=" display:block; overflow-y:scroll;">
+                <table id="tabQrCode"></table>
+            </div>
+        </div>
+        <div class="footer" style="height:50px;">
+            <div id="pager" class="pager clearfix" style="margin-top:10px;margin-bottom:10px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(function () {
+        $("#qrcode").height(document.body.clientHeight - 115);
+    });
+</script>

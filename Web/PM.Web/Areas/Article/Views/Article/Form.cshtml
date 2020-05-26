@@ -1,0 +1,93 @@
+﻿@{
+    ViewBag.Title = "交流互动编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<link href="~/Content/js/wangEditor/css/wangEditor.min.css" rel="stylesheet" />
+<script src="~/Content/js/wangEditor/js/wangEditor.js"></script>
+<script src="~/Content/js/wangEditor/js/wangEditor.config.js"></script>
+<div style="margin-top: 10px;">
+    <form id="form1">
+        <input id="ID" name="ID" type="hidden" />
+        <table class="form">
+            <tr>
+                <th class="formTitle">标题<span class="required1">*</span></th>
+                <td class="formValue" colspan="2">
+                    <input id="Title" name="Title" type="text" class="form-control required" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">概要<span class="required1">*</span></th>
+                <td class="formValue" colspan="2">
+                    <textarea id="Abstract" name="Abstract" class="form-control required" style="height: 60px; padding-right: 2px;"></textarea>
+                </td>
+            </tr>
+            @*<tr>
+                <th class="formTitle">类型<span class="required1">*</span></th>
+                <td class="formValue">
+                    <select id="Type" name="Type" class="form-control" style="width: 120px;">
+                        <option value="1">普通</option>
+                        <option value="2">问题填报</option>
+                        <option value="3">其他</option>
+                    </select>
+                </td>
+            </tr>*@
+            <tr>
+                <th class="formTitle">内容<span class="required1">*</span></th>
+                <td class="formValue" colspan="3">
+                    <textarea id="Content" class="form-control required" rows="24"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">录入人</th>
+                <td class="formValue">
+                    <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                </td>
+                <th class="formTitle">录入时间</th>
+                <td class="formValue">
+                    <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>
+<script type="text/javascript">
+    var editor;
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "Article")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    //$("#Content").val(data.Content);
+                    //editor = $("#Content").PowerEditor();
+                }
+            });
+        }
+        else { 
+        }
+        editor = $("#Content").PowerEditor()
+    });
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        formData.Content = editor.getEncodeContent();
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "Article")" + "?type=" + type,
+            param: formData,
+            success: function () {
+                $.currentWindow().location.reload();
+            } 
+        })
+    }
+</script>

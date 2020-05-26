@@ -1,0 +1,179 @@
+﻿@{
+    ViewBag.Title = "选择审批人、抄送人";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script src="~/Content/js/wdtree/tree.js"></script>
+<link href="~/Content/js/wdtree/tree.css" rel="stylesheet" />
+<link href="~/Content/js/select2/select2.min.css" rel="stylesheet" />
+<script src="~/Content/js/select2/select2.min.js"></script>
+<link href="~/Content/js/wizard/wizard.css" rel="stylesheet" />
+<script src="~/Content/js/wizard/wizard.js"></script>
+<link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+<script src="~/Content/js/framework-ui.js?v=1.0"></script>
+<script src="~/Content/js/layer/layer.js"></script>
+<link href="~/Content/css/framework-tab.css" rel="stylesheet" />
+<script src="~/Content/js/Comm.js"></script>
+<script type="text/javascript">
+    var ProjectId;
+    var lastsel;
+    var number = 0;
+    $(function () {
+        leftgridList();//获取组织部门角色人员
+        gridList();//获取选中的审批、抄送人员
+        initControl();
+    });
+    //初始化
+    function initControl() {
+        $("input[type='radio']").on("click",
+         function () {
+             var OrgType = $("input[name='OrgType']:checked").val();
+             $("#leftgridList").jqGrid('setGridParam', {
+                 postData: { OrgType: OrgType },
+             }).trigger('reloadGrid');
+         });
+    }
+    //获取组织部门角色人员
+    function leftgridList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: '/Flow/Flow/GetDeptOrRoleOrUserNew',
+            height: $(window).height() - 200,
+            colModel: [
+                { label: '组织机构', name: 'Name', width: 220, align: 'left', sortable: false, },
+                { label: "编号", name: "id", hidden: true, key: true },
+                { label: "部门id", name: "DeptId", hidden: true },
+                { label: "部门名称", name: "DeptName", hidden: true },
+                { label: "角色id", name: "RoleId", hidden: true },
+                { label: "角色名称", name: "RoleName", hidden: true },
+                { label: "项目id", name: "ProjectId", hidden: true },
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'Name',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (id) {//单击
+                clickDeptOrRoleOrUser(id);
+            }
+        });
+    }
+
+    function clickDeptOrRoleOrUser(id) {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length > 0) number = parseInt(ids[ids.length - 1]) + 1;
+        var druData = $("#leftgridList").jqGrid('getRowData', id);
+        var DataId = id;
+        if (druData.level == "0") {//选择了部门
+            $.modalMsg("审批、抄送人员不能选择部门");
+            return;
+        }
+        else if (druData.level == "1") {//选择了角色
+            $("#gridList").jqGrid('addRowData', number, { UserTypeId: DataId, TypeName: 'Role', Name: druData.Name, ActionType: '0', ActionTypeName: '审批', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: ProjectId });
+        } else if (druData.level == "2") {//选择了用户
+            var a = DataId.split('-');
+            DataId = a[0];
+            $("#gridList").jqGrid('addRowData', number, { UserTypeId: DataId, TypeName: 'User', Name: druData.Name, ActionType: '0', ActionTypeName: '审批', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: ProjectId });
+        }
+    }
+
+    //加载岗位人员
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            height: $(window).height() - 200,
+            colModel: [
+                { label: "主键", name: "id", hidden: true, key: true },
+                { label: "人员类型ID", name: "UserTypeId", hidden: true },
+                { label: '人员来源', name: 'TypeName', width: 90, align: 'left', formatter: function (v) { if (v == "Dep") return "部门"; else if (v == "User") return "人员"; else if (v == "Role") return "角色"; } },
+                { label: '人员名称', name: 'Name', width: 90, align: 'left' },
+                { label: '操作类型', name: 'ActionType', hidden: true },
+                {
+                    label: '操作类型', name: 'ActionTypeName', width: 90, align: 'left', editable: true, edittype: "select", editoptions: { value: "0:审批;-1:抄送" }
+                },
+               { label: "部门id", name: "DeptId", hidden: true },
+               { label: "部门名称", name: "DeptName", width: 100, align: 'left' },
+               { label: "角色id", name: "RoleId", hidden: true },
+               { label: "角色名称", name: "RoleName", width: 100, align: 'left' },
+               { label: "项目id", name: "ProjectId", hidden: true },
+            ],
+            multiselect: false,
+            sortname: 'UserTypeId',
+            viewrecords: true,
+            gridComplete: function () {
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+                    $("#gridList>tbody").find("select").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+            },
+        });
+    }
+
+    //删除已选用户
+    function UnSelectedEmployee() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+
+    }
+    //确认
+    function BackData() {
+        debugger;
+        var rows = $('#gridList').jqGrid('getRowData');//获取所有数据
+        //处理少一行bug
+        var allCountID = $("#gridList").jqGrid('getDataIDs'); //这里获取所有行 主键id 是全的
+        rows.push($("#gridList").jqGrid('getRowData', allCountID[allCountID.length - 1]));  //单独用最后一个 ID 获取行数据 并 追加到 集合里
+        if (rows.length < 0) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        return rows;
+    }
+</script>
+<div style="width: 100%;margin-top: 5px;height:99%;position:absolute">
+    <div title="选择审批、抄送人员" style="width:90%;margin:0 auto;">
+        <h3>选择审批、抄送人员</h3>
+        <div id="DialogDiv1" class="panel panel-success" style="width: 350px; height: 99%; float: left; margin-right: 5px; border-color: #1ABC9C;margin-bottom:0px;">
+            <div class="panel-heading" style="border-color: #1ABC9C">
+                <h3 class="panel-title">组织机构</h3>
+            </div>
+            <div class="panel-body">
+                <div style="width:100%;height:35px;padding-bottom:5px;">
+                    <div style="height: 30px; float: left;line-height:2.5;">
+                        <input value="2" type="radio" name="OrgType" checked="checked" />经理部&nbsp;
+                        <input value="3" type="radio" name="OrgType" />分部&nbsp;
+                        <input value="4" type="radio" name="OrgType" />工区&nbsp;
+                        <input value="1" type="radio" name="OrgType" />加工厂&nbsp;
+                    </div>
+                </div>
+                <table id="leftgridList"></table>
+            </div>
+        </div>
+        <div id="DialogDiv2" class="panel panel-success" style="width: 700px; height: 99%; float: left; margin-right: 5px; border-color: #1ABC9C; margin-bottom: 0px; ">
+            <div class="panel-heading" style="border-color: #1ABC9C">
+                <h3 class="panel-title">已选审批、抄送人员</h3>
+            </div>
+            <div class="panel-body">
+                <div style="margin-bottom:5px;">
+                    <button id="btn_search" type="button" class="btn  btn-primary" onclick="UnSelectedEmployee();"><i class="fa fa-trash-o">删除</i></button>
+                </div>
+                <table id="gridList"></table>
+                <div id="gridPager"></div>
+            </div>
+        </div>
+    </div>
+</div>

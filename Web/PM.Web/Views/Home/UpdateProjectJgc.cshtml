@@ -1,0 +1,57 @@
+﻿@{
+    ViewBag.Title = "UpdateProjectJgc";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script>
+    $(function () {
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/Home/GetAllProjectJgc",
+            height: $(window).height() - 55,
+            colModel: [
+                { label: "加工厂编号", name: "ProcessFactoryCode", hidden: true, key: true },
+                { label: '加工名称', name: 'ProcessFactoryName', width: 220, align: 'left', sortable: false, }
+                
+            ],
+            rownumbers: false,
+            onCellSelect: function (id) {//单击
+                clickProjectJgc(id);
+            },
+            gridComplete: function () {
+                $("#gridList").jqGrid('setSelection', '@ViewBag.ProcessFactoryCode', false);
+            }
+        });
+    }
+
+    function clickProjectJgc(id) {
+        var ProjectJgc = $("#gridList").jqGrid('getRowData', id);
+        $.modalConfirm("是否要切换到:" + ProjectJgc.ProcessFactoryName + "?全部页面将初始化，请确定信息已保存！", function (r) {
+            if (r) {
+                SaveProjectJgc(ProjectJgc);
+            }
+        });
+
+    }
+
+    function SaveProjectJgc(ProjectJgc) {
+        $.ajax({
+            url: "/Home/SaveProcessFactoryCode",
+            data: { ProcessFactoryCode: ProjectJgc.ProcessFactoryCode, ProcessFactoryName: ProjectJgc.ProcessFactoryName },
+            type: "get",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                top.location.href = "/Home/Index";
+            }
+        });
+    }
+</script>
+<div class="ui-layout-center">
+    <div class="gridPanel">
+        <table id="gridList"></table>
+    </div>
+</div>

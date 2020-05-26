@@ -1,0 +1,191 @@
+﻿@{
+    ViewBag.Title = "库存盘点列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    $(function () {
+        $.LodeMenuBtn("/RawMaterial/StockTaking/Index");
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 128;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 218;
+        } else {
+            Height = 128;
+        }
+        gridList(Height);
+        //仓库属性
+        $("#WarehouseType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "MaterialType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        $("#TakDayS").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd ',
+            });
+        });
+        $("#TakDayE").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd ',
+                minDate: $("#TakDayS").val(),
+            });
+        });
+    });
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "StockTaking")",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '加工厂名称', name: 'FactoryName', hidden: true },
+                { label: "盘点单编号", name: "TakNum", width: 120, align: 'left', sortable: false },
+                { label: '盘点日期', name: 'TakDay', width: 100, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: "仓库类型", name: "WarehouseTypeName", width: 80, align: 'left', sortable: false },
+                { label: "账存总量(吨)", name: "TotalInventory", width: 150, align: 'left', sortable: false },
+                { label: '盘点总量(吨)', name: 'TotalTak', width: 150, align: 'left', sortable: false },
+                { label: '盘盈/盘亏(吨)', name: 'TotalEarnOrLos', width: 150, align: 'left', sortable: false, formatter: EarnOrLosColor },
+                { label: '备注', name: 'Remarks', width: 100, align: 'left', sortable: false },
+                { label: '盘盈/盘亏', name: 'EarnOrLos', hidden: true },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 200, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function EarnOrLosColor(cellValue, options, rowObject) {
+        if (parseInt(rowObject.EarnOrLos) == -1) {
+            return "<span style='color: red;'>" + cellValue + "</span>";
+        } else {
+            return "<span style='color: green;'>" + cellValue + "</span>";
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增库存盘点信息", "@Url.Action("Form", "StockTaking")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改库存盘点",
+            url: "@Url.Action("Form", "StockTaking")",
+            anyUrl: "@Url.Action("AnyInfo", "StockTaking")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "StockTaking")",
+            anyUrl: "@Url.Action("AnyInfo", "StockTaking")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看库存盘点",
+            url: "@Url.Action("Details", "StockTaking")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "480px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //加工厂选择
+    function selectFactory() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/1";
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "StockTaking")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel divwidth1">
+        <div class="topPanel-btn divwidth2" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search divwidth2">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="TakNum">库存盘点单号</option>
+                                <option value="ProcessFactoryCode">加工厂</option>
+                                <option value="WarehouseType">仓库类型</option>
+                                <option value="TakDay">盘点时间</option>
+                            </select>
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                            <input id="TakNum" name="TakNum" type="text" placeholder="库存盘点单号" class="form-control SearchContent hidSearchContent">
+                            <input id="ProcessFactoryName" name="ProcessFactoryCode" type="text" class="form-control SearchContent hidSearchContent " readonly="readonly" placeholder="加工厂">
+                            <span name="ProcessFactoryCode" class="input-group-btn input-group-btn-search SearchContent hidSearchContent">
+                                <button type="button" class="btn  btn-primary" onclick="selectFactory();"><i class="fa fa-search"></i></button>
+                            </span>
+                            <select id="WarehouseType" name="WarehouseType" class="form-control SearchContent hidSearchContent">
+                                <option value="">请选择</option>
+                            </select>
+                            <input id="TakDayS" name="TakDay" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="开始时间" />
+                            <input id="TakDayE" name="TakDay" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="结束时间" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                            <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

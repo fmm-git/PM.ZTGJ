@@ -1,0 +1,148 @@
+﻿<html>
+<head>
+    <meta http-equiv="UserContent-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>附件查看</title>
+    <link href="~/Content/js/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <script src="~/Content/js/jquery/jquery-2.1.1.min.js"></script>
+    <script src="~/Content/js/bootstrap/bootstrap.js"></script>
+    <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+    <script src="~/Content/js/uploadFile.js"></script>
+    <style>
+        #div_file {
+            width: 100%;
+            height: 100%;
+        }
+
+        .div1 {
+            line-height: 30px;
+            border-bottom: 1px solid #ddd;
+            height: 30px;
+            width: 100%;
+        }
+
+        .del {
+            width: 15%;
+            float: left;
+            margin-right: 5px;
+        }
+
+            .del a {
+                color: red;
+                font-size: 12px;
+            }
+
+        .down {
+            width: 15%;
+            float: left;
+            margin-right: 5px;
+        }
+
+            .down a {
+                color: red;
+                font-size: 12px;
+            }
+
+        .mypro {
+            width: 65%;
+            display: block;
+            word-wrap: break-word;
+            word-break: normal;
+            font-size: 12px;
+            float: left;
+        }
+
+        .mytitle-text {
+            font-weight: bold;
+            color: #2e6da4;
+            border-bottom: 1px solid #2e6da4;
+            margin: 0px !important;
+            line-height: 30px;
+            font-size: 14px;
+        }
+
+        #NoteContext {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div id="classDiv" class="col-md-2 col-sm-2 col-lg-2" style=" border: 1px solid #ddd; padding: 3px; margin: 5px">
+            <h4 class="mytitle-text">文件列表</h4>
+            <div id="div_file"></div>
+        </div>
+        <div id="contextDiv" class="col-md-9 col-sm-9 col-lg-9" style="border: 1px solid #ddd; padding:3px; margin:5px;">
+            <h4 class="mytitle-text">预览界面</h4>
+            <div>
+                <iframe id="NoteContext" src="" frameborder=0 width=100% marginheight=0 marginwidth=0 scrolling="yes" class="iframe"></iframe>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(".container-fluid").height(document.documentElement.clientHeight - 60);
+        $("#classDiv,#contextDiv").height(document.documentElement.clientHeight - 90);
+        $("#NoteContext").height(document.documentElement.clientHeight - 110);
+        var ids = '@ViewBag.ids';
+        var type = '@ViewBag.type';
+        var menuTable = '@ViewBag.menuTable'
+        var IsItem = '@ViewBag.IsItem'
+        var index1 = '@ViewBag.index1'
+        $(function () {
+            $.ajax({
+                url: "@Url.Action("GetUploadList", "Attachment")",
+                data: { ids: ids, r: Math.random() },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    if (data.length > 0) {
+                        var strHtml = [];
+                        if (type == "form") {//新增、修改
+                            for (var i = 0; i < data.length; i++) {
+                                strHtml.push("<div class=\"div1\">");
+                                strHtml.push("<div class=\"del\" onclick=\"DelFile('" + data[i].id + "','" + menuTable + "','" + IsItem + "','" + index1 + "')\" href=\"javascript:;\"><a href=\"#\"  onclick=\"DelFile('" + data[i].id + "','" + menuTable + "','" + IsItem + "','" + index1 + "')\" >删除</a></div>");
+                                strHtml.push("<div class=\"down\" onclick=\"DownFile(" + data[i].id + ")\" href=\"javascript:;\"><a href=\"#\" onclick=\"DownFile(" + data[i].FileStoragePath + ")\">下载</a></div>");
+                                strHtml.push("<div class=\"mypro\" onclick=\"showDocument(" + data[i].id + ")\" href=\"javascript:;\" title=\"" + data[i].FileName + "\"><a href=\"#\" onclick=\"showDocument(" + data[i].id + ")\">" + GetFileName(data[i].FileName) + "</a></div>");
+                                strHtml.push("</div>");
+                            }
+                        }
+                        else {
+                            for (var i = 0; i < data.length; i++) {
+                                strHtml.push("<div class=\"div1\">");
+                                strHtml.push("<div class=\"down\" onclick=\"DownFile(" + data[i].id + ")\" href=\"javascript:;\"><a href=\"#\" onclick=\"DownFile(" + data[i].FileStoragePath + ")\">下载</a></div>");
+                                strHtml.push("<div class=\"mypro\" onclick=\"showDocument(" + data[i].id + ")\" href=\"javascript:;\" title=\"" + data[i].FileName + "\"><a href=\"#\" onclick=\"showDocument(" + data[i].id + ")\">" + GetFileName(data[i].FileName) + "</a></div>");
+                                strHtml.push("</div>");
+                            }
+                        }
+                        $("#div_file").html(strHtml.join('').toString());
+                        if (data[0].id) {
+                            showDocument(data[0].id);
+                        }
+                    }
+                }
+            });
+        });
+        function GetFileName(FileName) {
+            var NewFileName;
+            if (FileName.length > 10) {
+                var newText = FileName.substring(0, 10) + "...";
+                NewFileName = newText;
+            } else {
+                NewFileName = FileName;
+            }
+            return NewFileName;
+        }
+        //查看文件
+        function showDocument(id) {
+            if (id) {
+                $("#NoteContext").attr("src", "@Url.Action("ShowDocument")?id=" + id);
+                return;
+            } else {
+                $.modalAlert("附件信息错误！！");
+            }
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+﻿@{
+    ViewBag.Title = "数据字典FormData";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var type = $.request("type");
+    $(function () {
+        var dyCode = $.request("dyCode");
+        initControl();
+        var dCode = $.request("dCode");
+        var CodeType = $.request("codetype");
+        var CodeText = $.request("dcodetext");
+        if (!!dCode) {
+            $.ajax({
+                url: "/SystemManage/DataDictionary/GetDicJsonByCode",
+                data: { dicCode: dCode, CodeType: CodeType, CodeText: CodeText },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    $("#DictionaryCode").attr("disabled", "disabled");
+                    $("#FDictionaryCode").attr("disabled", "disabled");
+                }
+            });
+        }
+        if (type == "add")
+        {
+            $("#FDictionaryCode").val(dyCode).change();
+        }
+    });
+    function initControl() {
+        $("#FDictionaryCode").bindSelect({
+            url: "/SystemManage/DataDictionary/GetSelectJson",
+        });
+    }
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "/SystemManage/DataDictionary/SubmitFormData?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#gridList").resetSelection();
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li role="presentation" class="active"><a href="#">基本信息</a></li>
+        </ul>
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <input id="id" name="id" type="hidden" class="form-control" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">字典分类<span class="required1">*</span></th>
+                    <td class="formValue">
+                        @*<input id="id" name="id" type="text" class="form-control" style="display:none" />*@
+                        <select id="FDictionaryCode" name="FDictionaryCode" disabled="disabled" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">字典编码<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DictionaryCode" name="DictionaryCode" type="text" class="form-control required" placeholder="字典编码" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">字典内容<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DictionaryText" name="DictionaryText" type="text" class="form-control required" placeholder="字典内容" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">显示顺序<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DictionaryOrder" name="DictionaryOrder" type="text" class="form-control required" placeholder="显示顺序" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

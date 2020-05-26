@@ -1,0 +1,195 @@
+﻿@{
+    ViewBag.Title = "吊装安全列表信息";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    var CompanyCode = "";
+    var ProjectId = "";
+    $(function () {
+        $.LodeMenuBtn("/Safe/HoistingSafety/Index");
+        $('#layout').layout();
+        gridList();
+        leftList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "HoistingSafety")",
+            height: $(window).height() - 178,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false, hidden: true },
+                { label: "吊装安全管理编号", name: "HoistingCode", width: 100, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 150, align: 'left', sortable: false },
+                { label: '监管人员', name: 'SuperviseUserName', width: 80, align: 'left', sortable: false },
+                { label: "施工人员", name: "ConstructionUserName", width: 140, align: 'left', sortable: false },
+                { label: "特种作业资格证", name: "TzWorkZgzNew", width: 80, align: 'left', sortable: false },
+                { label: "机械是否正常", name: "MechanicsIsNormalNew", width: 80, align: 'left', sortable: false },
+                { label: "捆扎是否牢固", name: "KzIsSolidNew", width: 80, align: 'left', sortable: false },
+                { label: "有无禁止行为", name: "IsProhibitionNew", width: 80, align: 'left', sortable: false },
+                { label: '开始时间', name: 'BeginTime', width: 140, align: 'left', sortable: false },
+                { label: '吊装令文件', name: 'HoistFileName', width: 150, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 46,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,
+            treeGridModel: 'adjacency',
+            ExpandColumn: 'CompanyFullName',
+            rownumbers: false,
+            onCellSelect: function (ucode) {//单击
+                var siteCode = getOrganizationalCode(ucode);
+                ProjectId = $("#leftgridList").jqGrid('getRowData', ucode).ProjectId;
+                CompanyCode = siteCode;
+            }
+        });
+    }
+    function btn_add() {
+        var where = "?type=add&CompanyCode=" + CompanyCode + "&ProjectId=" + ProjectId;
+        CommonOpen("Form", "新增吊装安全", "@Url.Action("Form", "HoistingSafety")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改吊装安全",
+            url: "@Url.Action("Form", "HoistingSafety")",
+            anyUrl: "@Url.Action("AnyInfo", "HoistingSafety")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "HoistingSafety")",
+            anyUrl: "@Url.Action("AnyInfo", "HoistingSafety")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看吊装安全",
+            url: "@Url.Action("Details", "HoistingSafety")",
+            isbtn: false,
+            isAny: false,
+            isBack:false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "560px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'HoistingSafety', rowData.Examinestatus, rowData.HoistingCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+    //查询
+    //选择加工厂
+    function selectCompanyProcessFactory(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px');
+    }
+    //选择监管人员
+    function selectSuperviseUser() {
+        var str = "SuperviseUser=UserCode,SuperviseUserName=UserName";
+        var ret = selectClickNew(str, '75%', '75%', function (row) { }, false);
+    }
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="topPanel-btn" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+        </div>
+        <div class="topPanel">
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <input id="SuperviseUser" type="hidden">
+                                <input id="SuperviseUserName" type="text" class="form-control" readonly="readonly" placeholder="监管人">
+                                <span class="input-group-btn input-group-btn-search">
+                                    <button type="button" class="btn  btn-primary" onclick="selectSuperviseUser();"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_search">查询</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

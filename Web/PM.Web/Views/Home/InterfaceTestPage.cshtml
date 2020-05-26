@@ -1,0 +1,168 @@
+﻿@{
+    ViewBag.Title = "InterfaceTestPage";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<h2>InterfaceTestPage</h2>
+
+<script>
+    $(function () {
+        aa();
+    })
+    function aa() {
+        //var a = {
+        //    "model": {
+        //        "OrgType": "2",
+        //        "ComPanyName": "十一号线经理部",
+        //        "CompanyId": "6247574415609954304",
+        //        "ProjectOrgAllId": "6247574415609954304",
+        //        "ProjectOrgAllName": "十一号线经理部",
+        //        "ProjectId": "6245721945602523136",
+        //        "RoleCode": "6352967650544590848",
+        //        "UserCode": "102787",
+        //        "UserId": "6487716734823440384",
+        //        "UserName": "李良博",
+        //        "LoginTime": "2019-04-25 15:31:11",
+        //        "LoginToken": "9BD8717A3C93C93C5CAEE8FBA126D353AD4562C10CE22F487CA47731EB6E842E3B6064B1DC8A4B75",
+        //        "IsSystem": false,
+        //        "IsDriver": false,
+        //        "ProcessFactoryCode": "6386683214299275264",
+        //        "ProcessFactoryName": "一号加工厂"
+        //    },"type":"Jgc"
+        //}
+        //        var a = {
+        //            "model": {
+        //                "OrgType": "2",
+        //                "ComPanyName": "十三号线二期经理部",
+        //                "CompanyId": "6247574415609954305",
+        //                "ProjectOrgAllId": "6386683729561128960",
+        //                "ProjectOrgAllName": "十三号线二期经理部",
+        //                "ProjectId": "6245721945602523137",
+        //                "RoleCode": "6352967650544590848",
+        //                "UserCode": "102787",
+        //                "UserId": "6487716734823440384",
+        //                "UserName": "李良博",
+        //                "LoginTime": "2019-04-25 15:31:11",
+        //                "LoginToken": "9BD8717A3C93C93C5CAEE8FBA126D353AD4562C10CE22F487CA47731EB6E842E3B6064B1DC8A4B75",
+        //                "IsSystem": false,
+        //                "IsDriver": false,
+        //                "ProcessFactoryCode": "6386683214299275264",
+        //                "ProcessFactoryName": "一号加工厂"
+        //            }, "type": "Org"
+        //        };
+        //$.ajax({
+        //    type: 'POST',
+        //    url: '/api/User/AppSaveJgcOrOrg',
+        //    data:a,
+        //    async: false,
+        //    cache: false,
+        //    success: function (data) {
+
+        //    }
+        //});
+
+        ////运输流程出厂确认
+        //var a = {
+        //    "model": {
+        //        "DistributionCode": "PSZC201900025",
+        //        "UserCode": "102917",
+        //        "VehicleCode": "CAR201900008",
+        //        "Driver": "102917"
+        //    }
+        //}
+        //$.ajax({
+        //    type: 'POST',
+        //    url: '/api/TransportFlow/FactoryFlowConfirm',
+        //    data:a,
+        //    async: false,
+        //    cache: false,
+        //    success: function (data) {
+
+        //    }
+        //});
+        ////运输订单流程确认
+        //var a = { "model": { "DistributionCode": "PSZC201900025", "DisEntOrderId": 31, "UserCode": "102917", "Enclosure": '[{"file":"iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDIxIDc5LjE1NTc3MiwgMjAxNC8wMS8xMy0xOTo0NDowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTQgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjYxMzJERkQ0Rjc5NTExRTdBMzlDODg2MkYwNkQ2Q0VDIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjYxMzJERkQ1Rjc5NTExRTdBMzlDODg2MkYwNkQ2Q0VDIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6NjEzMkRGRDJGNzk1MTFFN0EzOUM4ODYyRjA2RDZDRUMiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6NjEzMkRGRDNGNzk1MTFFN0EzOUM4ODYyRjA2RDZDRUMiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz64d8gqAAAGs0lEQVR42uRb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","fileName":"jccqr.png"}]', "FlowState": 4 } }
+        //$.ajax({
+        //    type: 'POST',
+        //    url: '/api/TransportFlow/OrderFlowConfirm',
+        //    data: a,
+        //    async: false,
+        //    cache: false,
+        //    success: function (data) {
+
+        //    }
+        //});
+
+        //问题填报
+        var a = {
+            "model": {
+                "DistributionCode": "PSZC201900037",
+                "DisEntOrderId": 31,
+                "Title": "测试APp问题填报",
+                "FlowState": 3,
+                "Abstract": "33344dsdds",
+                "Content": "46656gfgfgfgfgf",
+                "InsertUserCode": "102747"
+            }
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/api/TransportFlow/ProblemReport',
+            data: a,
+            async: false,
+            cache: false,
+            success: function (data) {
+
+            }
+        });
+
+
+        ////运输订单流程确认
+        //var a = {
+        //    "model": {
+        //        "CheckCode": "11111",
+        //        "ProcessFactoryCode": "6386683729561128960",
+        //        "epod": "外电",
+        //        "gorlp": "接地",
+        //        "drorps": "配电室",
+        //        "dorsb": "配电",
+        //        "CheckUserCodes": "102747",
+        //        "CheckUserNames": "杨建成",
+        //        "CheckDate": "2019-06-05",
+        //        "ProblemDescription": "223455",
+        //        "Enclosure":'[{"file":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSgBBwcHCggKEwoKEygaFhooKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKP/AABEIABAAEAMBEQACEQEDEQH/xAGiAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgsQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+gEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoLEQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2gAMAwEAAhEDEQA/APpvWb/+zrPzgm9iwVR2z/kV5Wc5n/ZmGdflu7pJep0Yah7epyXsGjX/APaNn5xTYwYqw7Z4/wAaMmzP+08Mq/LZ3s0GJoewqcl7j9S0+LUIljnZwqnI2nHNaZlllLMqapVm7LXR9SaFeVCXNETTdPi0+NkgZyrHJ3HPNLLMro5bTdOi3Z66vqOvXlXlzSP/2Q==","fileName":"jccqr.png"}]',
+        //        "InsertUserCode": "102747",
+        //        "ProjectId": "6245721945602523136"
+        //    },
+        //    "type": "add"
+        //}
+        //$.ajax({
+        //    type: 'POST',
+        //    url: '/api/InterimUseElectricCheck/SubmitForm',
+        //    data:a,
+        //    async: false,
+        //    cache: false,
+        //    success: function (data) {
+
+        //    }
+        //});
+
+        ////保存配送装车信息
+        //var a = {
+        //    "model": { "DistributionCode": "PSZC201900027", "ProjectId": "6245721945602523136", "VehicleCode": "100778", "InsertUserCode": "102787", "InsertTime": "2019-06-18 14:38:50" },
+        //    "orderModel": [{"DistributionCode":"PSZC201900027","OrdeCode":"JGDD201900311","SiteCode":"6267790574804271104","TypeCode":"LHL-XDD-3-84-89（下）","TypeName":"导洞钢架下台阶","UsePart":"主体导洞","PlanDistributionTime":"2019-05-27 23:59:59","DistributionAddress":"广东省越秀区人民北路流花路站IV竖井施工区","SiteContacts":"6338835607250411520","SiteContactTel":"17608002946","DisEntOrderIdentity":"JGDD201900311-1"}],
+        //    "itemModel": [{ "DistributionCode": "PSZC201900027", "OrdeCode": "JGDD201900311", "ComponentName": "N3主筋", "MaterialCode": "MI201800047", "MaterialName": "螺纹钢", "MeteringUnit": "kg\/m", "SingletonWeight": 0, "UnitWeight": 0, "GjNumber": 0, "WeightGauge": 0, "PackNumber": 24, "PackagesNumber": 1, "CanLoadingPackCount": 1, "ThisTimePackCount": 1, "Number": 24, "ProcessingTechnology": "14", "DataType": 1, "Manufactor": "韶钢", "HeatNo": "G94038390", "DisEntOrderIdentity": "PSZC201900027-0", "WorkorderdetailId": "4822" }]
+
+        //}
+        //$.ajax({
+        //    type: 'POST',
+        //    url: '/api/DistributionEnt/SubmitForm',
+        //    data:a,
+        //    async: false,
+        //    cache: false,
+        //    success: function (data) {
+
+        //    }
+        //});
+    }
+</script>

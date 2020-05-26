@@ -1,0 +1,257 @@
+﻿@{
+    ViewBag.Title = "SelectForm";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<style type="text/css">
+    #gview_gridList {
+        margin-bottom: 0px;
+    }
+</style>
+<div class="topPanel">
+    <div class="search">
+        <table>
+            <tr>
+                <td>
+                    <div class="input-group">
+                        <input id="txt_keyword" type="text" class="form-control" placeholder="编号/名称" style="width: 200px;">
+                        <span class="input-group-btn">
+                            <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridList"></table>
+    <div id="gridPager"></div>
+</div>
+<script>
+    var isPage = $.request("isPage");//是否分页
+    if (isPage == "") {isPage = true;}
+    else { isPage = false; }
+    var Fields = $.request("tableName");//弹框表名
+    $(function () {
+        var queryCriteria = $.request("queryCriteria");
+        if (!!queryCriteria) {
+            $("#txt_keyword").attr("placeholder", queryCriteria);
+        }
+        var GetDataUrl = $.request("GetDataUrl");//弹框数据来源
+        //弹框数据来源(多条件查询)
+        //例："/ProjectManage/ProgressPlan/GetGridJson&keyValue=ProjectCode/" + code + "|TaskNumber/" + task;
+        var keyValue = $.request("keyValue");
+        var where = "?1=1";
+        if (keyValue) {
+            var searchArry = keyValue.split("|");
+            if (searchArry.length > 0) {
+                $.each(searchArry, function (index, value) {
+                    var arry = value.split("/");
+                    if (arry.length > 0) {
+                        where += "&" + arry[0] + "=" + arry[1];
+                    }
+                    else {
+                        where = "?keyValue=" + keyValue;
+                    }
+                });
+                GetDataUrl = GetDataUrl + where;
+            } else {
+                GetDataUrl = GetDataUrl + "?keyValue=" + keyValue;
+            }
+        }
+        var GridType = $.request("GridType");//数据类型（Grid/TreeGrid）
+        var SortField = $.request("SortField");//排序字段
+        var Key = $.request("Key");//可以为空（用于treegrid分级）
+        var multiselect = $.request("multiselect")
+        if ((multiselect == null || multiselect == "" || multiselect == undefined) || multiselect == "false") {
+            multiselect = false;
+        } else {
+            multiselect = true;
+        }
+        if (GridType == 'Grid') {
+            gridList(Fields, GetDataUrl, SortField, multiselect);
+        } else {
+            treegridList(Fields, GetDataUrl, SortField, Key)
+        }
+        $(window).resize(function () {
+            $("#gridList").setGridWidth($(window).width());
+            $("#gridList").setGridHeight($(window).height()-150);
+        });
+    });
+    function gridList(Fields, GetDataUrl, SortField, multiselect) {
+        var hadeHtml = [];//存放表头
+        //获取表格表头数据
+        $.ajax({
+            url: "/SystemManage/WinDisplayField/GetGridHeadJson?tableName=" + Fields,
+            type: "get",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].FieldIsShow == 1) {
+                        hadeHtml.push({ label: data[i].FieldName, name: data[i].FieldCode, hidden: true })
+                    } else {
+                        hadeHtml.push({ label: data[i].FieldName, name: data[i].FieldCode, width: data[i].FieldWidth, align: 'left', sortable: false, formatter: formatDatebox })
+                    }
+                }
+            }
+        });
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: GetDataUrl,
+            height: $(window).height()*0.65,
+            multiselect: multiselect,
+            colModel: hadeHtml,
+            gridComplete: function (id) {
+                $("#gridList>tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+            },
+            ondblClickRow: function (id) {//双击
+                //BackData();
+            },
+            pager:isPage? "#gridPager":"",
+            sortname: SortField,
+            sortorder: 'desc',
+            viewrecords: true
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { keyword: $("#txt_keyword").val() },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function treegridList(Fields, GetDataUrl, SortField, Key) {
+        var hadeHtml = [];//存放表头
+        //获取表格表头数据
+        $.ajax({
+            url: "/SystemManage/WinDisplayField/GetGridHeadJson?tableName=" + Fields,
+            type: "get",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i].FieldCode == Key) {
+                        hadeHtml.push({ label: data[i].FieldName, name: data[i].FieldCode, width: data[i].FieldWidth, key: true, align: 'left', sortable: false })
+                    } else {
+                        if (data[i].FieldIsShow == 1) {
+                            hadeHtml.push({ label: data[i].FieldName, name: data[i].FieldCode, hidden: true })
+                        } else {
+                            hadeHtml.push({ label: data[i].FieldName, name: data[i].FieldCode, width: data[i].FieldWidth, align: 'left', sortable: false })
+                        }
+                    }
+                    if (i == 0 && Fields != "win_Area") {
+                        hadeHtml.push({ label: data[i].FieldName, name: data[i].FieldCode, width: data[i].FieldWidth, hidden: true, align: 'left', sortable: false })
+                    }
+                }
+            }
+        });
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: true,
+            treeGridModel: "adjacency",
+            rownumbers: false,
+            url: GetDataUrl,
+            height: $(window).height() - 96,
+            colModel: hadeHtml,
+            sortname: SortField,
+            ondblClickRow: function (id) {//双击
+                //BackData();
+            }
+
+        });
+        //查询
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { keyword: $("#txt_keyword").val() },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    function BackData(multiselect) {
+        var rowData = [];
+        if (multiselect == true) {
+            var ids = jQuery("#gridList").jqGrid('getGridParam', 'selarrrow');//获取选中行id
+            if (ids == null || ids == "" || ids == undefined || ids == []) {
+                $.modalMsg("你还没选择任何行", "warning");
+                return;
+            }
+            if (ids.length > 0) {
+                for (var i = 0; i < ids.length; i++) {
+                    rowData.push(jQuery("#gridList").jqGrid('getRowData', ids[i]));
+                }
+            }
+            //厂家炉批号
+            if (Fields == "win_TestReport") {
+                var new_arr = [];
+                var idAll = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+                $.each(idAll, function (i, item) {
+                    if ($.inArray(item, ids) == -1) {
+                        new_arr.push(item);
+                    }
+                });
+                if (new_arr.length > 0) {
+                    for (var i = 0; i < new_arr.length; i++) {
+                        var rowdataitem = jQuery("#gridList").jqGrid('getRowData', new_arr[i]);
+                        rowdataitem.isNotSelect = true;
+                        rowData.push(rowdataitem);
+                    }
+                }
+            }
+        } else {
+            var id = jQuery("#gridList").jqGrid('getGridParam', 'selrow');//获取选中行id
+            if (id == null || id == "" || id == undefined || id == []) {
+                $.modalMsg("你还没选择任何行", "warning");
+                return;
+            }
+            if (id.length > 0) {
+                rowData.push(jQuery("#gridList").jqGrid('getRowData', id));
+            }
+        }
+        if (Fields == "win_Accounting")
+        {
+            if (rowData[0].DetailSubject != "是") {
+                $.modalMsg("只能选择明细科目", "warning");
+                return;
+            }
+        }
+        if (Fields == "win_WelcomeProjectMake" || Fields == "win_BalanceSheetProjectName") {
+            if (rowData.length>5) {
+                $.modalMsg("您好，最多只能选择5条项目信息！", "warning");
+                return;
+            }
+        }
+        //判断配送装车选择的订单是否都是选择的同一站点下的订单
+
+        if (Fields == "win_ZCPlan") {
+            if (rowData) {
+                var a=rowData[0].SiteCode;
+                for (var i = 0; i < rowData.length; i++) {
+                    if (rowData[i].SiteCode != a) {
+                        $.modalMsg("您好，只能选择同一站点下的订单！", "warning");
+                        return;
+                    }
+                }
+            }
+        }
+        return rowData;
+    }
+</script>

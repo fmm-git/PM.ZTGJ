@@ -1,0 +1,502 @@
+﻿@{
+    ViewBag.Title = "原材料生产领料数据列表页";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script src="~/Content/js/highstock.js"></script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="topPanel-btn" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="CollarState">领料状态</option>
+                                    <option value="CollarCode">领用单号</option>
+                                    <option value="OrderCode">加工订单编号</option>
+                                    <option value="HistoryMonth">历史月份</option>
+                                </select>
+                                <select id="CollarState" name="CollarState" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                </select>
+                                <input id="CollarStateSelected" name="CollarStateSelected" type="hidden">
+                                <input id="CollarCode" name="CollarCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="领用单号">
+                                <input id="OrderCode" name="OrderCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="加工订单编号">
+                                <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 10px; margin-right:0px;">
+            <div style="float:left; width:40%;">
+                <section class="panel panel-default">
+                    <header class="panel-heading font-bold">
+                        当月领料量分析
+                    </header>
+                    <div class="panel-body">
+                        <div id="report1" class="highchartImg"></div>
+                    </div>
+                </section>
+            </div>
+            <div style="float:left; width:60%;">
+                <section class="panel panel-default">
+                    <header class="panel-heading font-bold">
+                        站点领料量分析
+                    </header>
+                    <div class="panel-body">
+                        <div id="report2" class="highchartImg"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top:10px;">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var CollarStateSelected = "";
+    var SiteCode = "";
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/RawMaterial/RMProductionMaterial/Index");
+        //移除添加，审核按钮
+        $("#NF-add").parent().remove();
+        $("#NF_examination").parent().remove();
+        $('#layout').layout();
+        //领料状态值改变事件
+        $("#CollarState").change("bind", function () {
+            CollarStateSelected = $(this).find("option:selected").val();
+            $("#CollarStateSelected").val(CollarStateSelected);
+        })
+        leftList();
+        //原材料生产领料数据访问
+        gridList();
+        $(".ui-layout-center").css("padding", "10px");
+        //领料状态
+        $("#CollarState").bindSelect({
+            url: "/SystemManage/DataDictionary/GetDicByCode?dicCode=CollarState",
+            id: "DictionaryText",
+            text: "DictionaryText"
+        });
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+            });
+        });
+    });
+
+    //原材料生产领料数据访问
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: " /RawMaterial/RMProductionMaterial/RMIndexSelect",
+            height: $(window).height() * 0.36,
+            colModel: [
+                //{ label: '审批状态', name: 'Examinestatus', width: 70, align: 'left', sortable: false },
+                { label: '领用单号', name: 'CollarCode', width: 100, align: 'left', sortable: false },
+                //{ label: '领用日期', name: 'CollarDate', width: 70, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d', newformat: 'Y-m-d' } },
+                { label: '加工订单编号', name: 'OrderCode', width: 100, align: 'left', sortable: false },
+                {
+                    label: '操作', name: 'PrintCount', width: 100, align: 'center', sortable: false,
+                    formatter: function (value, options, row) {
+                        return value = "<a onclick='print(" + row.ID + ",0)' style='text-decoration:none;cursor:pointer'><span style='color:blue;'>打印领料单</span></a>";
+                    }
+                },
+                { label: '类型编号', name: 'TypeCode', width: 70, align: 'left', sortable: false },
+                { label: '类型名称', name: 'TypeName', width: 70, align: 'left', sortable: false },
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '使用部位', name: 'CollarPosition', width: 120, align: 'left', sortable: false },
+                //{ label: '领用人', name: 'DeliverUser', width: 70, align: 'left', sortable: false },
+                { label: '领用状态', name: 'CollarState', width: 70, align: 'left', sortable: false, formatter: CollarStateFM },
+                { label: '重量合计(kg)', name: 'Total', width: 120, align: 'left', sortable: false },
+                { label: '领料重量合计(kg)', name: 'WeightSum', width: 120, align: 'left', sortable: false },
+                { label: '使用部位', name: 'CollarPosition', width: 120, align: 'left', sortable: false },
+                { label: '工区', name: 'BranchName', width: 70, align: 'left', sortable: false, formatter: NewCellFbOrGq },
+                { label: '工区', name: 'WorkAreaName', hidden: true },
+                { label: '站点', name: 'SiteName', width: 70, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 90, align: 'left', sortable: false, hidden: true },
+                { label: '录入人名称', name: 'UserName', width: 70, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入时间', name: 'InsertTime', width: 110, align: 'left', sortable: false },
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();//双击执行查看事件
+            },
+            pager: "#gridPager",//分页DIV-ID
+            sortname: 'CollarCode',//按照什么列名排序
+            sortorder: "desc",
+            viewrecords: false,
+            rownumbers: true,
+        });
+        //查询按钮事件
+        $("#btn_search").click(function () {
+            var param = $(".search").formSerialize();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+            thisMonthOrder(param);
+            thisMonthOrderZ(param);
+        });
+        //查询按钮事件
+        $("#btn_searchOne").click(function () {
+            var postData = $(".search").formSerialize();
+            for (x in postData) {
+                if (x != "ProjectId") {
+                    postData[x] = "";
+                }
+            }
+            var ss = $("#SearchType").children('option:selected').val();
+            if (ss != "") {
+                var cons = $("[name='" + ss + "']");
+                $.each(cons, function (i, item) {
+                    postData[$(item)[0].id] = $(item).val();
+                });
+            }
+            thisMonthOrder(postData);
+            thisMonthOrderZ(postData);
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    //分部、工区
+    function NewCellFbOrGq(cellValue, options, rowObject) {
+        var tdhtml = rowObject.BranchName + "/" + rowObject.WorkAreaName;
+        return tdhtml;
+    }
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 46,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,
+            treeGridModel: 'adjacency',
+            ExpandColumn: 'CompanyFullName',
+            rownumbers: false,
+            onCellSelect: function (ucode) {//单击
+                var CompanyData = $("#leftgridList").jqGrid('getRowData', ucode);
+                SiteCode = getOrganizationalCode(ucode);
+                var param = $(".search").GetSearchCondition();
+                param.SiteCode = SiteCode;
+                param.ProjectId = CompanyData.ProjectId;
+                thisMonthOrder(param);
+                thisMonthOrderZ(param);
+            }
+        });
+    }
+
+    //领用状态
+    function CollarStateFM(cellValue, options, rowObject) {
+        var color = "red";
+        if (cellValue == '领料完成') {
+            color = "green";
+        }
+        return "<span style='color:" + color + ";'>" + cellValue + "</span>";
+    }
+
+    function btn_add() {
+        var where = "?type=add&CompanyCode=" + SiteCode;
+        @*CommonOpen("Form", "新增原材料生产领料", "@Url.Action("Form", "RMProductionMaterial")" + where, true, true)*@
+        CommonOpenAdd({
+            id: "Form",
+            title: "新增原材料生产领料",
+            url: "@Url.Action("Form", "RMProductionMaterial")" + where,
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").getGridParam("selrow");
+        var where = "?keyValue=" + keyValue;
+        CommonOpenAdd({
+            id: "Form",
+            title: "修改原材料生产领料",
+            url: "@Url.Action("Form", "RMProductionMaterial")" + where,
+            windowType: 2,
+            btnText: "确认并打印",
+        });
+    }
+    function OpenForLC() {
+        var data = { width: "60%", height: "550px" };
+        return data;
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "RMProductionMaterial")",
+            anyUrl: "@Url.Action("AnyInfo", "RMProductionMaterial")",
+            isdel: true,
+            isAny: false,
+        });
+    }
+
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'RMProductionMaterial', rowData.Examinestatus, rowData.CollarCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+
+    //查看按钮事件
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "原材料生产领料查看界面",
+            url: "@Url.Action("Details", "RMProductionMaterial")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    //修改，添加，查看界面载体
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    function print(id) {
+        var keyValue = id;
+        $.modalOpen({
+            id: "Print",
+            title: "打印",
+            url: "@Url.Action("Print", "RMProductionMaterial")" + "?keyValue=" + keyValue,
+            width: "68%",
+            height: "700px",
+            btn: null,
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "RMProductionMaterial")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+<!------------报表---------->
+<script type="text/javascript">
+    $(function () {
+        //设置统计图形的高度
+        var screenHeight = $("body").height();
+        $(".highchartImg").each(function () {
+            $(this).height(screenHeight * 0.3);
+        });
+        var param = $(".search").formSerialize();
+        //1.当月领料订单分析饼状图
+        thisMonthOrder(param);
+        //2.当月各站点领料分析
+        thisMonthOrderZ(param);
+    });
+
+    //当月领料订单分析饼状图
+    function thisMonthOrder(param) {
+        var CollarStateCode = [];
+        $.ajax({
+            url: '/RMProductionMaterial/PieSelect',
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data) {
+                    for (var i = 0; i < data.length; i++) {
+                        CollarStateCode.push({
+                            name: data[i]["text"],
+                            y: data[i]["value"]
+                        });
+                    }
+                }
+            }
+        });
+        //初始化图表
+        var chart = Highcharts.chart('report1', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false
+            },
+            title: { text: '' },
+            credits: { enabled: false },//是否显示版权信息
+            tooltip: { pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>' },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        distance: '-1', //控制饼图外面的线的长短,为负数时文本内容在饼图内部
+                        format: '<span style="color:#757575">{point.name}:{point.percentage:.1f}%</span><br><span style="color:#757575">{point.y}kg</span>',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }, events: {
+                        click: function (e) {
+                            //pieClick(e.point.name);
+                        }
+                    }
+                }
+            },
+            series: [{
+                type: 'pie',
+                name: '领用量所占比重',
+                data: CollarStateCode
+            }]
+        });
+    }
+
+    //当月各站点领料分析柱状图开始
+    function thisMonthOrderZ(param) {
+        var SiteName = [];
+        var SiteCode = [];
+        var SiteData = [];
+        var SiteData1 = [];
+        var SiteData2 = [];
+        var SiteData3 = [];
+        $.ajax({
+            url: '/RMProductionMaterial/SitaDataReport',
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        SiteData1.push(data[i]["Total"]);
+                        SiteData2.push(data[i]["ycl"]);
+                        SiteData3.push(data[i]["yl"]);
+                        SiteName.push(data[i]["SiteName"]);
+                        SiteCode.push(data[i]["SiteCode"]);
+                    }
+                    SiteData.push({
+                        name: '领料总量',
+                        data: SiteData1
+                    }, {
+                        name: '原材料领用量',
+                        data: SiteData2
+                    }, {
+                        name: '余料领用量',
+                        data: SiteData3
+                    })
+                }
+            }
+        });
+        // 初始化图表
+        var chart = Highcharts.chart('report2', {
+            chart: {
+                type: 'column'
+            },
+            title: { text: '' },
+            credits: { enabled: false },
+            subtitle: { text: null },
+            xAxis: {
+                categories: SiteName,
+                crosshair: true,
+                max: 5
+            },
+            yAxis: {
+                min: 0,
+                title: { text: "重量" }
+            },
+            legend: {
+                align: 'right', //水平方向位置
+                verticalAlign: 'top', //垂直方向位置
+                x: 0, //距离x轴的距离
+                y: 0
+            },
+            //设置滚动条
+            scrollbar: {
+                enabled: true
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                '<td style="padding:0"><b>{point.y:.1f} kg</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0,
+                    pointWidth: 15, //柱子之间的距离值
+                },
+                series: {
+                    cursor: 'pointer',
+                    events: {
+                        click: function (e) {
+                            pieClick(SiteCode[e.point.index])
+                        }
+                    },
+                }
+            },
+            series: SiteData
+        });
+    }
+
+    function pieClick(code) {
+        var param = $(".search").formSerialize();
+        param.SiteCode = code;
+        $("#gridList").jqGrid('setGridParam', {
+            postData: param,
+            page: 1
+        }).trigger('reloadGrid');
+    }
+</script>

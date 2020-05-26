@@ -1,0 +1,74 @@
+﻿@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+@*<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script>
+    $(function () {
+        gridList();
+    })
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/Role/GetNoPageGridJson",
+            height: $(window).height() - 46,
+            colModel: [
+                //ID,UserCode,UserName,UserSex,IDNumber,MobilePhone 
+                { label: "主键", name: "ID", hidden: true, key: true },
+                {
+                    name: 'UserCode', width: 100, align: 'center',
+                    formatter: function (cellvalue) {
+                        return cellvalue == "true" ? "<input type='checkbox' checked='checked'/>" : "<input type='checkbox'/>"
+                    }
+                },
+                { label: "用户编号", name: "UserCode", width: 150, align: 'left' },
+                { label: '用户名称', name: 'UserName', width: 150, align: 'left' },
+                //{ label: '性别', name: 'UserSex', width: 150, align: 'left' },
+                //{ label: '身份证', name: 'IDNumber', width: 200, align: 'left' },
+                //{ label: '电话号码', name: 'MobilePhone', width: 180, align: 'left' }
+                //{ label: "主键", name: "ID", hidden: true, key: true },
+                //{
+                //    name: 'UserCode', width: 100, align: 'center',
+                //    formatter:function(v,x,r){return "<input type='checkbox'/>";}
+                //},
+                //{ label: '角色编号', name: 'RoleCode', width: 150, align: 'left' },
+                //{ label: '人员编号', name: 'RoleName', width: 150, align: 'left' }
+            ],
+            pager: "#gridPager",
+            sortname: 'ID asc',
+            viewrecords: true
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { keyword: $("#txt_keyword").val() },
+            }).trigger('reloadGrid');
+        });
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <div style="padding-top: 5px; margin-right: 30px;">
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="txt_keyword" type="text" class="form-control" placeholder="名称" style="width: 200px;height:25px;">
+                                <span class="input-group-btn">
+                                    <button id="btn_search" type="button" class="btn  btn-primary" style="width:30px;height:25px;" value="查询"><i class="fa fa-search"></i></button>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="gridPanel">
+                <table id="gridList" style="width:800px;height:400px"></table>
+                <div id="gridPager"></div>
+            </div>
+        </div>
+        
+    </div>
+</form>*@

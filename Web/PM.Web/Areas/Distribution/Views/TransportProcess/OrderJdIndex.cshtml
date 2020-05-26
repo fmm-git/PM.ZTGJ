@@ -1,0 +1,114 @@
+﻿@{
+    ViewBag.Title = "OrderJdIndex";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<style type="text/css">
+    .redBG {
+        background-color: #c9302c;
+        color: white;
+    }
+
+    .yBG {
+        background-color: #FFD306;
+        color: white;
+    }
+
+    .table > tbody > tr.active > td, .table > tbody > tr.success > td {
+        color: black;
+    }
+</style>
+<script src="~/Content/js/uploadFile.js"></script>
+<script>
+    var OrderCode = $.request("OrderCode");
+    $(function () {
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            @*url: "@Url.Action("GetCarReportGridJson", "TransportProcess")",*@
+            url: "/Distribution/TransportProcess/GetCarReportGridJson?OrderCode=" + OrderCode,
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '订单编号', name: 'OrderCode', width: 100, align: 'left', sortable: false },
+                { label: '装车配送编号', name: 'DistributionCode', width: 100, align: 'left', sortable: false },
+                { label: "卸货过程状态", name: "FlowState", width: 100, align: 'left', sortable: false },
+                { label: "卸货站点", name: "SiteName", width: 150, align: 'left', sortable: false },
+                { label: "类型编号", name: "TypeCode", width: 150, align: 'left', sortable: false },
+                { label: "类型名称", name: "TypeName", width: 150, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'PlanDistributionTime', width: 150, align: 'left', sortable: false },
+                { label: "实际配送时间", name: "LoadCompleteTime", width: 150, align: 'left', sortable: false },
+                { label: '车牌号', name: 'CarCph', width: 80, align: 'left', sortable: false },
+                { label: "出厂时间", name: "LeaveFactoryTime", width: 150, align: 'left', sortable: false },
+                { label: '运输到场时间', name: 'EnterSpaceTime', width: 150, align: 'left', sortable: false },
+                { label: '等待卸货时间', name: 'WaitTime', width: 80, align: 'left', sortable: false },
+                { label: '开始卸货时间', name: 'StartDischargeTime', width: 150, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'EndDischargeTime', width: 150, align: 'left', sortable: false },
+                { label: '车辆出场时间', name: 'OutSpaceTime', width: 150, align: 'left', sortable: false },
+                { label: '是否存在问题', name: 'IsProblem', width: 80, align: 'left', sortable: false, formatter: IsProblem },
+                { label: '附件', name: 'Enclosure', hidden: true },
+                { label: "照片记录", name: "OperateP", width: 100, align: 'center', sortable: false, formatter: ConfirmButton },
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            gridComplete: function () {
+                var ids = $("#gridList").getDataIDs();
+                for (let i = 0; i < ids.length; i++) {
+                    var rowData = $("#gridList").getRowData(ids[i]);
+                    var state = $('#' + ids[i]).find("[aria-describedby='gridList_FlowState']");
+                    $(state).html("正常");
+                    var title = parseInt(rowData.WaitTime);
+                    if (title > 30) {
+                        $('#' + ids[i]).find("td").addClass("redBG");
+                        $(state).html("等待超过30分钟");
+                    }
+                    if (rowData.IsProblem == '是') {
+                        $('#' + ids[i]).find("td").addClass("yBG");
+                        $(state).html("卸货存在问题");
+                    }
+                }
+                $('.aTable').on('click', $.nfinetab.syaddtab);
+            },
+            pager: "#gridPager",
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+    }
+
+    function ConfirmButton(cellvalue, options, rowObject) {
+        if (rowObject.Enclosure != "") {
+            var butHtm = "<a class='btn btn-primary' Enclosure='"+rowObject.Enclosure+"' onclick='onButClick(this)'>查看</a> ";
+            return butHtm;
+        } else {
+            return "";
+        }
+    }
+    function onButClick(obj) {
+        var Enclosure= $(obj).attr("Enclosure");
+        showFile(Enclosure, "details", "DistributionEnt");
+    }
+
+    function IsProblem(cellvalue, options, rowObject) {
+        if (rowObject.IsProblem == "是") {
+            var butHtm = "是&nbsp;&nbsp;<a class='btn btn-primary aTable' data-id='Article'  href='/Article/Article/Index?DistributionCode=" + rowObject.DistributionCode + "'>查看</a> ";
+            return butHtm;
+        } else {
+            return "否";
+        }
+    }
+</script>
+
+<script src="~/Content/js/indextab.js?v=1.1" charset="gbk"></script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+

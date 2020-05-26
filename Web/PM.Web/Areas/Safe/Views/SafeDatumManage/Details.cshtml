@@ -1,0 +1,82 @@
+﻿@{
+    ViewBag.Title = "班前讲话查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<style type="text/css">
+    #btn_top {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        display: none;
+    }
+</style>
+<button id="btn_top" title="回到顶部" class="btn btn-primary btn-rounded">
+    回到顶部
+</button>
+<div class="row wrapper border-bottom white-bg page-heading page-heading-d">
+    <div class="col-lg-10">
+        <h3></h3>
+        <ol class="breadcrumb">
+            <li>
+                <a href="@Url.Action("Index", "SafeDatumManage")">首页</a>
+            </li>
+            <li class="active">
+                <strong>内容</strong>
+            </li>
+        </ol>
+    </div>
+    <div class="col-lg-2">
+
+    </div>
+</div>
+<div class="wrapper wrapper-content  animated fadeInRight article">
+    <div class="row">
+        <div class="col-lg-10 col-lg-offset-1">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <div class="pull-left">
+                        讲话人：@ViewBag.SpeechUserName
+                    </div>
+                    <div class="text-center article-title">
+                        <span class="text-muted"><i class="fa fa-clock-o"></i>@ViewBag.InsertTime</span>
+                        <h1>
+                            @ViewBag.SpeechTheme
+                        </h1>
+                    </div>
+                    <div id="Content"></div>
+                    @Html.Raw(ViewBag.SpeechContent)
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>编辑人：</h5>
+                            <button class="btn btn-primary btn-xs" type="button">@ViewBag.InsertUserName</button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-right">
+                                <h5>统计：</h5>
+                                <div> <i class="fa fa-eye"> </i> @ViewBag.BrowseCount 查看 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        $(window).scroll(function () {
+            if ($(window).scrollTop() >= 50) {
+                $('#btn_top').fadeIn();
+            }
+            else {
+                $('#btn_top').fadeOut();
+            }
+        });
+        $('#btn_top').click(function () {
+            $('html,body').animate({ scrollTop: 0 }, 500);
+        });
+    });
+
+</script>

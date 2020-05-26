@@ -1,0 +1,203 @@
+﻿@{
+    ViewBag.Title = "临时用电检查编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "InterimUseElectricCheck")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    $("#InsertUserName").val(data.UserName);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                }
+            });
+        }
+    });
+
+    function initControl() {
+        //外电防护与配电线路
+        $("#epod").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "InterimUseElectricCheck" })",
+            id: "DictionaryText",
+            text: "DictionaryText"
+        });
+        //接地与防雷
+        $("#gorlp").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "InterimUseElectricCheck" })",
+            id: "DictionaryText",
+            text: "DictionaryText"
+        });
+        //配电室与自备电源
+        $("#drorps").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "InterimUseElectricCheck" })",
+            id: "DictionaryText",
+            text: "DictionaryText"
+        });
+        //配电箱与开关箱
+        $("#dorsb").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "InterimUseElectricCheck" })",
+            id: "DictionaryText",
+            text: "DictionaryText"
+        });
+    }
+    //检查人选择
+    function selectCheckUser() {
+        var ret = selectClickNew('', '75%', '75%', function (data) {
+            if (data != null) {
+                var userName = [];
+                var userCode = [];
+                data.forEach(function (v) { userName.push(v.UserName); userCode.push(v.UserCode); });
+                var strName = userName.join(",");
+                var strCode = userCode.join(",");
+                $("#CheckUserNames").val(strName);
+                $("#CheckUserCodes").val(strCode);
+            };
+        }, true);
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "InterimUseElectricCheck")" + "?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "InterimUseElectricCheck");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "InterimUseElectricCheck");
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">检查编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CheckCode" name="CheckCode" type="text" value="@ViewBag.CheckCode" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.FactoryCode">
+                        <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" value="@ViewBag.FactoryName" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">外电防护与配电线路<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="epod" name="FireImplement" class="form-control required"></select>
+                    </td>
+                    <th class="formTitle">接地与防雷<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="gorlp" name="FireSlogan" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">配电室与自备电源<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="drorps" name="FirePassageway" class="form-control required"></select>
+                    </td>
+                    <th class="formTitle">配电箱与开关箱<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="dorsb" name="FirePiping" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">检查人<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="CheckUserCodes" name="CheckUserCodes" type="hidden">
+                            <input id="CheckUserNames" name="CheckUserNames" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn" onclick="selectCheckUser();">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">检查时间<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CheckDate" name="CheckDate" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">问题描述<span class="required1">*</span></th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="ProblemDescription" name="ProblemDescription" class="form-control required" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserName" name="InsertUserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+

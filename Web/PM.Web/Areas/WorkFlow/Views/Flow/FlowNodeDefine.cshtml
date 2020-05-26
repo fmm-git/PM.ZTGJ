@@ -1,0 +1,209 @@
+﻿@{
+    ViewBag.Title = "FlowNodeDefine";
+}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>节点属性</title>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+    <link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+</head>
+<body >
+    <div>
+        <form id="form_nodeinfo" class="form" style="padding-left:0;padding-top:20px;padding-right:0;" role="form">
+            <div class="form-group" style="margin-top: 10px; width: 50%; padding-left: 40px;">
+                <h5 class="h5">节点属性</h5>
+            </div>
+            <div class=" form-inline" style="width: 50%; padding-left: 40px;">
+                <label class="col-sm-2 control-label" for="FlowNodeName">节点名称&nbsp;&nbsp;</label>
+                <input type="text" class="form-control" id="FlowNodeName" name="FlowNodeName" placeholder="请输入节点名称" />
+            </div>
+            <div class="form-inline" style="margin-top: 10px; width: 50%; padding-left: 40px;display:none">
+                <label class="col-sm-2 control-label" for="FlowNodeName">节点设置&nbsp;&nbsp;</label>
+                <label class="checkbox col-sm-8">
+                    <input type="checkbox" id="BlankNode" name="BlankNode" value="option1" title=""
+                           data-toggle="popover" data-trigger="hover" data-delay="{ show: 1000, hide: 5000 }" data-placement="top"
+                           data-content="该节点不需要审批人员，系统自动跳过">空节点
+                </label>
+                <label class="checkbox col-sm-8" style="margin-left:10px;">
+                    <input type="checkbox" id="AllApproval" name="AllApproval" value="option2" title=""
+                           data-toggle="popover" data-trigger="hover" data-delay="{ show: 1000, hide: 5000 }" data-placement="top"
+                           data-content="该节点所有审批人员都审核通过后才能跳转下一节点">会签
+                </label>
+                <label class="checkbox col-sm-8" style="margin-left:10px;">
+                    <input type="checkbox" id="FreeCandidates" name="FreeCandidates" value="option3" title=""
+                           data-toggle="popover" data-trigger="hover" data-delay="{ show: 1000, hide: 5000 }" data-placement="top"
+                           data-content="上一审批节点选择审批人员">自由选人
+                </label>
+            </div>
+            <div class="form-group" style="margin-top: 10px; width: 50%;padding-left:40px;">
+                <h5 class="h5">处理人员</h5>
+                <button class="btn btn-info" type="button" onclick="afp();" id="add_flow_person">添加人员</button>
+                <button class="btn btn-danger" type="button" onclick="deleteafp();" id="del_flow_person">删除</button>
+            </div>
+            <div class="form-group" style="margin-top:10px;width:50%;padding-left:40px;">
+                <div class="gridPanel">
+                    <table id="gridList"></table>
+                </div>
+            </div>
+        </form>
+
+
+        <script src="/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+        <script src="/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+        <script src="/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+        <script src="/UiFrame/FlowChartTool/jquery.window.js"></script>
+        <script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+        <link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+        <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+        <script src="~/Content/js/layer/layer.js"></script>
+        <script type="text/javascript">
+            var type = $.request("type");
+            var FlowCode = $.request("FlowCode");
+            var FlowNodeCode = $.request("FlowNodeCode");
+            var index = 1;
+            var lastsel;
+            $(function () {
+                var $gridList = $("#gridList");
+                $gridList.dataGrid({
+                    datatype: "json",
+                    height: $(window).height() - 248,
+                    rownumbers: false,
+                    colModel: [
+                        { label: "主键", name: "id", hidden: true, key: true },
+                        { label: "编码", name: "UserTypeId", width: 100, align: 'left', sortable: false, hidden: true },
+                        { label: '操作类型', name: 'ActionType', hidden: true },
+                        { label: "操作类型", name: "ActionTypeName", width: 100, align: 'left', sortable: false, editable: true, edittype: "select", editoptions: { value: "0:审批;-1:抄送" } },
+                        { label: "人员来源", name: "TypeName", width: 100, align: 'left', sortable: false },
+                        { label: "人员名称", name: "Name", width: 100, align: 'left', sortable: false },
+                        { label: "部门ID", name: "DeptId", width: 100, align: 'left',hidden: true },
+                        { label: "所属部门", name: "DeptName", width: 100, align: 'left', sortable: false },
+                        { label: "角色ID", name: "RoleId", width: 100, align: 'left', hidden: true },
+                        { label: "所属角色", name: "RoleName", width: 100, align: 'left', sortable: false },
+                        { label: "项目id", name: "ProjectId", width: 100, align: 'left', hidden: true },
+                        { label: "组织机构Id", name: "OrgId", width: 100, align: 'left', hidden: true },
+                    ],
+                    onCellSelect: function (rowid, iCol, cellContent, e) {
+                        $gridList.jqGrid('editRow', rowid, true, null, null, null, null, null, null, null, iCol);
+                        //获取表格最后一行Id
+                        var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                        var id = selectedRowIds[selectedRowIds.length - 1];
+                        if (rowid && (rowid !== lastsel || rowid == id)) {
+                            $gridList.jqGrid('saveRow', lastsel);
+                            $gridList.jqGrid('editRow', rowid, true);
+                            lastsel = rowid;
+                            $("#gridList>tbody").find("input:text").each(function () {
+                                var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                                $(this).css("height", "20px").css("width", width + "px");
+                            });
+                        }
+                        valid(rowid);
+                    },
+                    editurl: "@Url.Action("RowEditing", "Flow")",
+                });
+
+                if (type == "edit") {
+                    $.post("/Flow/Flow/GetNode", { FlowCode: FlowCode, FlowNodeCode: FlowNodeCode }, function (data) {
+
+                        var json = JSON.parse(data);
+                        if (json.state == "success") {
+                            var node = JSON.parse(json.data);
+                            $("#FlowNodeName").val(node.FlowNodeName);
+                            if (node.AllApproval == 1) $("#AllApproval").attr("checked", true);
+                            if (node.FreeCandidates == 1) $("#FreeCandidates").attr("checked", true);
+                            if (node.BlankNode == 1) $("#BlankNode").attr("checked", true);
+                            $.post("/WorkFlow/Flow/GetNodePersonnel", { FlowCode: FlowCode, FlowNodeCode: FlowNodeCode }, function (data) {
+                                var rows = JSON.parse(data);
+                                $("div.unwritten").remove();
+                                for (var i = 0; i < rows.length; i++) {
+                                    $("#gridList").jqGrid("addRowData", i, rows[i]);
+                                }
+                            });
+                        }
+                        else {
+                            alert("数据查询失败");
+                        }
+                    });
+                }
+            });
+
+            function valid(rowid) {
+                $("#" + rowid + "_ActionTypeName").change(function () {
+                    var value = $("#" + rowid + "_ActionTypeName").val();
+                    $($("#" + rowid + "_ActionTypeName").parent().parent().children()[2]).html(value);//给操作类型赋值
+                });
+            }
+
+            function afp() {
+                if ($("#BlankNode").is(":checked")) {
+                    alert("该节点已设置为空节点，空节点不需要设置审批人员");
+                    return;
+                }
+                else if ($("#FreeCandidates").is(":checked")) {
+                    alert("该节点已设置为自由选人，自由选人节点审批人员由上一步审批人完成后手动选择");
+                    return;
+                }
+                layer.open({
+                    type: 2,
+                    title: "选择审批、抄送人员",
+                    area: ['95%', '95%'],
+                    content: "/Flow/Flow/FreeChooseFlowUserNew?cztype=sp",
+                    btn: ['确定', '关闭'],
+                    yes: function (index, layero) {
+                        $("div.unwritten").remove();
+                        var rows = layero.find("iframe")[0].contentWindow.BackData();
+                        for (var i = 0; i < rows.length; i++) {
+                            $("#gridList").jqGrid("addRowData", i, rows[i]);
+                        }
+                        layer.close(index);
+                    }, cancel: function (index) { }
+                });
+            }
+            function deleteafp() {
+                var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+                if (!rowId) {
+                    $.modalMsg("请选择数据", "warning");
+                    return false;
+                }
+                $("#gridList").jqGrid('delRowData', rowId);
+            }
+            function BackData() {
+                var Result = {};
+                var rows = $('#gridList').jqGrid('getRowData');
+                var allCountID = $("#gridList").jqGrid('getDataIDs');
+                rows.push($("#gridList").jqGrid('getRowData', allCountID[allCountID.length - 1]));
+                if (rows.length > 0) {
+                    for (var i = 0; i < rows.length; i++) {
+                        delete rows[i].ActionTypeName
+                    }
+                }
+                Result["SPLIST"] = rows;
+                var Name = $("#FlowNodeName").val();
+                Result["Name"] = Name;
+                var AllApproval = $("#AllApproval").is(":checked") ? 1 : 0;
+                Result["AllApproval"] = AllApproval;
+                var FreeCandidates = $("#FreeCandidates").is(":checked") ? 1 : 0;
+                Result["FreeCandidates"] = FreeCandidates;
+                var BlankNode = $("#BlankNode").is(":checked") ? 1 : 0;
+                Result["BlankNode"] = BlankNode;
+                return Result;
+            }
+
+            //获取表格数据
+            function GetGridRowData() {
+                $("#gridList").jqGrid('saveRow', lastsel);
+                var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+                var columnData = [];
+                $(ids).each(function (index, yu) {
+                    var rowData = $("#gridList").jqGrid("getRowData", yu);
+                    columnData.push(rowData);
+                });
+                return columnData;
+            }
+        </script>
+    </div>
+</body>
+</html>

@@ -1,0 +1,203 @@
+﻿@{
+    ViewBag.Title = "机械费用核算列表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<style type="text/css">
+    .ui-jqgrid .table-bordered th {
+        border-left: 0px none !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-weight: normal;
+        background: #eee;
+        border: 1px solid #ddd;
+        vertical-align: middle;
+    }
+</style>
+<script>
+    $(function () {
+        $.LodeMenuBtn("/CostManage/MachineCost/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "MachineCost")",
+            height: $(window).height() - 178,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false },
+                { label: "核算编号", name: "CheckCode", width: 100, align: 'left', sortable: false },
+                { label: '站点名称', name: 'SiteName', width: 100, align: 'left', sortable: false },
+                { label: "订单编号", name: "OrderCode", width: 100, align: 'left', sortable: false },
+                { label: "类型编号", name: "TypeCode", width: 100, align: 'left', sortable: false },
+                { label: "类型名称", name: "TypeName", width: 100, align: 'left', sortable: false },
+                { label: "使用部位", name: "UsePart", width: 100, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 150, align: 'left', sortable: false },
+                { label: '机械费用合计', name: "TotalAmount", width: 100, align: "right", sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false },
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+            subGrid: true,
+            gridComplete: function (id) {
+                $("#gridList>tbody").find(".ui-sgcollapsed").each(function () {
+                    $(this).css("padding-top", "7px");
+                });
+            },
+            subGridRowExpanded: function (subgrid_id, row_id) {
+                var subgrid_table_id, pager_id;
+                subgrid_table_id = subgrid_id + "_t";
+                pager_id = "p_" + subgrid_table_id;
+                var rowData = $gridList.jqGrid('getRowData', row_id);
+                var code = rowData.CheckCode;
+                $("#" + subgrid_id).html(
+                    "<table id='" + subgrid_table_id
+                        + "' class='scroll'></table><div id='"
+                        + pager_id + "' class='scroll'></div>");
+                $("#" + subgrid_table_id).jqGrid({
+                    url: "@Url.Action("GetItemGridJson", "MachineCost")" + "?CheckCode=" + code,
+                    datatype: "json",
+                    colModel: [
+                                 { label: "主键", name: "ID", hidden: true },
+                                 { label: "核算编号", name: "CheckCode", hidden: true },
+                                 { label: '设备名称', name: "DeviceName", width: 200, align: "left", sortable: false },
+                                 { label: '数量', name: "OilSauce", width: 100, align: "left", sortable: false },
+                                 { label: '单价', name: "OilPrice", width: 100, align: "right", sortable: false },
+                                 { label: '金额', name: "OilAmount", width: 100, align: "right", sortable: false },
+                                 { label: '数量', name: "ElectricSauce", width: 100, align: "left", sortable: false },
+                                 { label: '单价', name: "ElectricPrice", width: 100, align: "right", sortable: false },
+                                 { label: '金额', name: "ElectricAmount", width: 100, align: "right", sortable: false },
+                                 { label: '折旧费用', name: "DepreciationCost", width: 100, align: "right", sortable: false },
+                                 { label: '费用合计', name: "TotalPrice", width: 100, align: "right", sortable: false },
+                                 { label: ' ', name: "", width: 100, align: "right", sortable: false },
+                    ],
+                    height: '100%',
+                    pager: pager_id,
+                    viewrecords: true,
+                    rownumbers: true,
+                });
+                $("#" + subgrid_table_id).jqGrid('setGroupHeaders', {
+                    useColSpanStyle: true,
+                    groupHeaders: [
+                    { startColumnName: 'OilSauce', numberOfColumns: 3, titleText: '油耗' },
+                    { startColumnName: 'ElectricSauce', numberOfColumns: 3, titleText: '耗电' }
+                    ]
+                });
+            }
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增机械费用核算信息", "@Url.Action("Form", "MachineCost")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改机械费用核算",
+            url: "@Url.Action("Form", "MachineCost")",
+            anyUrl: "@Url.Action("AnyInfo", "MachineCost")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "MachineCost")",
+            anyUrl: "@Url.Action("AnyInfo", "MachineCost")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看机械费用核算",
+            url: "@Url.Action("Details", "MachineCost")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "500px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'MachineCost', rowData.Examinestatus, rowData.CheckCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+    </div>
+    <div class="topPanel">
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <input id="CheckCode" type="text" class="form-control" placeholder="核算编号">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_search">查询</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

@@ -1,0 +1,172 @@
+﻿@{
+    ViewBag.Title = "消息列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<link href="~/Content/js/select2/select2.min.css" rel="stylesheet" />
+<script src="~/Content/js/select2/select2.min.js"></script>
+<script>
+    $(function () {
+        $('#layout').layout();
+        $.LodeMenuBtn("/OA/MyMessage/Index");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        FlowDefineView();
+        gridList();
+        $("#btn_search").click(function () {
+            var sdt = $("#SDT").val();
+            var edt = $("#EDT").val();
+            var status = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+            status = status == null ? 0 : status;
+            var param = JSON.stringify({ status: status, SDT: sdt, EDT: edt });
+            $("#leftgridList").jqGrid('setGridParam', {
+                postData: { param: param },
+            }).trigger('reloadGrid');
+            $("#gridList").jqGrid('setGridParam', {
+                postData: { param: param },
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+
+    })
+    function FlowDefineView() {
+        var sdt1 = $("#SDT").val();
+        var edt1 = $("#EDT").val();
+        var param1 = JSON.stringify({ SDT: sdt1, EDT: edt1 });
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/MyMessage/GetMessageStateNew",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: "状态编码", name: "EWStart", hidden: true, key: true },
+                { label: '消息状态', name: 'StartCount', hidden: true },
+                { label: '消息状态', name: 'StartNameOrCount', width: 240, align: 'left', formatter: StartNameCount }
+            ],
+            treeGrid: false,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'MenuName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                var sdt = $("#SDT").val();
+                var edt = $("#EDT").val();
+                var param = JSON.stringify({ status: ucode, SDT: sdt, EDT: edt });
+                $("#gridList").jqGrid('setGridParam', {
+                    postData: { param: param },
+                }).trigger('reloadGrid');
+            },
+            postData: { param: param1 },
+            loadComplete: function () {//默认选中第一条
+                $("#leftgridList").jqGrid('setSelection', 0);
+            }
+        });
+    }
+    function StartNameCount(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.EWStart == "0") {//未阅
+            tdhtml += "未阅【" + rowObject.StartCount + "】";
+        }
+        else {
+            tdhtml += "已阅【" + rowObject.StartCount + "】";
+        }
+        return tdhtml;
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: false,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            url: "/MyMessage/GetMessageStateList",
+            height: $(window).height() - 128,
+            rownumbers: false,
+            colModel: [
+                { label: "消息ID", name: "ID", width: 100, align: 'left', sortable: false, hidden: true },
+                { label: "消息类型", name: "messageType", width: 100, align: 'left', sortable: false },
+                { label: "主题", name: "messageTitle", width: 150, align: 'left', sortable: false },
+                { label: "内容", name: "messageContent", width: 500, align: 'left', sortable: false },
+                { label: "状态", name: "isread", width: 70, align: 'left', sortable: false },
+                { label: "消息时间", name: "messageCreateTime", width: 100, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+            ],
+            ondblClickRow: function (rowid) {
+                var row = $("#gridList").jqGridRowValue();
+                var title = row.messageTitle;
+                var content = row.messageContent.replace(/%/g, '%25');
+                var dt = row.messageCreateTime;
+                var ID = row.ID;
+                $.modalOpen({
+                    id: "MsgNew",
+                    title: "消息内容",
+                    url: "/OA/MyMessage/MessageView?ID=" + ID + "&tle=" + title + "&cent=" + content + "&dt=" + dt,
+                    width: "60%",
+                    height: "50%",
+                    btn: null,
+                    cancelBack: function (iframeId) {
+                        //刷新首页审批消息数量
+                        window.parent.getcount();
+                        //刷新父页面
+                        location.reload();
+                    }
+                });
+            },
+            pager: "#gridPager",
+            sortorder: "desc",
+            sortname: 'messageCreateTime',
+            viewrecords: true,
+        });
+
+
+    }
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow:no-display;">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            起始时间：
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="SDT" name="SDT" type="text" @*value="@(DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd"))"*@ class="form-control required input-wdatepicker" onfocus="WdatePicker({ maxDate: '%y-%M-%d', })" />
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;截止时间：
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="EDT" name="EDT" type="text" @*value="@(DateTime.Now.ToString("yyyy-MM-dd"))"*@ class="form-control required input-wdatepicker" onfocus="WdatePicker({ maxDate: '%y-%M-%d', })" />
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a id="btn_search" class="btn btn-primary"><i class="fa fa-search">查询</i></a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

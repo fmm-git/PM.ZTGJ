@@ -1,0 +1,261 @@
+﻿@using PM.DomainObject.Position
+@{
+    ViewBag.Title = "个人信息页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<style type="text/css">
+    body { background: #F4F4F4; }
+    .header { width: 100%; height: 70px; background-color: #FFF; position: absolute; line-height: 70px; padding-left: 80px; font-size: 17px; z-index: 999; position: fixed; border-bottom: 1px solid #F4F4F4; }
+    .content { width: 100%; height: 20%; background-color: #FFF; margin-top: 15px; z-index: 0; padding-top: 10px; }
+</style>
+<link href="~/Content/css/app.v2.css" rel="stylesheet" cache="false" />
+
+<a href="#" class="btn btn-rounded btn-sm btn-twitter" style="position:absolute; right:0; bottom:0; z-index:1300; position:fixed;" id="db_a">
+    <i class="fa fa-arrow-up"></i>&nbsp;回到顶部
+</a>
+<div class="header">
+    <i class="fa fa-xing"></i>
+    <span class="UserText">
+        个人信息页面
+    </span>
+    <ul class="nav nav-tabs pull-right" style="font-size:13px;padding-top:9px;">
+        <li class="active" style="height:70px;">
+            <a href="#messages-1" data-toggle="tab" style="background:#FFF;cursor:pointer " class="ul_li_a">
+                <i class="fa fa-user text-default"></i>
+                基本信息
+            </a>
+        </li>
+        <li class="" style="height:70px;">
+            <a href="#profile-1" data-toggle="tab" style="background:#FFF " class="ul_li_a">
+                <i class="fa fa-sitemap text-default"></i>
+                任职信息
+            </a>
+        </li>
+        <li style="height:70px;">
+            <a href="#settings-1" data-toggle="tab" style="background:#FFF " class="ul_li_a">
+                <i class="fa fa-cog text-default"></i>
+                角色信息
+            </a>
+        </li>
+    </ul>
+</div>
+
+<section class="panel panel-default" style="margin-top:80px; border:0;">
+    <div class="panel-body">
+        <div class="tab-content">
+            <div class="tab-pane active" id="messages-1">
+                <div class="tab-content">
+                    <div class="tab-pane fade active in" id="profile-2">
+                        <div class="content">
+                            <div class="timeline">
+                                <article class="timeline-item active">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <i class="fa fa-bell-o time-icon bg-default"></i>
+                                                数据更新时间：@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article class="timeline-item">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <span class="arrow left"></span> <span class="timeline-icon"><i class="fa fa-database time-icon bg-success"></i></span>
+                                                <h5>
+                                                    <span>公司名称</span>
+                                                    @ViewBag.UserInfo.CompanyCode
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>所在部门</span>
+                                                    @ViewBag.UserInfo.DepartmentCode
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>在职状态</span>
+                                                    @ViewBag.UserInfo.UserClosed
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article class="timeline-item alt">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <span class="arrow right"></span>
+                                                <span class="timeline-icon">
+                                                    <i class="fa fa-male time-icon bg-success"></i>
+                                                </span>
+                                                <h5>
+                                                    <span>您的性别</span>
+                                                    @ViewBag.UserInfo.UserSex
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>出生年月</span>
+                                                    @ViewBag.UserInfo.Birthday
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>政治面貌</span>
+                                                    @ViewBag.UserInfo.PoliticalLandscape
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article class="timeline-item">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <span class="arrow left"></span> <span class="timeline-icon"><i class="fa  fa-phone time-icon bg-primary"></i></span>
+                                                <h5>
+                                                    <span>手机号码</span>
+                                                    @ViewBag.UserInfo.MobilePhone
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>座机号码</span>
+                                                    @ViewBag.UserInfo.Tell
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article class="timeline-item">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <span class="arrow right"></span> <span class="timeline-icon"><i class="fa fa-envelope-o time-icon bg-primary"></i></span>
+                                                <h5>
+                                                    <span>电子邮箱</span>
+                                                    @ViewBag.UserInfo.Email
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article class="timeline-item alt">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <span class="arrow right"></span>
+                                                <span class="timeline-icon"><i class="fa fa-qq time-icon bg-info"></i></span>
+                                                <h5>
+                                                    <span>QQ号</span>
+                                                    @ViewBag.UserInfo.QQ
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>微信号</span>
+                                                    @ViewBag.UserInfo.WeChat
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article class="timeline-item">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <span class="arrow left"></span> <span class="timeline-icon"><i class="fa fa-line-chart time-icon bg-warning"></i></span>
+                                                <h5>
+                                                    <span>招聘来源</span>
+                                                    @ViewBag.UserInfo.RecruitmentSource
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>社保购买情况</span>
+                                                    @ViewBag.UserInfo.PurchaseSocialSecurity
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>劳务合同签订情况</span>
+                                                    @ViewBag.UserInfo.TheLaborContract
+                                                </h5>
+                                                <br />
+                                                <h5>
+                                                    <span>保密合同</span>
+                                                    @ViewBag.UserInfo.ConfidentialityContract
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article class="timeline-item alt">
+                                    <div class="timeline-caption">
+                                        <div class="panel panel-default">
+                                            <div class="panel-body">
+                                                <span class="arrow right"></span> <span class="timeline-icon"><i class="fa fa-calendar-times-o time-icon bg-dark"></i></span>
+                                                <h5>
+                                                    <span>账号创建时间</span>
+                                                    @ViewBag.UserInfo.CreateTime
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <div class="timeline-footer"><a href="#"><i class="fa fa-plus time-icon inline-block bg-dark"></i></a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="profile-1">
+                <ul class="list-group gutter list-group-lg list-group-sp sortable" id="Position">
+                    @foreach (var Position in ViewData["Position"] as List<PositionUserResponse>)
+                    {
+                        <script type="text/javascript">
+                            $(function () {
+                                $("#Position").append('<li class="list-group-item" draggable="true" style="cursor:pointer"><span class="pull-left media-xs"><i class="fa    fa-align-justify text-muted fa m-r-sm"></i></span><div class="clear">您在&nbsp;<font color="red">@Position.CompanyFullName-</font><font color="red">@Position.DepartmentName</font>&nbsp;担任&nbsp;<font color="red">@Position.PositionName</font></div></li>');
+
+                                $("#Position li").hover(function () {
+                                    $(this).css("border", "1px solid #14a689");
+                                }, function () {
+                                    $(this).css("border", "1px solid #e8e8e8");
+                                })
+                            })
+                        </script>
+                    }
+                </ul>
+            </div>
+            <div class="tab-pane" id="settings-1">
+                <ul class="list-group gutter list-group-lg list-group-sp sortable" id="Role">
+                    @foreach (var Role in ViewData["Role"] as List<PM.DomainObject.TbUserRoleUserRequset>)
+                    {
+                        <script type="text/javascript">
+                            $(function () {
+                                $("#Role").append('<li class="list-group-item" draggable="true" style="cursor:pointer"><span class="pull-left media-xs"><i class="fa    fa-align-justify text-muted fa m-r-sm"></i></span><div class="clear">您在本系统的角色为&nbsp;<font color="red">@Role.RoleName</font>，角色已<font color="red">@Role.State</font>。(该角色说明：@Role.UserName)</div></li>');
+
+                                $("#Role li").hover(function () {
+                                    $(this).css("border", "1px solid #14a689");
+                                }, function () {
+                                    $(this).css("border", "1px solid #e8e8e8");
+                                })
+                            })
+                        </script>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    $(function () {
+        $(".ul_li_a").hover(function () {
+            $(this).animate({ height: "100px" });//鼠标移入时高度变为100px
+        }, function () {
+            $(this).animate({ height: "0" });//还原本体高度
+        })
+
+        $("#db_a").hover(function () {
+            $(this).animate({ height: "50px" });//鼠标移入时高度变为100px
+        }, function () {
+            $(this).animate({ height: "30px" });//还原本体高度
+        })
+    })
+</script>

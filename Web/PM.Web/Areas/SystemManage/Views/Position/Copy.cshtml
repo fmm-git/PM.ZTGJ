@@ -1,0 +1,109 @@
+﻿@{
+    ViewBag.Title = "岗位编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script>
+    var keyValue = $.request("keyValue");
+    var depCode = $.request("depCode");
+    var type = $.request("type");
+    var po = "";
+    var pod = "";
+    $(function () {
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "Position")",
+                data: { keyValue: keyValue},
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    po = data.ParentPositionCode;
+                    depCode = data.CompanyCode;
+                    pod = data.DepartmentCode;
+                }
+            });
+        }
+        initControl();
+        if (type != "add") {
+            $("#PositionCode").attr("disabled", "disabled");
+            $("#DepartmentCode").val(pod).trigger("change");
+            $("#ParentPositionCode").val(po).trigger("change");
+        }
+        else {
+            $("#DepartmentCode").val(depCode).trigger("change");
+        }
+    });
+
+    function initControl() {
+        $("#DepartmentCode").bindSelect({
+            attr: "data",
+            url: "@Url.Action("GetTreeSelectJsonForDep", "Position")" + "?code=" + depCode
+        });
+        $("#DepartmentCode").change(function () {
+            $("#ParentPositionCode").html("<option value=''></option>");
+            var deCode = $(this).val();
+            if (deCode) {
+                var pCode = $("#DepartmentCode").find("option:selected").attr("data");
+                var code = $("#PositionCode").val();
+                $("#ParentPositionCode").bindSelect({
+                    url: "@Url.Action("GetTreeSelectJson", "Position")" + "?deCode=" + deCode + "&pDeCode=" + pCode + "&code=" + code,
+                });
+            }
+        });
+    }
+
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "Position")" + "?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+        <input id="id" name="id" type="hidden" />
+        <div style="padding-top: 20px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">所属部门<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <select id="DepartmentCode" name="DepartmentCode" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">上级岗位</th>
+                    <td class="formValue" colspan="2">
+                        <select id="ParentPositionCode" name="ParentPositionCode" class="form-control">
+                            <option value=""></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">岗位编码<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="PositionCode" name="PositionCode" type="text" class="form-control required" placeholder="请输入岗位编码" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">岗位名称<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="PositionName" name="PositionName" type="text" class="form-control required" placeholder="请输入岗位名称" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="2">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

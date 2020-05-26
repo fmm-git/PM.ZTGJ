@@ -1,0 +1,482 @@
+﻿@{
+    ViewBag.Title = "流程图设计";
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>流程图设计</title>
+    <link href="/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/UiFrame/FlowChartTool/css/site.css" rel="stylesheet" />
+    <link href="/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="/UiFrame/EasyUi/themes/gray/easyui.css" rel="stylesheet" />
+    <link href="/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+
+    <script src="/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+    <script src="/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jsPlumb/jquery.jsPlumb-1.3.16-all-min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jquery.contextmenu.r2.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/flowdesign/leipi.flowdesign.v2.js"></script>
+    <link href="/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+    <link href="/UiFrame/EasyUi/themes/default/easyui.css" rel="stylesheet" />
+    <link href="/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+    <script src="/UiFrame/FlowChartTool/jquery.window.js"></script>
+</head>
+<body>
+    <div>
+    <div class="navbar navbar-fixed-top">
+        <div id="toolbar" class="navbar-inner">
+            <div class="container">
+                <div class="pull-right" id="BtnDesign">
+                    <button class="btn btn-info" type="button" id="leipi_save">保存设计</button>
+                    <button class="btn btn-danger" type="button" id="leipi_clear">清空连接</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="alertModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3>消息提示</h3>
+        </div>
+        <div class="modal-body">
+            <p>提示内容</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">我知道了</button>
+        </div>
+    </div>
+
+
+    <div id="attributeModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="width: 800px; margin-left: -350px">
+        <div class="modal-body" style="max-height: 500px;">
+
+        </div>
+        <div class="modal-footer" style="padding: 5px;">
+        </div>
+    </div>
+
+    <div id="processMenu" style="display: none;">
+        <ul>
+            <li id="addson"><i class="icon-plus"></i>&nbsp;<span class="_label">添加节点</span></li>
+            <li id="delete"><i class="icon-trash"></i>&nbsp;<span class="_label">删除节点</span></li>
+            <li id="attribute"><i class="icon-cog"></i>&nbsp;<span class="_label">节点定义</span></li>
+            @*<li id="nodeevent" style="display:none;"><i class="icon-wrench"></i>&nbsp;<span class="_label">节点事件</span></li>
+            <li id="flowevent" style="display:none;"><i class="icon-play"></i>&nbsp;<span class="_label">流程事件</span></li>*@
+            <li id="formpart"><i class="icon-check"></i>&nbsp;<span class="_label">区域权限</span></li>
+        </ul>
+    </div>
+
+
+    <div id="winMenu" class="easyui-window" data-options="width: 102,height: 152,title:'菜单',modal: true,shadow: false,collapsible: false,minimizable: false,maximizable: false,draggable: false,closed:true">
+        <a id="btnAdd" href="#" class="easyui-linkbutton" style="width: 100%; margin-top: 4px;" onclick="btnAddChildNodes()">插入节点</a>
+        <a id="btnDelete" href="#" class="easyui-linkbutton" style="width: 100%; margin-top: 4px;" onclick="btnDeleteLine()">删除连线</a>
+    </div>
+
+    <!--内容DIV-->
+    <div class="container" id="flowdesign_canvas" style="width: 100%; height: 100%;">
+        <!--div class="process-step btn" style="left: 189px; top: 340px;"><span class="process-num badge badge-inverse"><i class="icon-star icon-white"></i>3</span> 步骤3</div-->
+    </div>
+
+    @*<div id="winNode" class="easyui-window" title="节点定义" style="width: 600px; height: 440px;" data-options="iconCls:'icon-save',modal:true,closed:true,shadow:false,collapsible:false,minimizable:false,maximizable:false">
+        <iframe frameborder="no" scrolling="no" id="Nodeiframe" style="width: 100%; height: 398px"></iframe>
+    </div>*@
+    <div id="winNode" class="easyui-window" title="节点定义" style="width: 100%; height: 100%;" data-options="iconCls:'icon-save',modal:true,closed:true,shadow:false,collapsible:false,minimizable:false,maximizable:false">
+        <iframe frameborder="no" scrolling="no" id="Nodeiframe" style="width: 100%; height: 100%"></iframe>
+    </div>
+
+    <!--设置事件div-->
+    <div id="winEvent" class="easyui-window" title="设置事件" style="width: 95%; height: 95%;" data-options="modal:true,closed:true,shadow:false,collapsible:false,minimizable:false,maximizable:false">
+        <iframe frameborder="no" scrolling="no" id="Eventiframe" style="width: 100%; height: 100%"></iframe>
+    </div>
+    @*<div id="winEvent" class="easyui-window" title="设置事件" style="width: 600px; height: 420px" data-options="modal:true,closed:true,shadow:false,collapsible:false,minimizable:false,maximizable:false">
+        <iframe frameborder="no" scrolling="no" id="Eventiframe" style="width: 100%; height: 97%"></iframe>
+    </div>*@
+    <!--表单权限div-->
+    <div id="winFormPart" class="easyui-window" title="设置表单区域权限" style="width: 95%; height: 95%;" data-options="modal:true,closed:true,shadow:false,collapsible:false,minimizable:false,maximizable:false">
+        <iframe frameborder="no" scrolling="no" id="FormPartiframe" style="width: 100%; height: 100%"></iframe>
+    </div>
+    @*<div id="winFormPart" class="easyui-window" title="设置表单区域权限" style="width: 600px; height: 420px" data-options="modal:true,closed:true,shadow:false,collapsible:false,minimizable:false,maximizable:false">
+        <iframe frameborder="no" scrolling="no" id="FormPartiframe" style="width: 100%; height: 97%"></iframe>
+    </div>*@
+   
+
+
+    <script type="text/javascript">
+        var _lineInfo;         //存储连线信息
+        var _globalcanvas;     //存储设计器对象
+        var _processData;
+        var _readOnly = '@ViewBag.ReadOnly'.toLowerCase();
+        $(function () {
+            if (parent.$('#iframeFlowDesign') == null || _readOnly == "true") {
+                $('#BtnDesign').hide();
+                $('#processMenu').remove();//删除右键菜单
+            }
+            var alertModal = $('#alertModal'), attributeModal = $("#attributeModal");
+            //消息提示
+            mAlert = function (messages, s) {
+                if (!messages) messages = "";
+                if (!s) s = 2000;
+                alertModal.find(".modal-body").html(messages);
+                alertModal.modal('toggle');
+                setTimeout(function () { alertModal.modal("hide") }, s);
+            }
+            //属性设置
+            attributeModal.on("hidden", function () {
+                $(this).removeData("modal");//移除数据，防止缓存
+            });
+            ajaxModal = function (url, fn) {
+                debugger;
+                url += url.indexOf('?') ? '&' : '?';
+                url += '_t=' + new Date().getTime();
+                attributeModal.modal({
+                    remote: url
+                })
+                //加载完成执行
+                if (fn) {
+                    attributeModal.on('shown', fn);
+                }
+            }
+
+            function page_reload() {
+                var s = "";
+                if(s.length)
+                location.reload();
+            }
+            /*步骤数据*/
+            var processData = getFlowJson();
+            if (processData == null) {
+                //新建流程默认保存发起人、结束节点
+                $.post('/Flow/Flow/LoadingNode', { FlowCode: '@ViewBag.FlowCode' }, function (result) { });
+                processData = {
+                    "list": {
+                        "0": { "id": "0", "flow_id": '@ViewBag.FlowCode', "icon": "icon-00", "process_name": "发起", "process_to": "9999", "style": "left:100px;top:68px;" },
+                        "9999": { "id": "9999", "flow_id": '@ViewBag.FlowCode', "icon": "icon-9999", "process_name": "结束", "process_to": "", "style": "left:260px;top:68px;" }
+                    }
+                }
+            }
+            
+            /*创建流程设计器*/
+            var _canvas = $("#flowdesign_canvas").Flowdesign({
+                "processData": processData
+                /*步骤右键*/
+                , processMenus: {
+                    "addson": function (t) {
+                        var activeId = _canvas.getActiveId();//右键当前的ID
+                        if (activeId != '9999') {
+                            SaveNodeInfo(_canvas, false);//保存一下节点的位置
+                            var count = 0;
+                            for (var i in processData["list"]) {
+                                count++;
+                            }
+                            count++;
+                            count = count - 2;
+                            //验证ID是否重复
+                            while (processData["list"][count] != undefined) {
+                                ++count;
+                            }
+                            var mLeft = t.offsetLeft, mTop = t.offsetTop + 160;
+                            var url = "/Flow/Flow/ProcessDefinition?FormCode=@ViewBag.FormCode&action=add&FlowCode=@ViewBag.FlowCode" + "&FlowNodeCode=" + count + "&Left=" + mLeft + "&Top=" + mTop + "&sourceId=" + activeId;
+                            $("#Nodeiframe").attr("src", url);
+                            $('#winNode').window('open');
+                        }
+                    },
+                    "copy": function (t) {
+                        //var activeId = _canvas.getActiveId();//右键当前的ID
+                        _canvas.copy();//右键当前的ID
+                        alert("复制成功");
+                    },
+                    "delete": function (t) {
+                        SaveNodeInfo(_canvas, false);//保存一下节点的位置
+                        var activeId = _canvas.getActiveId();//右键当前的ID
+                        if (activeId == 0 || activeId == 9999) {
+                            $.messager.show({
+                                title: '提示',
+                                msg: '不允许删除该节点',
+                                showType: 'show',
+                                style: {
+                                    right: '',
+                                    top: document.body.scrollTop + document.documentElement.scrollTop,
+                                    bottom: ''
+                                }
+                            });
+                        }
+                        else {
+                            $.messager.confirm('提示', '您确定要删除当前节点吗？', function (r) {
+                                if (r) {
+                                    //清理删除节点相关的数据
+                                    $.post('/Flow/Flow/DeleteNode', { FlowCode: '@ViewBag.FlowCode', FlowNodeCode: activeId }, function (data) {
+                                        debugger;
+                                        if ($.parseJSON(data).state == "success") {
+                                            Refresh();
+                                        }
+                                        else {
+                                            $.messager("删除失败");
+                                        }
+                                    });
+                                }
+                            })
+                        }
+                    },
+                    "attribute": function (t) {
+                        var activeId = _canvas.getActiveId();//右键当前的ID
+                        if (activeId == 0 || activeId == 9999) {
+                            return;
+                        }
+                        $("#Nodeiframe").attr("src", '@Url.Action("ProcessDefinition", "Flow")' + "?FormCode=@ViewBag.FormCode&action=edit&FlowCode=@ViewBag.FlowCode&FlowNodeCode=" + activeId);
+                        $('#winNode').window('open');
+                        //ajaxModal('/FlowdesignV2.0/Public/js/flowdesign/attribute.html?id=' + activeId, function () {
+                        //    //alert('加载完成执行')
+                        //});
+                    },
+                    "nodeevent": function (t) {
+                        var activeId = _canvas.getActiveId();//右键当前的ID
+                        //if (activeId != "0") {
+                        $("#Eventiframe").attr("src", '@Url.Action("FlowEvent", "Flow")' + "?action=edit&eventtype=flownode&FlowCode=@ViewBag.FlowCode&FlowNodeCode=" + activeId);
+                        $("#winEvent").window({ title: '节点事件管理' }).window('open');
+                        //}
+                    },
+                    "flowevent": function (t) {
+                        var activeId = _canvas.getActiveId();//右键当前的ID
+                        //if (activeId != "0") {
+                        $("#Eventiframe").attr("src", '@Url.Action("FlowEvent", "Flow")' + "?action=edit&eventtype=flow&FlowCode=@ViewBag.FlowCode&FlowNodeCode=" + activeId);
+                        $("#winEvent").window({ title: '流程事件管理' }).window('open');
+                        //}
+                    },
+                    "formpart": function (t) {//区域权限
+                        var activeId = _canvas.getActiveId();//右键当前的ID
+                        if (activeId == 0 || activeId == 9999) {
+                            return;
+                        }
+                        $("#FormPartiframe").attr("src", '@Url.Action("FlowNodeFormPart", "Flow")' + "?action=edit&FlowCode=@ViewBag.FlowCode&FlowNodeCode=" + activeId);
+                        $("#winFormPart").window({ title: '表单区域权限设置' }).window('open');
+                    }
+                }
+                , fnRepeat: function () {
+                    //alert("步骤连接重复1");//可使用 jquery ui 或其它方式提示
+                    mAlert("步骤连接重复了，请重新连接");
+                }
+                , fnClick: function () {
+                }
+                //双击处理事件
+                , fnDbClick: function (nodeid) {
+                    nodeid = nodeid.replace("window", "");
+                    if (nodeid == 0 || nodeid == 9999 || _readOnly == "true") {
+                        return;
+                    }
+                    $("#Nodeiframe").attr("src", '@Url.Action("ProcessDefinition", "Flow")' + "?FormCode=@ViewBag.FormCode&action=edit&FlowCode=@ViewBag.FlowCode&FlowNodeCode=" + nodeid);
+                    $('#winNode').window('open');
+                }
+            });
+
+            _globalcanvas = _canvas;
+            _processData = processData;
+            /*保存*/
+            $("#leipi_save").bind('click', function () {
+                SaveNodeInfo(_canvas, true);
+            });
+            /*清除*/
+            $("#leipi_clear").bind('click', function () {
+                if (_canvas.clear()) {
+                    //alert("清空连接成功");
+                    mAlert("清空连接成功，请重新设置连接。");
+                } else {
+                    //alert("清空连接失败");
+                    mAlert("清空连接失败");
+                }
+            });
+            /*关闭*/
+            $("#leipi_close").bind('click', function () {
+                if (parent.$('#win')) {
+                    parent.$('#win').window('close');
+                }
+            });
+        });
+
+        //获取流程图JSON字符串
+        function getFlowJson() {
+            var flowjson = "";
+            $.ajax({
+                type: "POST",
+                url: '/Flow/Flow/GetNodeList',
+                data: { FlowCode: '@ViewBag.FlowCode' },
+                async: false, //设为false就是同步请求
+                cache: false,
+                success: function (data) {
+                    var json = eval(data);
+                    //对获取的字段进行拼接
+                    for (var i in json) {
+                        if (json.length == 1) {
+                            flowjson += '"list": {"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + '" }}';
+                        }
+                        else if (i == 0) {
+                            flowjson += '"list": {"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + '" },';
+                        }
+                            //如果是最后一个
+                        else if (i == json.length - 1) {
+                            flowjson += '"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + '" }}';
+                        }
+                        else {
+                            flowjson += '"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + '" },';
+                        }
+                    }
+                }
+            });
+            if (flowjson == "") {
+                return null;
+            } else {
+                return $.parseJSON("{" + flowjson + "}");
+            }
+        }
+
+        //刷新界面方法
+        function Refresh() {
+            location.reload();
+        }
+
+        //删除连线后，删除连线关系数据
+        function FlowNodeDelete(stratNode, endNode) {
+            var processData = "";
+            //获取起始节点信息，取出当前节点的下级数据用于更新
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowLineStart" })', { FlowCode: "@ViewBag.FlowCode", FlowNodeCode: stratNode.replace("window", "") }, function (data) {
+                var s = eval(data)[0].processData.split(',');
+                for (var i = 0; i < s.length; i++) {
+                    if (s[i] != endNode.replace("window", "")) {
+                        processData += s[i] + ",";
+                    }
+                }
+                processData = processData.substring(0, processData.length - 1);
+                //更新起始节点下级关系，删除关系表对应关系
+                $.post('@Url.Action("ItemCUD", "Flow", new { FunCode = "FlowLineDelete" })', { FlowCode: "@ViewBag.FlowCode", ParentNodeCode: stratNode.replace("window", ""), ChildNodeCode: endNode.replace("window", ""), processData: processData, FlowNodeCode: stratNode.replace("window", "") }, function (data) {
+                    //alert(data);
+                });
+            });
+            //alert(stratNode.replace("window", "") + "      " + endNode.replace("window", ""));
+        }
+
+        //连线之后，添加节点关系数据
+        function FlowLineAdd(stratNode, endNode) {
+            debugger;
+            stratNode = stratNode.replace("window", "");
+            endNode = endNode.replace("window", "");
+            var processData = "";
+            //获取起始节点信息，取出当前节点的下级数据用于更新
+            $.post('/Flow/Flow/LineAdd', { Para: JSON.stringify({ FlowCode: "@ViewBag.FlowCode", StartNode: stratNode, EndNode: endNode }) }, function (data) {
+               
+            });
+        }
+
+        //保存节点位置信息
+        function SaveNodeInfo(_canvas, _flag) {
+            var processInfo = $.parseJSON(_canvas.getProcessInfo());//连接信息
+            var str = "";
+            var flag = "";
+            //保存节点之间的关系
+            for (var flowcode in processInfo) {
+                //更新NodeUI表的下级节点  (改为更新节点位置)
+                var NodeLeft = processInfo[flowcode].left.replace("px", "");
+                var NodeTop = processInfo[flowcode].top.replace("px", "");
+                $.post('/Flow/Flow/UpdataFlowNodeUI', { FlowCode: "@ViewBag.FlowCode", FlowNodeCode: flowcode, NodeLeft: NodeLeft, NodeTop: NodeTop }, function (data) { });
+            }
+            $.post('/Flow/Flow/GetFlowNodeName', { FlowCode: "@ViewBag.FlowCode" }, function (data) {
+                if (eval(data).length == 0 && _flag) {
+                    $.messager.show({
+                        title: '提示',
+                        msg: '保存成功',
+                        timeout: 2000,
+                        showType: 'show',
+                        style: {
+                            right: '',
+                            top: document.body.scrollTop + document.documentElement.scrollTop,
+                            bottom: ''
+                        }
+                    });
+                } else if (_flag) {
+                    var s = "";
+                    for (var i = 0; i < eval(data).length; i++) {
+                        s += eval(data)[i]["FlowNodeName"] + ",";
+                    }
+                    s = s.substring(0, s.length - 1);
+                    $.messager.show({
+                        title: '提示',
+                        msg: "步骤：" + s + "<br/> 不存在下级节点！",
+                        showType: 'show',
+                        timeout: 2000,
+                        style: {
+                            right: '',
+                            top: document.body.scrollTop + document.documentElement.scrollTop,
+                            bottom: ''
+                        }
+                    });
+                }
+            });
+        }
+        //新增子节点处理方法
+        function btnAddChildNodes() {
+            $("#winMenu").window('close');
+            var _sourceId = _lineInfo.sourceId.replace("window", "");//连线起始节点id
+            var _targetId = _lineInfo.targetId.replace("window", "");//连线结束节点id
+
+            var stratabscissa = _lineInfo.source[0].offsetLeft;//起始节点横坐标
+            var stratordinate = _lineInfo.source[0].offsetTop;//起始节点纵坐标
+
+            var endabscissa = _lineInfo.target[0].offsetLeft;//结束节点横坐标
+            var endordinate = _lineInfo.target[0].offsetTop;//结束节点纵坐标
+
+            var _sourceLeft;
+            var _sourceTop;
+            var Coordinate = 0;
+            //处理节点添加的位置
+            if (stratabscissa == endabscissa) {
+                _sourceLeft = stratabscissa;//起始节点的横坐标
+                _sourceTop = parseInt(stratordinate) + 160;//起始节点的纵坐标
+            } else {
+                _sourceLeft = parseInt(stratabscissa) + 160;//起始节点的横坐标
+                _sourceTop = stratordinate;//起始节点的纵坐标
+                Coordinate = 1;
+            }
+
+            SaveNodeInfo(_globalcanvas, false);//保存一下节点的位置
+            var count = 0;
+            for (var i in _processData["list"]) {
+                count++;
+            }
+            count++;
+            count = count - 2;
+            while (_processData["list"][count] != undefined) {
+                ++count;
+            }
+            //var mLeft = $("#jqContextMenu").css("left"), mTop = $("#jqContextMenu").css("top");
+            $("#Nodeiframe").attr("src", '@Url.Action("ProcessDefinition", "Flow")' + "?FormCode=@ViewBag.FormCode&action=add&FlowCode=@ViewBag.FlowCode&FlowNodeCode=" + count + "&Left=" + _sourceLeft + "&Top=" + _sourceTop + "&sourceId=" + _sourceId + "&targetId=" + _targetId + "&Coordinate=" + Coordinate);
+            $('#winNode').window('open');
+        }
+        //删除连线处理方法
+        function btnDeleteLine() {
+            $("#winMenu").window('close');
+            $.messager.confirm('确认', '你确定删除连接吗？', function (r) {
+                if (r) {
+                    FlowNodeDelete(_lineInfo.sourceId, _lineInfo.targetId);
+                    jsPlumb.detach(_lineInfo);
+                }
+            });
+        }
+        //驳回的连线方法
+        //startId:连线开始节点ID
+        //endId:连线结束节点ID
+        //labelInfo:连线上label显示内容
+        function RejectedConnection(startId, endId, labelInfo) {
+            jsPlumb.connect({
+                source: startId,
+                target: endId,
+                label: labelInfo
+            });
+        }
+    </script>
+</body>
+</html>

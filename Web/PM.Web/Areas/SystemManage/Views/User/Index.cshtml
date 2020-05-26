@@ -1,0 +1,204 @@
+﻿@{
+    ViewBag.Title = "用户/员工Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div id="disLeft" class="ui-layout-west">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="UserName" type="text" class="form-control" placeholder="用户名称" style="width: 200px;">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_search">查询</a>
+                                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                                <a class="btn btn-primary" onclick="SetUpUserAuthority();">设置用户权限</a>
+                                <a class="btn btn-primary" onclick="SynchronizationUser();">同步用户</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+<script>
+    var projectId;
+    $(function () {
+        $('#layout').layout();
+        //$.LodeMenuBtn("/SystemManage/User/Index");//这里是对应网页的菜单管理地址
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        RoleView();
+        gridList();
+    });
+    function RoleView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/SystemManage/Company/GetAllCompanyOrBySearch",
+            height: $(window).height() - 50,
+            colModel: [
+                { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+                { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                { label: "组织机构类型", name: "OrgType", hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                clickCompany(ucode);
+            }
+        });
+    }
+    function clickCompany(id) {
+        var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+        var CompanyCode = CompanyId.CompanyCode;
+        if (CompanyId.OrgType == "1") {
+            var a = CompanyCode.split('_');
+            CompanyCode = a[0];
+        }
+        if (CompanyId.OrgType=="1") {
+            projectId = "6245721945602523136";
+        } else {
+            checkParent(id);
+        }
+        $("#gridList").jqGrid('setGridParam', {
+            url: "/SystemManage/User/GetCompanyUser",
+            postData: { CompanyCode: CompanyCode, DepartmentProjectId: projectId },
+        }).trigger('reloadGrid');
+    }
+    function checkParent(rowid) {
+        var CompanyId = $("#leftgridList").jqGrid("getLocalRow", rowid);
+        if (CompanyId.level != 0) {
+            var parent = $("#leftgridList").jqGrid('getNodeParent', $("#leftgridList").jqGrid("getLocalRow", rowid));
+            checkParent(parent.CompanyCode);
+        }
+        else {
+            projectId = CompanyId.CompanyCode;
+        }
+    }
+
+    function gridList() {
+        var $gridList = $("#gridList");
+        var newurl = "/SystemManage/User/GetGridJson";
+        $gridList.dataGrid({
+            height: $(window).height() - 128,
+            url: newurl,
+            colModel: [
+                { label: "标识ID", name: "id", hidden: true, },
+                { label: '员工编号', name: 'UserId', hidden: true },
+                { label: '员工编号', name: 'UserCode', sortable: false, width: 100, align: 'left', Key: true },
+                { label: '员工姓名', name: 'UserName', sortable: false, width: 100, align: 'left' },
+                { label: '用户状态', name: 'UserClosed', sortable: false, width: 80, align: 'left' },
+                { label: '性别', name: 'UserSex', sortable: false, width: 80, align: 'left' },
+                //{
+                //    label: '身份证号', name: 'IDNumber', sortable: false, width: 180, align: 'left', formatter: function (value, options, rowObject) {
+                //        var code = rowObject.IDNumber;
+                //        if (code) {
+                //            if (code.length > 12) {
+                //                s = code.substring(0, 12) + "...";
+                //                return s;
+                //            }
+                //        } else {
+                //            return "";
+                //        }
+                       
+                //    }
+                //},
+                //{
+                //    label: '手机号', name: 'MobilePhone', sortable: false, width: 150, align: 'left', formatter: function (value, options, rowObject) {
+                //        var code = rowObject.MobilePhone;
+                //        if (code) {
+                //            if (code.length > 8) {
+                //                s = code.substring(0, 8) + "...";
+                //                return s;
+                //            }
+                //        }
+                //        else {
+                //            return "";
+                //        }
+                //    }
+                //}
+            ],
+            pager: "#gridPager",
+            sortname: 'UserCode',
+            sortorder: 'desc',
+            viewrecords: true
+        });
+        $("#btn_search").click(function () {
+            var rowData = $("#leftgridList").jqGridRowValue();
+            if (rowData.CompanyCode) {
+                //重新加载该组织机构下的用户
+                $("#gridList").jqGrid('setGridParam', {
+                    url: "/SystemManage/User/GetCompanyUser",
+                    postData: { UserName:$("#UserName").val(),CompanyCode: rowData.CompanyCode, DepartmentProjectId: projectId },
+                }).trigger('reloadGrid');
+            } else {
+                //获取系统所有的用户
+                $gridList.jqGrid('setGridParam', {
+                    postData: $(".search").formSerialize(),
+                }).trigger('reloadGrid');
+            }
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    //设置权限
+    function SetUpUserAuthority() {
+        var UserId = $("#gridList").jqGridRowValue().UserId;
+        if (UserId) {
+            $.modalOpen({
+                id: "UserAuthority",
+                title: "设置用户权限",
+                url: "/SystemManage/User/UserAuthority?UserId=" + UserId,
+                width: "70%",
+                height: "550px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要设置权限的用户信息", "warning");
+        }
+    }
+    //同步用户
+    function SynchronizationUser() {
+        var url = "server/byServer/queryUserList.json";
+        $.loading(true, "正在同步数据...");
+        $.ajax({
+            url: "/api/SystemManage/GetUserList",
+            data: { url: url },
+            type: "get",
+            success: function (data) {
+                if (data.state == "success") {
+                    $.loading(false);
+                    $.modalMsg("同步成功", data.state);
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                } else {
+                    $.loading(false);
+                    $.modalMsg("同步失败", "error");
+                }
+            },
+            error: function () {
+                $.loading(false);
+                $.modalMsg("同步失败", "error");
+            }
+        });
+    }
+</script>

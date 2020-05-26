@@ -1,0 +1,296 @@
+﻿@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        height: 34px;
+        line-height: 1.42857;
+        color: rgb(85, 85, 85);
+        background-color: rgb(255, 255, 255);
+        padding: 6px 0px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgb(221, 221, 221);
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = $.request("ProjectId");
+    var EarlyWarningCode = $.request("EarlyWarningCode");
+    var MenuCode = $.request("MenuCode");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        initControl();
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "FormEarlyWarningNode")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    MenuCode = data.Item1[0].MenuCode;
+                    EarlyWarningCode = data.Item1[0].EarlyWarningCode;
+                    ProjectId = data.Item1[0].ProjectId;
+                    lodeList(data.Item2);//加载明细信息
+                }
+            });
+        }
+    });
+    //页面初始化
+    function initControl() {
+        //预警时间类型
+        $("#EWTimeType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "EarlyWarningTimeType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+        $("#MenuCode").val(MenuCode);
+        $("#EarlyWarningCode").val(EarlyWarningCode);
+        $("#ProjectId").val(ProjectId);
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            $.modalMsg("请设置菜单预警人员", "warning");
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "FormEarlyWarningNode")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids1 = $("#gird").jqGrid('getGridParam', 'selarrrow');
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("预警人员数据不完整", "warning");
+            return null;
+        }
+        var EWNodeCode = $("#EWNodeCode").val();
+        var columnData = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.MenuCode = MenuCode;
+            rowData.EWNodeCode = EWNodeCode;
+            rowData.EarlyWarningCode = EarlyWarningCode;
+            if (rowData.TypeName == "用户") {
+                rowData.PersonnelSource = "Personnel";
+            } else if (rowData.TypeName == "角色") {
+                rowData.PersonnelSource = "Role";
+            } else if (rowData.TypeName == "部门") {
+                rowData.PersonnelSource = "Department";
+            }
+            rowData.PersonnelCode = rowData.UserTypeId;
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+<!---------明细信息------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: "人员来源", name: "TypeName", width: 100, align: 'left', sortable: false },
+                    { label: "编码", name: "UserTypeId", width: 100, align: 'left', sortable: false, hidden: true },
+                    { label: "人员名称", name: "Name", width: 100, align: 'left', sortable: false },
+                    { label: "部门ID", name: "DeptId", width: 100, align: 'left', hidden: true },
+                    { label: "所属部门", name: "DeptName", width: 100, align: 'left', sortable: false },
+                    { label: "角色ID", name: "RoleId", width: 100, align: 'left', hidden: true },
+                    { label: "所属角色", name: "RoleName", width: 100, align: 'left', sortable: false },
+                    { label: "项目id", name: "ProjectId", width: 100, align: 'left', hidden: true }
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.PersonnelCode); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.PersonnelCode, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //批量添加
+    function btn_add() {
+        $.modalOpen({
+            id: "ChooseEarlyWarningUser",
+            title: "新增菜单预警节点",
+            url: "@Url.Action("ChooseEarlyWarningUser", "FormEarlyWarningNode")",
+            width: "100%",
+            height: "100%",
+            callBack: function (iframeId) {
+                var rows = top.frames[iframeId].BackData();
+                for (var i = 0; i < rows.length; i++) {
+                    $("#gridList").jqGrid("addRowData", i, rows[i]);
+                }
+                //关闭窗口
+                var index = top.layer.getFrameIndex(iframeId);
+                top.layer.close(index);
+            }
+        });
+    }
+
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+
+
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">预警人员信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+                <input id="ID" name="ID" type="hidden" />
+                <input id="MenuCode" name="MenuCode" type="hidden"/>
+                <input id="ProjectId" name="ProjectId" type="hidden" />
+                <input id="EarlyWarningCode" name="EarlyWarningCode" type="hidden" />
+                <div style="padding-top: 20px;">
+                    <table class="form">
+                        <tr>
+                            <th class="formTitle">预警节点编号<span class="required1">*</span></th>
+                            <td class="formValue">
+                                <input id="EWNodeCode" name="EWNodeCode" type="text" value="" class="form-control required" placeholder="请输入预警节点编号" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="formTitle">预警节点名称<span class="required1">*</span></th>
+                            <td class="formValue">
+                                <input id="EWNodeName" name="EWNodeName" type="text" value="" class="form-control required" placeholder="请输预警节点名称" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="formTitle">预警时间<span class="required1">*</span></th>
+                            <td class="formValue">
+                                <input id="EWTime" name="EWTime" type="number" value="" class="form-control required" placeholder="请输入预警时间间隔" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="formTitle">预警时间类型<span class="required1">*</span></th>
+                            <td class="formValue">
+                                <select id="EWTimeType" name="EWTimeType" class="form-control required"></select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin-left:10px;margin-right:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+

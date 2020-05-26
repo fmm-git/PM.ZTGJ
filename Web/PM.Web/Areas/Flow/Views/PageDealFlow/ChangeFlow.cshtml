@@ -1,0 +1,108 @@
+﻿@{
+    ViewBag.Title = "发起流程选择";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script type="text/javascript">
+    var FormCode = $.request("FormCode");//弹框表名
+    var DataId = $.request("id");//弹框数据来源
+    var DataName = $.request('name');
+    var ProjectId = $.request('ProjectId');
+    $(function () {
+        gridList(FormCode);
+    });
+    function gridList(FormCode) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/PageDealFlow/GetGridJson?FormCode=" + FormCode+"&ProjectId="+ProjectId,
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "id", hidden: true, key: true },
+                { label: "表单编号", name: "FormCode", hidden: true },
+                { label: '表单名称', name: 'FormName', width: 140, align: 'left', sortable: false },
+                { label: '流程编号', name: 'FlowCode', hidden: true },
+                { label: '流程名称', name: 'FlowName', width: 450, align: 'left', sortable: false },
+                { label: '流程说明', name: 'FlowDetail', width: 50, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            sortname: 'id',
+            viewrecords: true
+        });
+    }
+    //发起流程
+    function submitForm() {
+        var FlowCode = $("#gridList").jqGridRowValue().FlowCode;
+        var FormName = $("#gridList").jqGridRowValue().FormName;
+        if (FlowCode) {
+            LaunchFlow(FlowCode, 0, FormName, '');
+            
+        } else {
+            $.modalMsg("请选择要发起的审批流程", "warning");
+            return false;
+        }
+    }
+    //发起流程
+    function LaunchFlow(FlowCode, FlowNodeCode, FormName, FreeNodeUser) {
+        $.loading(true, '正在发起流程...');
+        var FlowTitle = '';
+        FlowTitle = '关于《' + DataName + '》的' + FormName + '审批';
+       
+        $.ajax({
+            type: 'POST',
+            url: '/PageDealFlow/InitFlowPerform',
+            data: { param: JSON.stringify({ FlowCode: FlowCode, FormCode: FormCode, FormDataCode: DataId, UserCode: '@ViewBag.UserCode', FlowTitle: FlowTitle, FlowLevel: '0', FinalCutoffTime: '' }) },
+            async: false, 
+            cache: false,
+            success: function (data) {
+                $.loading(false);
+                var str_json = JSON.parse(data);
+                if (str_json.state == "success")
+                {
+                    var index = top.layer.getFrameIndex("ChangeFlow");
+                    top.layer.close(index);
+                }
+                else
+                {
+                    $.modalMsg(str_json.message, "warning");
+                }
+            }
+        });
+    }
+
+    //显示自由选人节点的执行人选择窗口
+    //FlowCode:流程代码；FlowPerformID:流程执行流水号；FlowNodeCode：当前执行节点代码；CallBack：回调函数
+    function ShowFreeNodeUser(FlowCode, FlowPerformID, FlowNodeCode, CallBack) {
+        $.ajax({
+            type: "POST",
+            url: '/Flow/Flow/GetChildNoUserFreeNode',
+            data: { FlowCode: FlowCode, FlowPerformID: FlowPerformID, FlowNodeCode: FlowNodeCode },
+            async: false, //设为false就是同步请求
+            cache: false,
+            success: function (data) {
+                var json = eval(data);
+                if (json.length > 0) {
+                    $.modalOpen({
+                        id: "Form",
+                        title: "节点执行人设置",
+                        url: "/Flow/Flow/FreeChildNodeUser?FormCode=" + json[0].FormCode + "&FlowNodeCode=" + json[0].FlowNodeCode + "&FlowNodeName=" + json[0].FlowNodeName + "&DataId=" + DataId,
+                        width: "50%",
+                        height: "450px",
+                        callBack: function (iframeId) {
+                            top.frames[iframeId].submitForm();
+                        }
+                    });
+                } else {//没有获取到未设置执行人的节点
+                    CallBack(FlowCode, FlowPerformID, FlowNodeCode);
+                }
+            }
+
+        });
+
+    }
+
+</script>
+<div class="gridPanel">
+    <table id="gridList"></table>
+</div>
+

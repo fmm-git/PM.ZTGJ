@@ -1,0 +1,76 @@
+﻿@{
+    /**/
+
+    ViewBag.Title = "DetailsOtherCost";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var addType = $.request("addType");
+    var HeSuanCode = $.request("HeSuanCode");
+    var otherCostList = top.frames["Details"].OtherCostList($.request("rowid"));
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();
+        if (otherCostList != null) {
+            lodeList(JSON.parse(otherCostList));
+        }
+    });
+
+    //明细表
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '成本类型', name: 'CostType', hidden: true },
+                { label: '名称', name: 'CostName', width: 150, height: 10, align: "left", sortable: false, editable: true },
+                { label: '金额(元)', name: 'CostMoney', width: 120, align: "left", sortable: false, editable: true },
+                { label: '备注', name: 'Remark', width: 150, align: "left", sortable: false, editable: true },
+                { label: '核算编号', name: 'HeSuanCode', hidden: true }
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+
+        });
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <div id="ItemXXInfo" style="padding-top: 5px;margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+

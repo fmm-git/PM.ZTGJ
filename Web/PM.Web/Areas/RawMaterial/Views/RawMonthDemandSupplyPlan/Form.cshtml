@@ -1,0 +1,583 @@
+﻿@{
+    ViewBag.Title = "原材料月度需求补充计划编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var CompanyCode = $.request("CompanyCode") == "" ? '@ViewBag.CompanyId' : $.request("CompanyCode");
+    var ProjectId = top.clients.projectId;
+    var DemandPlanCode = $.request("DemandPlanCode"); //月度需求计划编号
+    $(function () {
+        //判断浏览器是否是IE浏览器，如果是ie浏览器不设置样式
+        var mb = myBrowser();
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            if ("IE" != mb) {
+                $(this).css("padding-left", "8px");
+            }
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();
+        initControl(); //初始化
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "RawMonthDemandSupplyPlan")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    ProjectId = data.Item1[0].ProjectId;
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data.Item2, 1); //加载明细信息
+                }
+            });
+        }
+        var minDate = new Date().Format("yyyy-MM-dd");
+        $("#SupplyTime").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd',
+                minDate: minDate,
+            });
+        });
+        $("#SupplyTime").val(minDate);
+    });
+
+    //初始化
+    function initControl() {
+        if (DemandPlanCode) {
+            $.ajax({
+                url: "@Url.Action("GetRawMaterialMonthDemandPlanList", "RawMonthDemandSupplyPlan")",
+                data: { keyword: DemandPlanCode },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#DemandPlanCode").val(data[0].DemandPlanCode);
+                    $("#ProcessFactoryCode").val(data[0].ProcessFactoryCode);
+                    $("#ProcessFactoryName").val(data[0].ProcessFactoryName);
+                    $("#ProcessFactoryCodeH").val(data[0].ProcessFactoryCode);
+                    $("#BranchCode").val(data[0].BranchCode);
+                    $("#BranchName").val(data[0].BranchName);
+                    $("#WorkAreaCode").val(data[0].WorkAreaCode);
+                    $("#WorkAreaName").val(data[0].WorkAreaName);
+                    $("#DeliveryAdd").val(data[0].DeliveryAdd);
+                    $("#GrandTotalPlanNum").val(data[0].GrandTotalPlanNum);
+                    $("#RebarType").val(data[0].RebarType);
+                    $("#ProjectId").val(data[0].ProjectId);
+                    //获取原材料月度需求计划明细信息
+                    getRawMonthDemandPlanDetail(data[0].DemandPlanCode, 2);
+                }
+            });
+        }
+    }
+    //选择需求计划
+    function selectDemandPlan() {
+        var url = "/RawMaterial/RawMonthDemandSupplyPlan/GetRawMaterialMonthDemandPlanList&keyValue=ProjectId/" + ProjectId;
+        var ret = selectClick('win_RawMaterialMonthDemandPlan', url, 'Grid', '', '', '', '550px', '450px', function (row) {
+            $("#ProcessFactoryCodeH").val(row[0].ProcessFactoryCode);
+            //获取原材料月度需求计划明细信息
+            getRawMonthDemandPlanDetail(row[0].DemandPlanCode, 2);
+            $("#RebarType").val(row[0].RebarType);
+        });
+    }
+
+    //获取原材料月度需求计划明细信息
+    function getRawMonthDemandPlanDetail(code, type) {
+        $.ajax({
+            url: "@Url.Action("GetRawMonthDemandPlanDetail", "RawMonthDemandSupplyPlan")",
+            data: { DemandPlanCode: code },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                //清空明细表中的数据
+                $("#gridList").jqGrid('clearGridData');
+                lodeList(data, type);
+                //汇总明细金额
+                totalDemandSupplyNum();
+            }
+        });
+    }
+    //加工厂选择
+    function selectFactory() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/1";
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+            var fH = $("#ProcessFactoryCodeH").val();
+            var demandPlanCode = $("#DemandPlanCode").val();
+            if (fH != row[0].CompanyCode) {
+                //加工厂与批次计划不同，明细重量不合并
+                getRawMonthDemandPlanDetail(demandPlanCode, 3);
+                $("#IsSupply").val(1);
+            } else {
+                getRawMonthDemandPlanDetail(demandPlanCode, 2);
+                $("#IsSupply").val(0);
+            }
+        });
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            return false;
+        }
+        totalDemandSupplyNum();
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "RawMonthDemandSupplyPlan")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+
+    //提交数据(发起流程)
+    function submitForm2() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            return false;
+        }
+        totalDemandSupplyNum();
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "RawMonthDemandSupplyPlan")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function (data) {
+                if (data.state == "success") {
+                    if (type == "add") {
+                        $.ajax({
+                            type: 'Get',
+                            url: "@Url.Action("GetDemSupplyPlanData", "RawMonthDemandSupplyPlan")",
+                            data: { SupplyPlanCode: formData.SupplyPlanCode },
+                            async: false,
+                            cache: false,
+                            success: function (data) {
+                                var datajson = JSON.parse(data);
+                                if (datajson.length > 0) {
+                                    var flag = examination(datajson[0].ID, "RawMonthDemandSupplyPlan", datajson[0].Examinestatus, datajson[0].SupplyPlanCode, datajson[0].ProjectId, datajson[0].InsertUserCode, datajson[0].RebarType);
+                                    if (flag) {
+                                        $.modalMsg("发起流程成功", "warning");
+                                    }
+                                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                                    //关闭页面
+                                    $.modalClose();
+                                } else {
+                                    $.modalMsg("发起流程失败", "warning");
+                                    return false;
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    $.modalMsg("操作失败", "success");
+                }
+            }
+        });
+    }
+
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var SupplyPlanCode = $("#SupplyPlanCode").val();
+        var columnData = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.SupplyPlanCode = SupplyPlanCode;
+            var SupplyNum = parseFloat(rowData.SupplyNum);
+            if (isNaN(SupplyNum)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            }
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+
+    //汇总明细需求数量
+    function totalDemandSupplyNum() {
+        var data = GetGridRowData();
+        if (data && data.length > 0) {
+            var total = 0;
+            var supply = 0;
+            $.each(data, function (index, obj) {
+                total += parseFloat(obj.DemandNum) + parseFloat(obj.SupplyNum);
+                supply += parseFloat(obj.SupplyNum);
+            });
+            $("#GrandTotalPlanNum").val(total.toFixed(5));
+            $("#SupplyPlanNum").val(supply.toFixed(5));
+        }
+        else {
+            $("#GrandTotalPlanNum").val("0.00000");
+            $("#SupplyPlanNum").val("0.00000");
+        }
+    }
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        } else {
+            totalDemandSupplyNum();
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "RawMonthDemandSupplyPlan");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "RawMonthDemandSupplyPlan");
+    }
+</script>
+
+<!---------明细信息------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称', name: 'MaterialName', width: 140, height: 10, align: "left", sortable: false },
+                    { label: '规格', name: 'SpecificationModel', width: 140, align: "left", sortable: false },
+                    { label: '计量单位', name: 'MeasurementUnitText', width: 100, align: "left", sortable: false },
+                    { label: '计量单位', name: 'MeasurementUnit', hidden: true },
+                    { label: '原需求重量(kg)', name: 'DemandNum', width: 120, align: "left", sortable: false },
+                    { label: '补充重量(kg)', name: 'SupplyNum', width: 120, align: "left", sortable: false, editable: true },
+                    { label: '技术要求', name: 'SkillRequire', width: 80, align: "left", sortable: false, editable: true },
+                    { label: '备注', name: 'Remark', width: 160, align: "left", sortable: false, editable: true }
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                $gridList.jqGrid('editRow', rowid, true, null, null, null, null, null, null, null, iCol);
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                valid(rowid);
+            },
+            @*editurl: "@Url.Action("RowEditing", "RawMonthDemandPlan", new { area = "RawMaterial" })",*@
+        });
+    }
+
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        $("#" + rowid + "_SupplyNum")
+               .keyup(function () { regTextBox(this, 5); })
+               .bind("paste", function () { regTextBox(this, 5); });
+
+    }
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    //加载列表数据
+    function lodeList(data, type) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            if (type >= 2) {
+                item.SupplyNum = 0;
+            }
+            if (type == 3) {
+                item.DemandNum = 0;
+            }
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+
+    //批量添加
+    function btn_add() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetMaterialGridJson&keyValue=RebarType/" + $("#RebarType").val();
+        var ret = selectClick('win_MaterialStock_RawMaterial', url, 'Grid', '', '', '', '50%', '500px', function (row) {
+            AllMyBack(row);
+        }, true);
+    }
+
+    //批量添加回调函数
+    function AllMyBack(row) {
+        var rowData = [];
+        if (row && row.length > 0) {
+            for (var i = 0; i < row.length; i++) {
+                var mydata = {
+                    ID: 0,
+                    MaterialCode: row[i].MaterialCode,
+                    MaterialName: row[i].MaterialName,
+                    SpecificationModel: row[i].SpecificationModel,
+                    MeasurementUnitText: row[i].MeasurementUnitText,
+                    MeasurementUnit: row[i].MeasurementUnit,
+                    DemandNum: "0.00000",
+                    SupplyNum: "0.00000",
+                    SkillRequire: "",
+                    Remark: ""
+                };
+                rowData.push(mydata);
+            }
+        }
+        lodeList(rowData, 1);
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.MaterialCode); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.MaterialCode, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+
+    //导入
+    function btn_Input() {
+        var url = "@Url.Action("SubmitInput", "RawMonthDemandSupplyPlan")";
+        var where = "&tableId=gridList";
+        var name = "原材料月度需求补充计划导入模板";
+        $.modalOpen({
+            id: "InputNew",
+            title: "原材料月度需求补充计划导入模板",
+            url: "@Url.Action("InputNew", "Common", new { area = "" })" + "?submitUrl=" + url + "&exclName=" + name + where,
+            width: "600px",
+            height: "500px",
+            btn: null
+        });
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="IsSupply" name="IsSupply" type="hidden" value="0" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">补充计划编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SupplyPlanCode" name="SupplyPlanCode" type="text" disabled="disabled" value="@ViewBag.SupplyPlanCode" class="form-control required" />
+                    </td>
+                    <th class="formTitle">需求计划编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input type="hidden" id="RebarType" name="RebarType" />
+                            <input id="DemandPlanCode" name="DemandPlanCode" type="text" disabled="disabled" class="form-control required" />
+                            @*<span class="input-group-btn" onclick="selectDemandPlan()">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>*@
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">分部名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="BranchCode" name="BranchCode" hidden="hidden" />
+                        <input id="BranchName" name="BranchName" type="text" readonly="readonly" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">工区名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="WorkAreaCode" name="WorkAreaCode" hidden="hidden" />
+                        <input id="WorkAreaName" name="WorkAreaName" type="text" readonly="readonly" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    @*<th class="formTitle">站点名称</th>
+                        <td class="formValue">
+                            <input id="SiteCode" name="SiteCode" hidden="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" readonly="readonly" disabled="disabled" class="form-control" />
+                        </td>*@
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="ProcessFactoryCodeH" name="ProcessFactoryCodeH" type="hidden" />
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" disabled="disabled" class="form-control required" />
+                            @*<span class="input-group-btn" onclick="selectFactory()">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>*@
+                            <span class="input-group-btn">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">交货地点<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DeliveryAdd" name="DeliveryAdd" type="text" value="" class="form-control required required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">补充计划总量(kg)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SupplyPlanNum" name="SupplyPlanNum" type="text" class="form-control required" value="0.00000" />
+                    </td>
+                    <th class="formTitle">累计总量(kg)</th>
+                    <td class="formValue">
+                        <input id="GrandTotalPlanNum" name="GrandTotalPlanNum" type="text" value="0.00000" class="form-control required" />
+                    </td>
+                </tr>
+                <tr style="display:none">
+                    <th class="formTitle">交货时间</th>
+                    <td class="formValue">
+                        <input id="SupplyTime" name="SupplyTime" type="text" class="form-control required input-wdatepicker" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 1px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-input" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_Input()"><i class="fa fa-pencil-square-o"></i>导入</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

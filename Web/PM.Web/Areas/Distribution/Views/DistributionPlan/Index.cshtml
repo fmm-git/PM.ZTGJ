@@ -1,0 +1,1102 @@
+﻿@{
+    ViewBag.Title = "配送计划数据列表页";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<link href="~/Content/css/Style.css" rel="stylesheet" />
+<script src="~/Content/js/ShowDialogDiv.js"></script>
+<script src="~/Content/js/BWSPName.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script src="~/Content/js/drilldown.js"></script>
+<script src="~/Content/js/indextab.js?v=1.1" charset="gbk"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script src="~/Content/js/Highcharts-8.0.0/highcharts.js"></script>
+
+<style type="text/css">
+    .ui-jqgrid .table-bordered th {
+        border-left: 0px none !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-weight: normal;
+        background: #eee;
+        border: 1px solid #ddd;
+    }
+
+    .SelectBG {
+        background-color: red;
+        color: #111;
+    }
+    /*延后配送*/
+    .SelectTQ {
+        background-color: #FFFF00;
+        color: #111;
+    }
+    /*提前配送*/
+
+</style>
+<script>
+    $(function () {
+        var llqHeight= $(window).height(); //浏览器当前窗口可视区域高度
+        //设置统计图形的高度
+        var screenHeight = $("body").height();
+        $(".highchartImg").each(function () {
+            $(this).height(screenHeight * 0.4);
+        });
+        $.LodeMenuBtn("/Distribution/DistributionPlan/Index");//加载地址
+        $("#NF-edit").parent().remove();//隐藏修改按钮
+        //initControl();//初始化查询
+        $('#layout').layout();
+        $(".ui-layout-center").css("padding", "10px");
+        leftList();//左侧组织机构初始化
+        $(".ui-layout-pane-west").css('overflow', 'hidden');
+        gridList();//数据列表查询
+        $(".ui-jqgrid-view").css("margin-bottom", "25px");
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var HistoryMonth = dp.cal.getNewDateStr();
+                    var param = $(".search").GetSearchCondition();
+                    param.HistoryMonth = HistoryMonth;
+                    //加载统计报表、订单进度展示
+                    loadWorkOrderProgress(param, llqHeight);
+                    //重新加载列表
+                    $("#gridList").jqGrid('setGridParam', {
+                        postData: param,
+                        page: 1
+                    }).trigger('reloadGrid');
+                }
+            });
+        });
+
+        //折叠ibox
+        $('.collapse-link').click(function () {
+            var ibox = $(this).closest('div.ibox');
+            var button = $(this).find('i');
+            var content = ibox.find('div.ibox-content');
+            content.slideToggle(150);
+            button.toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
+            ibox.toggleClass('').toggleClass('border-bottom');
+        });
+         //加载加工厂订单状态报表
+        loadWorkOrderProgress("",llqHeight);
+    })
+
+    //----------------左侧组织机构开始----------------------//
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 46,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '组织机构类型', name: 'OrgType', hidden: true },
+               { label: '地址', name: 'Address', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            sortname: 'CompanyCode',
+            onCellSelect: function (id) {//单击
+                var siteCode = getOrganizationalCode(id);
+                //重新加载报表数据
+                var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+                var param = $(".search").GetSearchCondition();
+                param.SiteCode = siteCode;
+                param.ProjectId = CompanyId.ProjectId;
+                var llqHeight = $(window).height(); //浏览器当前窗口可视区域高度
+                loadWorkOrderProgress(param, llqHeight);
+            }
+        });
+    }
+    //----------------左侧组织机构结束----------------------//
+
+    //--------------------右侧列表数据展示开始----------------------//
+    var DistributionTime = "";//计划配送时间
+    var LoadCompleteTime = "";//实际配送时间
+    //数据列表查询
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/Distribution/DistributionPlan/GetGridJson",
+            height: $(window).height() * 0.68,
+            colModel: [
+                //{ label: "主键", name: "ID", hidden: true, frozen: true, key: true },
+                //{ label: '订单编号', name: 'OrderCode', width: 100, align: 'left', sortable: false, frozen: true },
+                //{ label: '类型编码', name: 'TypeCode', width: 120, align: 'left', sortable: false },
+                //{ label: '类型名称', name: 'TypeName', width: 120, align: 'left' },
+                //{ label: '时间状态', name: 'DistributionTiemStart', width: 100, align: 'left' },
+                //{ label: '计划配送时间', name: 'DistributionTime', width: 120, align: 'left' },
+                //{
+                //    label: '实际配送时间', name: 'LoadCompleteTime', width: 120, align: 'left', formatter: function (cellvalue, options, rowObject) {
+                //        DistributionTiemStart = rowObject.DistributionTiemStart;
+                //        if (DistributionTiemStart == "暂无") {
+                //            return "";
+                //        }
+                //        else {
+                //            return cellvalue;
+                //        }
+                //    }
+                //},
+                //{ label: '配送状态', name: 'DistributionStart', width: 100, align: 'left', cellattr: addCellAttr },
+                //{ label: '分部名称', name: 'BranchName', width: 100, align: 'left' },
+                //{ label: '工区名称', name: 'WorkAreaName', width: 100, align: 'left' },
+                //{ label: '站点名称', name: 'SiteName', width: 100, align: 'left' },
+                //{ label: '加工厂名称', name: 'ProcessFactoryName', width: 130, align: 'left' },
+                //{ label: '使用部位', name: 'UsePart', width: 70, align: 'left' },
+                //{ label: '配送地址', name: 'DistributionAdd', width: 170, align: 'left' },
+                //{ label: '合计总量(kg)', name: 'WeightTotal', width: 90, align: 'left' },
+                //{ label: '站点联系人', name: 'ContactUser', width: 70, align: 'left' },
+                //{ label: '联系方式', name: 'ContactWay', width: 100, align: 'left' },
+                //{ label: '录入人名称', name: 'InsertUserName', width: 100, align: 'left' },
+                //{ label: '录入人编号', name: 'InsertUserCode', width: 100, align: 'left', hidden: true },
+                { label: "主键", name: "ID", hidden: true, frozen: true, key: true },
+                { label: '站点名称', name: 'SiteName', width: 100, align: 'center' },
+                { label: '订单编号', name: 'OrderCode', hidden: true },
+                { label: '订单编号及类型', name: 'OrderCodeNew', width: 120, align: 'center', sortable: false, formatter: OrderCodeorTypeTQ },
+                { label: '类型编号及名称', name: 'TypeCode', width: 140, align: 'center', sortable: false, formatter: TypeCodeOrNameTQ },
+                { label: '合计总量(kg)', name: 'WeightTotal', width: 90, align: 'center' },
+                { label: '配送状态', name: 'DistributionStart', width: 140, align: 'center', formatter: DistributionStartTQ },
+                { label: '配送时间', name: 'DistributionTimeNew', width: 140, align: 'center', formatter: DistributionTimeTQ },
+                { label: '配送数据来源', name: 'IsOffline', width: 140, align: 'center', sortable: false, formatter: IsOfflineTQ },
+                { label: '等待卸货超时(30)', name: 'ContactWay', width: 120, align: 'center', formatter: WaitXhTimeTQ },
+                { label: '工区签收', name: 'WorkAareSign', width: 140, align: 'center', sortable: false, formatter: NewCellWorkAareSignTQ },
+                { label: '等待时长', name: 'WaitTime', hidden: true },
+                { label: '是否存在问题', name: 'IsProblem', hidden: true },
+                { label: '计划配送时间', name: 'DistributionTime', hidden: true },
+                { label: '实际配送时间', name: 'LoadCompleteTime', hidden: true },
+                { label: '签收单附件', name: 'EnclosureSF', hidden: true },
+                { label: '签收单Id', name: 'SemiFinishedSignId', hidden: true },
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                $('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            gridComplete: function () {
+                //var ids = $("#gridList").getDataIDs();
+                //for (var i = 0; i < ids.length; i++) {
+                //    var rowData = $("#gridList").getRowData(ids[i]);
+                //    if (rowData.DistributionTiemStart == "延后配送") {//如果为延后配送，则背景色置于红色
+                //        $('#' + ids[i]).find("td").addClass("SelectBG");
+                //    }
+                //}
+                $('.aTable').on('click', $.nfinetab.syaddtab);
+            },
+            pager: "#gridPager",
+            sortname: 'ID',
+            sortorder: 'desc',
+            viewrecords: true,
+            rownumbers: true,
+            shrinkToFit: false,
+        });
+        $("#gridList").jqGrid('setGroupHeaders',
+            {
+                useColSpanStyle: true,
+                groupHeaders: [
+                    { startColumnName: 'SiteName', numberOfColumns: 5, titleText: '订单信息' },
+                    { startColumnName: 'DistributionStart', numberOfColumns: 4, titleText: '配送信息' }
+                ]
+            });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = CompanyId.CompanyCode;
+            param.ProjectId = CompanyId.ProjectId;
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    //订单编号及类型
+    function OrderCodeorTypeTQ(cellValue, options, rowObject) {
+        var tdhtml = rowObject.OrderCode + "</br>"
+        if (rowObject.OrderStart == "加急订单") {
+            tdhtml += "<span style='color:red;'>" + rowObject.OrderStart + "</span>";
+        }
+        else if (rowObject.OrderStart == "部分变更" || rowObject.OrderStart == "全部变更") {//4种（1、加急订单，2、部分撤销，3、全部撤销，4、正常订单）
+            tdhtml += "<span style='color: #1ABC9C;'>" + rowObject.OrderStart + "</span>";
+        } else {
+            tdhtml += rowObject.OrderStart;
+        }
+        return tdhtml;
+    }
+    //类型编号及名称
+    function TypeCodeOrNameTQ(cellValue, options, rowObject) {
+        var tdhtml = rowObject.TypeCode + "</br>" + rowObject.TypeName;
+        return tdhtml;
+    }
+    //配送状态
+    function DistributionStartTQ(cellValue, options, rowObject) {
+        var tdhtml = "";
+        var xtSj = (new Date()).Format("yyyy-MM-dd");
+        var psjhSj = formatterDateTime1(rowObject.DistributionTime);
+        if (rowObject.DistributionStart) {
+            if (rowObject.DistributionStart == "配送完成" || rowObject.DistributionStart == "部分配送") {
+                var color = "green";
+                if (rowObject.DistributionStart == "部分配送") {
+                    color = "#FF9900";
+                }
+                tdhtml += "<span style='color:" + color + ";'>" + rowObject.DistributionStart + "</span></br>";
+                if (formatterDateTime1(rowObject.LoadCompleteTime)) {
+                    if (formatterDateTime1(rowObject.LoadCompleteTime) > formatterDateTime1(rowObject.DistributionTime)) {
+                        tdhtml += "<span style='color:red;'>延迟配送</span>";
+                    } else if (formatterDateTime1(rowObject.LoadCompleteTime) < formatterDateTime1(rowObject.DistributionTime)) {
+                        tdhtml += "<span style='color:green;'>提前配送</span>";
+                    } else {
+                        tdhtml += "<span style='color:blue;'>正常配送</span>";
+                    }
+                }
+            }
+            else {
+                if (xtSj <= psjhSj) {
+                    tdhtml += "<span style='color:red;'>未配送</span></br>";
+                } else {
+                    tdhtml += "<span style='color:red;'>超期未配送</span></br>";
+                }
+            }
+        }
+        return tdhtml;
+    }
+    //配送时间
+    function DistributionTimeTQ(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (formatterDateTime1(rowObject.DistributionTime)) {
+            tdhtml += '计划：' + formatterDateTime1(rowObject.DistributionTime) + '</br>';
+        }
+        if (rowObject.DistributionStart == "配送完成" || rowObject.DistributionStart == "部分配送") {
+            if (formatterDateTime1(rowObject.LoadCompleteTime)) {
+                tdhtml += '实际：' + formatterDateTime1(rowObject.LoadCompleteTime);
+            }
+        }
+        return tdhtml;
+    }
+    //配送数据来源
+    function IsOfflineTQ(cellValue, options, rowObject) {
+        if (cellValue == '0') {
+            if (rowObject.DistributionStart != "" && rowObject.DistributionStart != "未配送") {
+                return "系统记录";
+            } else {
+                return "";
+            }
+        } else {
+            var tdhtml = "线下补录</br>";
+
+            tdhtml += "签收单&nbsp;&nbsp;<a onclick='UplaodFileSem(" + rowObject.ID + ")' style='text-decoration:none;cursor:pointer'>";
+            if (rowObject.EnclosureSF) {
+                tdhtml += "<span style='color:blue;'>查看</span></a>";
+            } else {
+                tdhtml += "<span style='color:blue;'>上传</span></a>";
+            }
+            return tdhtml;
+        }
+    }
+    //等待卸货时间
+    function WaitXhTimeTQ(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.WaitTime=="超时") {
+            tdhtml += "<a class='btn aTable' data-id='CarReport' style='background-color:#f15353;color:white;height: 18px;padding:2px;font-size:10px'  href='/Distribution/TransportProcess/CarReport?OrderCode=" +
+                rowObject.OrderCode +
+                "'>" + rowObject.WaitTime + "</a>";
+        }
+        if (rowObject.IsProblem == "存在问题") {
+            tdhtml += "&nbsp;&nbsp;<a class='btn aTable' data-id='Article' style='background-color:#f15353;color:white;height: 16px;padding:2px;font-size:10px'  href='/Article/Article/Index?OrderCode=" +
+                rowObject.OrderCode +
+                "'>" + rowObject.IsProblem + "</a>";
+        }
+        return tdhtml;
+    }
+    //工区签收
+    function NewCellWorkAareSignTQ(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.SignState == "已签收") {
+            tdhtml += "<span style='color:green;'>" + rowObject.SignState + "</span>";
+        } else if (rowObject.SignState == "未签收") {
+            tdhtml += "<span style='color:red;'>" + rowObject.SignState + "</span></br>";
+            tdhtml += '<a class="btn btn-primary" ids=' + rowObject.OrderCode + ' onclick=\'SignClick(this)\'>&nbsp;签 收&nbsp;</a> ';
+        }
+        return tdhtml;
+    }
+    //签收
+    function SignClick(obj) {
+        var OrderCode = $(obj).attr("ids");
+        if (OrderCode == null || OrderCode == undefined || OrderCode == "") {
+            $.modalMsg("信息错误", "warning");
+            return false;
+        }
+        $.deleteForm({
+            prompt: "注：您确定要确认签收吗？",
+            loading: "正在提交数据...",
+            url: "/Distribution/SemiFinishedSign/SemiFinishedSignNew",
+            param: { OrderCode: OrderCode },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+    //上传/签收单查看附件
+    function UplaodFileSem(item) {
+        var rowObject = $("#gridList").jqGrid("getRowData", item);
+        if (rowObject.EnclosureSF) {
+            showFile(rowObject.EnclosureSF, "form", "SemiFinishedSign");
+        } else {
+            UplaodFile(rowObject.EnclosureSF, rowObject.SemiFinishedSignId, "SemiFinishedSign");
+        }
+    }
+
+    //function addCellAttr(rowId, val, rawObject, cm, rdata) {
+    //    //if (rawObject.Number == rawObject.PSAmount) {
+    //    //    return "style='background-color:#14a689;color:#FFF'";
+    //    //} else if (rawObject.PSAmount > 0 && rawObject.PSAmount < rawObject.Number) {
+    //    //    return "style='background-color:#35ed20;color:#FFF'";
+    //    //} else if (rawObject.PSAmount == 0) {
+    //    //    return "style='background-color:#ff6a00;color:#FFF'";
+    //    //}
+    //    if (rawObject.DistributionStart == "未配送") {
+    //        return "style='background-color:#ff6a00;color:#FFF'";
+    //    } else if (rawObject.DistributionStart == "部分配送") {
+    //        return "style='background-color:#35ed20;color:#FFF'";
+    //    } else if (rawObject.DistributionStart == "配送完成") {
+    //        return "style='background-color:#14a689;color:#FFF'";
+    //    }
+    //}
+    //--------------------右侧列表数据展示结束----------------------//
+
+    //----------------其他功能操作---------
+
+    //查看按钮事件
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "配送计划查看",
+            url: "/Distribution/DistributionPlan/Details",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    //修改配送计划时间
+    function btn_other1() {
+        var keyValue = $("#gridList").getGridParam("selrow");
+        if (keyValue == "" || keyValue == null || keyValue == undefined) {
+            $.modalMsg("请选择数据", "warning"); return false;
+        }
+        var DistributionTime = $("#gridList").jqGridRowValue().DistributionTime;//计划配送时间
+        var LoadCompleteTime = $("#gridList").jqGridRowValue().LoadCompleteTime;//实际配送时间
+        if (!LoadCompleteTime) {
+            $.modalOpen({
+                id: "Form",
+                title: "计划配送时间修改",
+                url: "/Distribution/DistributionPlan/Form?keyValue=" + keyValue + "&DistributionTime=" + DistributionTime,
+                width: "20%",
+                height: "200px",
+                callBack: function (iframeId) {
+                    var $loadingpage = top.$("#loadingPage");
+                    $loadingpage.hide();
+                    top.frames[iframeId].submitForm();
+                }
+            });
+        }
+        else {
+            $.modalMsg("该订单已无法修改配送时间了！", "warning");
+            return false;
+        }
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "600px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "DistributionPlan")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+    //----------------其他功能操作---------
+
+    //----------报表信息开始---------------------
+    function loadWorkOrderProgress(param,llqHeight) {
+        loadImg1(param, llqHeight);
+        loadImg2(param, llqHeight);
+        loadImg3(param, llqHeight);
+    }
+
+    //加载生产进度、订单进度展示
+    function LoadDistributionPlanForm(param) {
+        var JgcName = [];
+        var PsTypeWeightTotal = [];
+        var pszl = [];
+        var tqps = [];
+        var yhps = [];
+        var zcps = [];
+        var PieProgress1 = [];
+        var PieProgress2 = [];
+        $.ajax({
+            url: "@Url.Action("GetDistributionForm", "DistributionPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function(data) {
+                //加载第一个报表数据
+                for (var d = 0; d < data.Item1.length; d++) {
+                    if (data.Item1[d].配送总量 > 0) {
+                        JgcName.push(data.Item1[d].CompanyFullName);
+                        pszl.push(data.Item1[d].配送总量);
+                        tqps.push(data.Item1[d].提前配送);
+                        yhps.push(data.Item1[d].延后配送);
+                        zcps.push(data.Item1[d].正常配送);
+                    }
+                }
+                if (JgcName.length > 0) {
+                    PsTypeWeightTotal.push({
+                        name: '配送总量',
+                        data: pszl
+                    });
+                    PsTypeWeightTotal.push({
+                        name: '提前配送',
+                        data: tqps
+                    });
+                    PsTypeWeightTotal.push({
+                        name: '延后配送',
+                        data: yhps
+                    });
+                    PsTypeWeightTotal.push({
+                        name: '正常配送',
+                        data: zcps
+                    });
+                }
+                //加载第二个报表数据第一层
+                for (var p = 0; p < data.Item2.length; p++) {
+                    PieProgress1.push({
+                        name: data.Item2[p].ProcessFactoryName,
+                        y: data.Item2[p].WeightTotal,
+                        drilldown: data.Item2[p].ProcessFactoryCode
+                    });
+                    //加载第二个报表数据的第二层
+                    var str = "";
+                    var str1 = "";
+                    str += "{id:'" + data.Item2[p].ProcessFactoryCode + "',data:[";
+                    for (var s = 0; s < data.Item3.length; s++) {
+                        if (data.Item3[s].ProcessFactoryCode == data.Item2[p].ProcessFactoryCode) {
+                            str1 += "['" + data.Item3[s].SiteName + "', " + data.Item3[s].WeightTotal + "],";
+                        }
+                    }
+                    var str2 = (str1.substring(str1.length - 1) == ',') ? str1.substring(0, str1.length - 1) : str1;
+                    str += str2;
+                    str += "]}";
+                    var a = eval('(' + str + ')'); //将string字符串转换为json对象
+                    PieProgress2.push(a);
+                }
+            }
+        });
+
+        $('#JgcMonthPsQk').highcharts({
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: '配送完成情况展示'
+            },
+            xAxis: {
+                categories: JgcName,
+                crosshair: true,
+                //min: 0,
+                //max: 3//这个值越小柱子越宽
+            },
+            //设置滚动条
+            scrollbar: {
+                enabled: true
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '订单量(kg)'
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                    '<td style="padding:0"><b>{point.y:.2f}kg</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            credits: {
+                enabled: false //是否显示版权信息
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0,
+                    pointWidth: 20, //柱子之间的距离值
+                    //dataLabels: {//将值显示到柱子外面的顶部
+                    //    enabled: true,
+                    //    allowOverlap: true
+                    //}
+                }
+            },
+            series: PsTypeWeightTotal
+        });
+
+        $('#JgcMonthPssFx').highcharts({
+            chart: {
+                type: 'pie'
+            },
+            title: {
+                text: '当月配送量分析'
+            },
+            xAxis: {
+                type: 'category'
+            },
+            legend: {
+                enabled: false
+            },
+            credits: {
+                enabled: false //是否显示版权信息
+            },
+            plotOptions: {
+                series: {
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.name}: {point.y:.2f}kg'
+                    }
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:11px"></span><br>',
+                pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f}kg</b><br/>'
+            },
+            series: [
+                {
+                    name: '加工厂订单配送量',
+                    colorByPoint: true,
+                    data: PieProgress1
+                }
+            ],
+            drilldown: {
+                series: PieProgress2
+            }
+        });
+
+    }
+
+    //去掉数组中重复的值
+    function unique(array) {
+        var r = [];
+        for (var i = 0, l = array.length; i < l; i++) {
+            for (var j = i + 1; j < l; j++)
+                if (array[i] == array[j]) j == ++i;
+            r.push(array[i]);
+        }
+        return r;
+    }
+
+
+    function loadImg1(param, llqHeight) {
+        try {
+                var imgSize1 = '100%';
+                var imgSize2 = '80%';
+                var ypszl = 0;//应配送总量
+                var wpsl = 0;//未配送量
+                var cqwpsl = 0;//超期未配送量
+                var ypsl = 0;//已配送量
+                var yhpsl = 0;//延后配送量
+                var tqpsl = 0;//提前配送量
+                var zcpsl = 0;//正常配送量
+                 $.ajax({
+                        url:"/Distribution/DistributionPlan/Img1",
+                        data: param,
+                        dataType: "json",
+                        async: false,
+                        success: function(data) {
+                            if (data.length > 0) {
+                                ypszl = data[0]["ypszl"];
+                                wpsl = data[0]["wpsl"];
+                                cqwpsl = data[0]["cqwpsl"];
+                                ypsl = data[0]["ypsl"];
+                                yhpsl = data[0]["yhpsl"];
+                                tqpsl = data[0]["tqpsl"];
+                                zcpsl = data[0]["zcpsl"];
+                            }
+                        }
+                });
+                var colors =  ['#FF0000','#F4B183','#70AD47'],
+	            categories = [
+		            "未配送",
+		            "超期未配送",
+		            "已配送"
+	            ],
+	            data = [
+                    {
+                        "y": wpsl,
+			            "color": colors[0],
+			            "drilldown": {
+				            "name": "未配送",
+				            "categories": [
+					            "未配送"
+				            ],
+                            "data": [
+                                wpsl
+				            ]
+			        }
+		        },
+                    {
+                        "y": cqwpsl,
+			            "color": colors[1],
+			            "drilldown": {
+				            "name": "超期未配送",
+				            "categories": [
+					            "超期未配送"
+				            ],
+                            "data": [
+                                cqwpsl
+				            ]
+			        }
+		        },
+                    {
+                        "y": ypsl,
+			            "color": colors[2],
+			            "drilldown": {
+				            "name": "已配送",
+				            "categories": [
+					            "提前",
+					            "延后",
+					            "正常",
+				            ],
+                            "data": [
+                                tqpsl,
+                                yhpsl,
+                                zcpsl
+				            ]
+			        }
+		        }
+	            ],
+	            browserData = [],
+	            versionsData = [],
+	            i,
+	            j,
+	            dataLen = data.length,
+	            drillDataLen,
+	            brightness;
+                for (i = 0; i < dataLen; i += 1) {
+	                // 内层数据
+	                browserData.push({
+		                name: categories[i],
+		                y: data[i].y,
+		                color: data[i].color
+	                });
+	                // 外层数据
+	                drillDataLen = data[i].drilldown.data.length;
+	                for (j = 0; j < drillDataLen; j += 1) {
+	                    var color = Highcharts.Color(data[i].color).brighten(brightness).get();
+	                    if (data[i].drilldown.categories[j] == "提前") {
+	                        color = '#17e13a'
+	                    } else if (data[i].drilldown.categories[j] == "延后") {
+	                        color = '#067805'
+	                    } else if (data[i].drilldown.categories[j] == "正常") {
+	                        color = '#82f37a'
+	                    }
+		                brightness = 0.2 - (j / drillDataLen) / 5;
+		                versionsData.push({
+			                name: data[i].drilldown.categories[j],
+			                y: data[i].drilldown.data[j],
+			                color: color
+		                });
+	                }
+                }
+                Highcharts.chart('Img1', {
+	                chart: {
+		                type: 'pie'
+	                },
+	                title: {
+		                text: ''
+	                },
+                    subtitle: {
+                        text: '<b style="font-size:15px;font-weight:600;">应配送总量:' + ypszl.toFixed(0) + 'kg</b>',
+		                align: 'left'
+	                },
+	                plotOptions: {
+		                pie: {
+			                shadow: false,
+			                center: ['50%', '50%']
+		                }
+	                },
+	                tooltip: {
+	                    pointFormat: '<span style="color:#757575">{point.y:.0f}({point.percentage:.0f}%)</span>'
+	                },
+	                credits: {
+		                enabled: false //右下角不显示highcharts的LOGO
+	                },
+	                series: [{
+		                name: 'Browsers',
+		                data: browserData,
+		                size: imgSize2,
+		                colors: ['#5B9BD5', '#92D050', '#FF3399'],
+		                dataLabels: {
+			                formatter: function () {
+				                var a=null;
+				                if(this.y > 0){
+					                a=this.point.name;
+				                }
+				                return a;
+			                },
+			                color: '#ffffff',
+			                distance:'-10'
+		                }
+	                }, {
+		                name: 'Versions',
+		                data: versionsData,
+		                size: imgSize1,
+		                innerSize: imgSize2,
+		                dataLabels: {
+			                formatter: function () {
+				                var a=null;
+                                if (this.y > 0) {
+                                    a = '<span style="color:#757575">' + this.point.name + '</span><br/><span style="color:#757575">' + this.point.y.toFixed(0) + '(' + this.point.percentage.toFixed(0) + '%)</span>';
+				                }
+				                return a;
+			                },
+			                distance: '1'
+		                },
+		                id: 'versions',
+		                events: {
+		                    click: function (e) {
+		                        pieClick(e.point.name,1);
+		                    }
+		                }
+	                }],
+	                responsive: {
+		                rules: [{
+			                chartOptions: {
+				                series: [{
+					                id: 'versions',
+					                dataLabels: {
+						                enabled: false
+					                }
+				                }]
+			                }
+		                }]
+	                }
+                });
+        } catch (e) {
+
+        }
+    }
+
+    function loadImg2(param, llqHeight) {
+        var categoriesNaem = [];
+        var seriesData = [];
+        $.ajax({
+            url: "@Url.Action("Img2", "DistributionPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function(data) {
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        categoriesNaem.push(data[i]["Type"]);
+                        if (i == 0)
+                            seriesData.push({ 'color': '#F6BD0F', 'y': data[i]["Count"] });
+                        if (i == 1)
+                            seriesData.push({ 'color': '#AFD8F8', 'y': data[i]["Count"] });
+                        if (i == 2)
+                            seriesData.push({ 'color': '#8BBA00', 'y': data[i]["Count"] });
+                    }
+                }
+            }
+        });
+        var chart = Highcharts.chart('Img2',
+            {
+                chart: {
+                    type: 'column'
+                },
+                title: {
+                    text: ''
+                },
+                tooltip: {
+                    pointFormat: '<span style="color:#757575">{point.y}</span>'
+                },
+                plotOptions: {
+                    series: {
+                        borderWidth: 0,
+                        dataLabels: {
+                            enabled: true,
+                            format: '<span style="color:#757575">{point.y}</span>',
+                        },
+                        events: {
+                            click: function (e) {
+                                pieClick(e.point.category, 2);
+                            }
+                        }
+                    }
+                },
+                xAxis: {
+                    categories: categoriesNaem
+                },
+                yAxis: {
+                    title: {
+                        text: null
+                    }
+                },
+                exporting: {
+                    enabled: false //隐藏右上角的打印导出按钮
+                },
+                legend: {
+                    enabled: false //隐藏底部横坐标的值
+                },
+                credits: {
+                    enabled: false //右下角不显示highcharts的LOGO
+                },
+                series: [
+                    {
+                        name: 'a',
+                        data: seriesData
+                    }
+                ]
+            });
+    }
+
+    function loadImg3(param, llqHeight) {
+        var imgSize = '100%';
+        var seriesData = [];
+        $.ajax({
+            url: "@Url.Action("Img3", "DistributionPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        seriesData.push({ 'name': data[i]["SiteName"], 'y': data[i]["WeightTotal"],'code':data[i]["SiteCode"] });
+                    }
+                }
+            }
+        });
+        var chart=  Highcharts.chart('Img3', {
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: ''
+            },
+            tooltip: {
+                pointFormat: '<span style="color:#757575">{point.y:.0f}kg({point.percentage:.0f}%)</span>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    size: imgSize,   //饼图外圈直径大小
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        distance: '2', //控制饼图外面的线的长短,为负数时文本内容在饼图内部
+                        format: '<span style="color:#757575">{point.name}</span><br/><span style="color:#757575">{point.y:.0f}kg({point.percentage:.0f}%)</span>',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    },
+                    events: {
+                        click: function (e) {
+                            pieClick(e.point.code,3);
+                        }
+                    }
+                }
+            },
+            exporting: {
+                enabled: false//隐藏右上角的打印导出按钮
+            },
+            legend: {
+                enabled: false//隐藏底部横坐标的值
+            },
+            credits: {
+                enabled: false //右下角不显示highcharts的LOGO
+            },
+            series: [{
+                name: '已供货',
+                colorByPoint: true,
+                data: seriesData
+            }]
+        });
+    }
+    function pieClick(code, Type) {
+        debugger;
+        var param = $(".search").GetSearchCondition();
+        if (Type==1) {
+            if (code == "未配送" || code == "超期未配送") {
+                param.DistributionStart = code;
+            } else {
+                param.DistributionStart = "已配送";
+                if (code=="正常") {
+                    param.DistributionTimeStart = "正常配送";
+                } else if (code=="提前") {
+                    param.DistributionTimeStart = "提前配送";
+                } else if (code=="延后") {
+                    param.DistributionTimeStart = "延迟配送";
+                }
+            }
+        }else if(Type==2) {
+            param.ProblemType = code;
+        }
+        else if (Type==3) {
+            param.SiteCode = code;
+        }
+        $("#gridList").jqGrid('setGridParam',
+            {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+    }
+
+    //----------报表信息结束---------------------
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="topPanel-btn" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="OrderCode">订单编号</option>
+                                    <option value="TypeName">类型编码/名称</option>
+                                    <option value="DistributionStart">配送状态</option>
+                                    <option value="DistributionTimeStart">配送时间状态</option>
+                                    <option value="IsOffline">配送数据来源</option>
+                                    <option value="SignState">工区签收状态</option>
+                                    <option value="HistoryMonth">配送月份</option>
+                                </select>
+                                <input id="OrderCode" name="OrderCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="订单编号">
+                                <input id="TypeName" name="TypeName" type="text" class="form-control SearchContent hidSearchContent" placeholder="类型编码/名称">
+                                <select id="DistributionStart" name="DistributionStart" class=" form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="未配送">未配送</option>
+                                    <option value="超期未配送">超期未配送</option>
+                                    <option value="部分配送">部分配送</option>
+                                    <option value="配送完成">配送完成</option>
+                                </select>
+                                <select id="DistributionTimeStart" name="DistributionTimeStart" class=" form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="正常配送">正常配送</option>
+                                    <option value="延迟配送">延迟配送</option>
+                                    <option value="提前配送">提前配送</option>
+                                </select>
+                                <select id="IsOffline" name="IsOffline" class=" form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="线下补录">线下补录</option>
+                                    <option value="系统记录">系统记录</option>
+                                </select>
+                                <select id="SignState" name="SignState" class=" form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="未签收">未签收</option>
+                                    <option value="已签收">已签收</option>
+                                </select>
+                                <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="配送月份" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <div class="ibox float-e-margins" style="margin-bottom:0px;">
+                <div class="ibox-title">
+                    <h5 id="ReportTitel">报表展示</h5>
+                    <div class="ibox-tools" style="float: left;padding-left:5px;">
+                        <a class="collapse-link" style="color:#1490fa">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                    </div>
+                </div>
+                @* <div class="row" style="margin-top: 10px; margin-right:0px;">
+                        <div id="JgcMonthPsQk" style="float: left; width: 54%;" class="highchartImg"></div>
+                        <div id="JgcMonthPssFx" style="float: left; width: 45%;" class="highchartImg"></div>
+                    </div>*@
+                <div class="ibox-content" style="overflow-x:scroll;padding-top:5px;padding-bottom:5px;background-color:#EEEEEE;">
+                    <div class="row" style="margin-top: 10px; margin-right:0px;border:0px solid red;white-space:nowrap;width:1300px">
+                        <div style="float:left; width: 400px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:24px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">配送状态统计</div>
+                                <div style="float:right;padding-right:5px;font-size:16px;font-weight:600;">单位：kg</div>
+                            </div>
+                            <div id="Img1" style="float:left; width: 380px;border:0px solid #eee" class="highchartImg">
+                                @*<iframe id="iframeImg1" width="400" scrolling="no" height="100%" frameborder="0"></iframe>*@
+                            </div>
+                        </div>
+                        <div style="float:left; width: 400px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:24px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">配送问题统计</div>
+                                <div style="float:right;padding-right:5px;font-size:16px;font-weight:600;">单位：次</div>
+                            </div>
+                            <div id="Img2" style="float:left; width: 380px;border:0px solid #eee" class="highchartImg"></div>
+                        </div>
+                        <div style="float:left; width: 400px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:24px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">配送量分布统计</div>
+                                <div style="float:right;padding-right:5px;font-size:16px;font-weight:600;">单位：kg</div>
+                            </div>
+                            <div id="Img3" style="float:left; width: 380px;border:0px solid #eee" class="highchartImg"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager" style="position: fixed; bottom: 0; background-color: #F9F9F9;"></div>
+        </div>
+    </div>
+</div>

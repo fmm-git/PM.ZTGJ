@@ -1,0 +1,54 @@
+2020-05-26 15:38:45
+Text:	select TbEarlyInfo.*,DATEDIFF(MINUTE,TbEarlyInfo.EarlyBegTiem,GETDATE()) as SjJgMinute,cast(DATEDIFF(MINUTE,TbEarlyInfo.EarlyBegTiem,GETDATE())*1.0/60/24 as decimal(18,2)) as SjJgDay,cast(DATEDIFF(MINUTE,TbEarlyInfo.EarlyBegTiem,GETDATE())*1.0/60 as decimal(18,2)) as SjJgHour,TbFormEarlyInfo.ID as FormEarlyInfoID from (select TbEarlySz.ID,TbEarlySz.EarlyWarningNewsCode,TbEarlySz.EarlyWarningContent,TbEarlySz.MenuCode,TbEarlySz.EarlyWarningNewsName,TbEarlySz.App,TbEarlySz.Pc,TbEarlySz.IsStart,TbEarlySz.EarlyWarningFrequency,TbEarlySz.IsBackstage,TbEarlySz.EarlyMenuCodeNode,TbEarlySz.EarlyWarningFrequencyType,TbEarlySz.OrgType,TbEarlySz.PersonnelSource,TbEarlySz.PersonnelCode,TbEarlySz.DeptId,TbEarlySz.RoleId,TbEarlyMenu.ID as EarlyDataId,TbEarlyMenu.EarlyCode,TbEarlyMenu.ProjectId,TbEarlyMenu.EarlyTiem,case when TbEarlySz.EarlyWarningFrequencyType='天' then DATEADD(DAY,TbEarlySz.EarlyWarningFrequency,DATEADD(DAY,TbEarlySz.TriggerTimeDay,DATEADD(HOUR,TbEarlySz.TriggerTimeHour,DATEADD(MINUTE,TbEarlySz.TriggerTimeMinute,TbEarlyMenu.EarlyTiem)))) when TbEarlySz.EarlyWarningFrequencyType='时' then DATEADD(HOUR,TbEarlySz.EarlyWarningFrequency,DATEADD(DAY,TbEarlySz.TriggerTimeDay,DATEADD(HOUR,TbEarlySz.TriggerTimeHour,DATEADD(MINUTE,TbEarlySz.TriggerTimeMinute,TbEarlyMenu.EarlyTiem))))else DATEADD(MINUTE,TbEarlySz.EarlyWarningFrequency,DATEADD(DAY,TbEarlySz.TriggerTimeDay,DATEADD(HOUR,TbEarlySz.TriggerTimeHour,DATEADD(MINUTE,TbEarlySz.TriggerTimeMinute,TbEarlyMenu.EarlyTiem)))) end as EarlyBegTiem,TbEarlyMenu.SiteCode,TbEarlyMenu.SiteName,TbEarlyMenu.WorkAreaCode,TbEarlyMenu.WorkAreaName,TbEarlyMenu.BranchCode,TbEarlyMenu.BranchName,TbEarlyMenu.ManagerDepartmentCode,TbEarlyMenu.ProcessFactoryCode,TbEarlyMenu.TypeCode from (select a.*,b.OrgType,b.ProjectId,b.PersonnelSource,b.PersonnelCode,b.DeptId,b.RoleId from TbEarlyWarningSetUp a
+                           left join TbNoticeNewsOrg b on a.EarlyWarningNewsCode=b.NoticeNewsCode
+                           where a.IsStart=1 and a.EarlyMenuCodeNode=0 and b.NewsType=2) TbEarlySz
+                           left join (
+                           --供货超时预警
+                           select 'SupplyList' as MenuCode,a.ID,a.BatchPlanNum as EarlyCode,f.InsertTime as EarlyTiem,a.ProjectId,'' as SiteCode,'' as SiteName,a.WorkAreaCode,b.CompanyFullName as WorkAreaName,a.BranchCode,c.CompanyFullName as BranchName,c.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,'' as TypeCode,'' as SiteContacts,'' as SiteContactTel from TbSupplyList a 
+                           left join TbCompany b on a.WorkAreaCode=b.CompanyCode
+                           left join TbCompany c on a.BranchCode=c.CompanyCode
+                           left join TbFactoryBatchNeedPlan f on a.BatchPlanNum=f.BatchPlanNum
+                           where a.StateCode='未供货'
+                           union all
+                           --取样订单质检报告上传超时
+                           select * from (
+                           select 'SampleOrder1' as MenuCode,a.ID,a.SampleOrderCode,a.ProcessingStateTime,a.ProjectId,'' as SiteCode,'' as SiteName,a.WorkAreaCode,b.CompanyFullName as WorkAreaName,c.CompanyCode as BranchCode,c.CompanyFullName as BranchName,c.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,'' as TypeCode,'' as SiteContacts,'' as SiteContactTel from TbSampleOrder a
+                           left join TbCompany b on a.WorkAreaCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           where a.IsUpLoad=0 and  a.RebarType='BuildingSteel'
+                           union all
+                           select 'SampleOrder3' as MenuCode,a.ID,a.SampleOrderCode,a.ProcessingStateTime,a.ProjectId,'' as SiteCode,'' as SiteName,a.WorkAreaCode,b.CompanyFullName as WorkAreaName,c.CompanyCode as BranchCode,c.CompanyFullName as BranchName,c.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,a.RebarType as TypeCode,a.InsertUserCode as SiteContacts,'' as SiteContactTel from TbSampleOrder a
+                           left join TbCompany b on a.WorkAreaCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           where a.IsUpLoad=0 and a.RebarType='SectionSteel') TbSo
+                           union all
+                           --等待卸货超时预警
+                           select 'TransportProcess' as MenuCode,a.ID,a.DistributionCode,a.EnterSpaceTime,a.ProjectId,a.SiteCode,b.CompanyFullName as SiteName,c.CompanyCode as WorkAreaCode,c.CompanyFullName as WorkAreaName,d.CompanyCode as BranchCode,d.CompanyFullName as BranchName,d.ParentCompanyCode as ManagerDepartmentCode,e.ProcessFactoryCode,a.TypeCode,o.SiteContacts,o.SiteContactTel from TbTransportCarReport a
+                           left join TbCompany b on a.SiteCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           left join TbCompany d on c.ParentCompanyCode=d.CompanyCode
+                           left join TbDistributionEntOrder o on a.DisEntOrderId=o.ID
+                           left join TbDistributionEnt e on a.DistributionCode=e.DistributionCode
+                           where a.FlowState=2  
+                           union all
+                           --半成品签收超时预警
+                           select 'SemiFinishedSign' as MenuCode,a.ID,a.SigninNuber,a.InsertTime,a.ProjectId,a.SiteCode,b.CompanyFullName as SiteName,c.CompanyCode as WorkAreaCode,c.CompanyFullName as WorkAreaName,d.CompanyCode as BranchCode,d.CompanyFullName as BranchName,d.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,a.TypeCode,'' as SiteContacts,'' as SiteContactTel from TbSemiFinishedSign a
+                           left join TbCompany b on a.SiteCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           left join TbCompany d on c.ParentCompanyCode=d.CompanyCode
+                           where a.OperateState='未签收') TbEarlyMenu on TbEarlySz.MenuCode=TbEarlyMenu.MenuCode and TbEarlySz.ProjectId=TbEarlyMenu.ProjectId) TbEarlyInfo
+                           left join TbFormEarlyWarningNodeInfo TbFormEarlyInfo on TbEarlyInfo.MenuCode=TbFormEarlyInfo.MenuCode 
+                           and TbEarlyInfo.EarlyWarningNewsCode=TbFormEarlyInfo.EarlyWarningCode 
+                           and TbEarlyInfo.EarlyDataId=TbFormEarlyInfo.EWFormDataCode
+                           where TbEarlyInfo.EarlyDataId is not null and GETDATE()>TbEarlyInfo.EarlyBegTiem and TbFormEarlyInfo.ID is null and TbEarlyInfo.EarlyBegTiem>'2020-04-01'	
+
+
+-----------------------------------------------------------------------------
+2020-05-26 15:38:45
+Text:	 SELECT   TOP 1 * FROM [TbNoticeNewsSetUp]  WHERE ([TbNoticeNewsSetUp].[NoticeNewsCode] = @NoticeNewsCode1) AND ([TbNoticeNewsSetUp].[IsStart] = @IsStart2) 	
+Parameters:
+@NoticeNewsCode1[String] = XXTZ0008
+@IsStart2[Int32] = 1
+
+
+-----------------------------------------------------------------------------

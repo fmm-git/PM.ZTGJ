@@ -1,0 +1,106 @@
+﻿@{
+    ViewBag.Title = "审批意见查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script>
+    var FormCode = $.request("FormCode"); //表单编码
+    var FlowPerformID = $.request("FlowPerformID"); //流程流水号
+    var ID = $.request("ID"); //数据ID
+    $(function() {
+        var flag = false;
+        var timer;
+        $("#forminfo").load(function() {
+            if (timer) {
+                clearInterval(timer);
+            }
+            //pre_height用于记录上次检查时body的高度
+            //mainheight用于获取本次检查时body的高度，并赋予iframe的高度
+            var mainheight, pre_height;
+            var frame_content = $(this);
+            timer = setInterval(function() {
+                    mainheight = frame_content.contents().find("body").height() + 30;
+                    if (!flag) {
+                        if (mainheight != pre_height) {
+                            pre_height = mainheight;
+                            frame_content.height(Math.max(mainheight, 450));
+                        }
+                        $('#forminfo').attr('src', $('#forminfo').attr('src'));
+                        flag = true;
+                    }
+                },
+                500);
+        });
+        LoadOderForm();
+        BindgridList();
+    })
+
+
+    //加载原单据信息
+    function LoadOderForm() {
+        $.ajax({
+            type: 'POST',
+            url: '/MyApproval/LoadOrderForm',
+            data: { formCode: FormCode },
+            async: false,
+            cache: false,
+            success: function(data) {
+                var str_json = JSON.parse(data);
+                var url = str_json.url;
+                $("#forminfo").attr("src", url + '?keyValue=' + ID);
+            }
+        });
+    }
+    //加载审批意见
+    function BindgridList() {
+        $("#gridList").dataGrid({
+            treeGrid: false,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            url: "/MyApproval/LoadApprovalOptions?FlowPerformID=" + FlowPerformID,
+            height: $(window).height() - 96,
+            rownumbers: false,
+            colModel: [
+                { label: "流程节点", name: "FlowNodeName", width: 250, align: 'left', sortable: false },
+                { label: "发起时间", name: "BeginTime", width: 100, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "接收人", name: "UserName", width: 100, align: 'left', sortable: false },
+                { label: "人员类型", name: "UserType", width: 100, align: 'left', sortable: false },
+                { label: "审批状态", name: "PerformState", width: 100, align: 'left', sortable: false },
+                { label: "处理时间", name: "PerformDate", width: 100, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "审批意见", name: "PerformOpinions", width: 300, align: 'left', sortable: false },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+            }
+        });
+    }
+
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+<form id="form1">
+    <ul class="nav nav-tabs">
+        <li id="ZW" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">正文</a></li>
+        <li id="SPYJ" onclick="selectTab($(this))"><a href="javascript:void(0);">审批意见</a></li>
+    </ul>
+    <div class="row">
+        <div id="spxx" class="col-md-6" style="width:70%;">
+            <div id="ZWInfo" style="padding-top: 5px;">
+                <iframe id="forminfo" style="width: 100%; height: 100%; " scrolling="auto" frameborder="0"></iframe>
+            </div>
+            <div id="SPYJInfo" style="padding-top: 5px;  display:none; overflow-x: scroll;">
+                <div class="gridPanel">
+                    <table id="gridList" style="width:100%;"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

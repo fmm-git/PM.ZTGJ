@@ -1,0 +1,314 @@
+﻿@{
+    ViewBag.Title = "预警信息列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    $(function () {
+        $('#layout').layout();
+        $.LodeMenuBtn("/OA/MyEarlyWarning/Index");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        FlowDefineView();
+        gridList1();//流程中预警
+        gridList2();//表单预警
+        $("#btn_search").click(function () {
+            var sdt = $("#SDT").val();
+            var edt = $("#EDT").val();
+            var startTime = new Date(Date.parse(sdt));
+            var endTime = new Date(Date.parse(edt));
+            if (startTime > endTime) {
+                $.modalMsg("起始时间不能大于结束时间", "warning");
+                return false;
+            }
+            var status = 0;
+            var param1 = JSON.stringify({ SDT: sdt, EDT: edt });
+            var param = JSON.stringify({ status: status, SDT: sdt, EDT: edt });
+            $("#leftgridList").jqGrid('setGridParam', {
+                postData: { param: param1 },
+            }).trigger('reloadGrid');
+            $("#gridList1").jqGrid('setGridParam', {
+                postData: { param: param },
+            }).trigger('reloadGrid');
+            $("#gridList2").jqGrid('setGridParam', {
+                postData: { param: param },
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    });
+
+    function FlowDefineView() {
+        var sdt1 = $("#SDT").val();
+        var edt1 = $("#EDT").val();
+        var param1 = JSON.stringify({ SDT: sdt1, EDT: edt1 });
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/MyEarlyWarning/GetMyEarlyWarningState",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: "预警状态编码", name: "EarlyWarningStart", hidden: true, key: true },
+                { label: '预警状态', name: 'EWStartCount', hidden: true },
+                { label: '预警状态', name: 'EarlyWarningStartName', width: 150, align: 'left', formatter: StartNameCount }
+            ],
+            onCellSelect: function (ucode) {
+                var sdt = $("#SDT").val();
+                var edt = $("#EDT").val();
+                var param = JSON.stringify({ state: ucode, SDT: sdt, EDT: edt });
+                $("#gridList1").jqGrid('setGridParam', {
+                    postData: { param: param },
+                }).trigger('reloadGrid');
+                $("#gridList2").jqGrid('setGridParam', {
+                    postData: { param: param },
+                }).trigger('reloadGrid');
+            },
+            postData: { param: param1 },
+            loadComplete: function () {//默认选中第一条
+                $("#leftgridList").jqGrid('setSelection', 0);
+            }
+        });
+    }
+    function StartNameCount(cellValue, options, rowObject) {
+        var tdhtml = cellValue + "【" + rowObject.EWStartCount + "】";
+        return tdhtml;
+    }
+    //流程预警
+    function gridList1() {
+        var $gridList1 = $("#gridList1");
+        $gridList1.dataGrid({
+            url: "/MyEarlyWarning/GetEarlyWarningInfo",
+            height: $(window).height() - 168,
+            colModel: [
+                { label: "ID", name: "ID", align: 'left', key: true, hidden: true, sortable: false },
+                { label: "预警编号", name: "EarlyWarningCode", align: 'left', hidden: true, sortable: false },
+                { label: "流程ID", name: "FlowPerformID", align: 'left', hidden: true, sortable: false },
+                { label: "流程编码", name: "FlowCode", align: 'left', hidden: true, sortable: false },
+                { label: "表单编码", name: "EWFormCode", align: 'left', hidden: true, sortable: false },
+                { label: "数据ID", name: "EWFormDataCode", align: 'left', hidden: true, sortable: false },
+                { label: "预警状态", name: "EarlyWarningStart", align: 'left', hidden: true, sortable: false },
+                { label: "预警人员", name: "EarlyWarningBTUser", align: 'left', hidden: true, sortable: false },
+                { label: "预警人员", name: "EarlyWarningBTUserName", align: 'left', hidden: true, sortable: false },
+                { label: "流程审批人员", name: "FlowUserName", align: 'left', width: 140, sortable: false },
+                { label: "上一步流程处理时间", name: "PreNodeCompleteDate", width: 140, align: 'left', sortable: false },
+                {
+                    label: "预警状态", name: "EarlyWarningStartName", align: 'left', width: 140, sortable: false
+                    //, formatter: function (cellValue, options, rowObject) {
+                    //    if (rowObject.EarlyWarningStart == 0) {
+                    //        return "未阅";
+                    //    } else if (rowObject.EarlyWarningStart == 1) {
+                    //        return "已阅";
+                    //    } else if (rowObject.EarlyWarningStart == 2) {
+                    //        return "预警已撤销";
+                    //    }
+                    //}
+                },
+                { label: "预警内容", name: "EarlyWarningContent", width: 350, align: 'left', sortable: false },
+
+            ],
+            pager: "#gridPager1",
+            sortorder: "desc",
+            sortname: 'EarlyWarningCode',
+            viewrecords: true,
+        });
+    }
+    //表单预警
+    function gridList2() {
+        var $gridList2 = $("#gridList2");
+        $gridList2.dataGrid({
+            url: "/MyEarlyWarning/GetEarlyWarningFormInfo",
+            height: $(window).height() - 168,
+            colModel: [
+                { label: "ID", name: "ID", align: 'left', key: true, hidden: true, sortable: false },
+                { label: "EWStart", name: "EWStart", align: 'left', hidden: true, sortable: false },
+                { label: "预警菜单", name: "MenuName", align: 'left', width: 140, sortable: false },
+                { label: "预警节点编号", name: "EWNodeCode", align: 'left', hidden: true, sortable: false },
+                { label: "预警节点名称", name: "EWNodeName", align: 'left', width: 140, sortable: false },
+                { label: "预警月份", name: "EWFormDataCode", align: 'left', hidden: true, sortable: false },
+                { label: "预警工区编号", name: "WorkArea", align: 'left', hidden: true, sortable: false },
+                { label: "预警工区", name: "WorkAreaName", align: 'left', width: 80, sortable: false },
+                { label: "预警人员", name: "EWUserCode", align: 'left', hidden: true, sortable: false },
+                { label: "预警人员", name: "EWUserName", align: 'left', width: 80, sortable: false },
+                {
+                    label: "预警状态", name: "EWStartName", align: 'left', width: 80, sortable: false
+                    //, formatter: function (cellValue, options, rowObject) {
+                    //    if (rowObject.EWStart == 0) {
+                    //        return "未阅";
+                    //    } else if (rowObject.EWStart == 1) {
+                    //        return "已阅";
+                    //    } else if (rowObject.EWStart == 2) {
+                    //        return "预警已撤销";
+                    //    }
+                    //}
+                },
+                { label: "预警发生时间", name: "EarlyWarningTime", width: 140, align: 'left', sortable: false },
+                { label: "预警内容", name: "EarlyWarningContent", width: 400, align: 'left', sortable: false }
+
+            ],
+            pager: "#gridPager2",
+            sortorder: "desc",
+            sortname: 'ID',
+            viewrecords: true,
+        });
+    }
+
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+    function btn_other1() {
+        if ($("#FormEw").hasClass("active")) {
+            var RowID = $("#gridList2").jqGrid('getGridParam', 'selrow');
+            var rowData = $("#gridList2").jqGrid("getRowData", RowID);
+            var ID = rowData.ID;
+            if (!rowData.EWStart) {
+                $.modalMsg("请选择要处理的预警信息", "warning");
+                return;
+            } else {
+                if (rowData.EWStart == 0) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/MyEarlyWarning/HandleEarlyWarning',
+                        data: { ID: ID, EarlyType: '表单预警' },
+                        async: false,
+                        cache: false,
+                        success: function (data) {
+                            $.loading(false);
+                            var str_json = JSON.parse(data);
+                            if (str_json.state == "success") {
+                                $.modalMsg("处理成功", "success");
+                                $.reload();
+                                //调用父页面方法刷新预警数量
+                                window.parent.getcount();
+                            }
+                            else {
+                                $.modalMsg(str_json.message, "warning");
+                            }
+                        }
+                    });
+                }
+                else {
+                    $.modalMsg("该预警信息已经处理", "warning");
+                    return;
+                }
+            }
+        } else {
+            var RowID = $("#gridList1").jqGrid('getGridParam', 'selrow');
+            var rowData = $("#gridList1").jqGrid("getRowData", RowID);
+            var ID = rowData.ID;
+            if (!rowData.EarlyWarningStart) {
+                $.modalMsg("请选择要处理的预警信息", "warning");
+                return;
+            } else {
+                if (rowData.EarlyWarningStart == 0) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/MyEarlyWarning/HandleEarlyWarning',
+                        data: { ID: ID, EarlyType: '流程预警' },
+                        async: false,
+                        cache: false,
+                        success: function (data) {
+                            $.loading(false);
+                            var str_json = JSON.parse(data);
+                            if (str_json.state == "success") {
+                                $.modalMsg("处理成功", "success");
+                                $.reload();
+                                //调用父页面方法刷新预警数量
+                                window.parent.getcount();
+                            }
+                            else {
+                                $.modalMsg(str_json.message, "warning");
+                            }
+                        }
+                    });
+                } else {
+                    $.modalMsg("该预警信息已经处理", "warning");
+                    return;
+                }
+            }
+
+        }
+    }
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow:no-display;">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+                <div class="btn-group" style="margin-left: 5px">
+                    <a id="NF_other1" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_other1()">
+                        <i class="fa fa-wrench"></i>处理预警
+                    </a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            起始时间：
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="SDT" name="SDT" type="text" placeholder="起始时间" @*value="@(DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd"))"*@ class="form-control required input-wdatepicker" onfocus="WdatePicker({ maxDate: '%y-%M-%d', })" />
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp; 截止时间：
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="EDT" name="EDT" type="text" placeholder="截止时间" @*value="@(DateTime.Now.ToString("yyyy-MM-dd"))"*@ class="form-control required input-wdatepicker" onfocus="WdatePicker({ maxDate: '%y-%M-%d', })" />
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a id="btn_search" class="btn btn-primary"><i class="fa fa-search">查询</i></a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="tabs-header-div">
+            @*<ul class="nav nav-tabs">
+                    <li id="tab1" class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">流程预警</a></li>
+                    <li id="tab2" class=""><a data-toggle="tab" href="#tab-2" aria-expanded="false">表单预警</a></li>
+                </ul>*@
+            <ul class="nav nav-tabs">
+                <li id="FlowEw" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">流程预警</a></li>
+                <li id="FormEw" onclick="selectTab($(this))"><a href="javascript:void(0);">表单预警</a></li>
+            </ul>
+        </div>
+        <div class="tab-content">
+            <div id="FlowEwInfo">
+                <div class="gridPanel">
+                    <table id="gridList1"></table>
+                    <div id="gridPager1"></div>
+                </div>
+            </div>
+            <div id="FormEwInfo" style="display:none;">
+                <div class="gridPanel">
+                    <table id="gridList2"></table>
+                    <div id="gridPager2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

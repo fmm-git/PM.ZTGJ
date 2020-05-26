@@ -1,0 +1,246 @@
+﻿@{
+    ViewBag.Title = "数据导入";
+    Layout = "~/Views/Shared/_Form.cshtml";
+    var host = ViewContext.HttpContext.Request.Url.Host;//域名
+    var port = ViewContext.HttpContext.Request.Url.Port;//端口
+    var address = "http://" + host + ":" + port;
+    var SubmitUrl = ViewBag.SubmitUrl;
+    var ExclName = ViewBag.ExclName;
+}
+
+<link href="~/Content/js/webuploader-0.1.5/webuploader.css" rel="stylesheet" />
+<script src="~/Content/js/webuploader-0.1.5/webuploader.js"></script>
+<style>
+    .thumbnail {
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-bottom: 5px;
+        height: 25px;
+    }
+
+        .thumbnail .info {
+            float: left;
+        }
+
+        .thumbnail .remove-this {
+            float: right;
+        }
+
+    .btns {
+        position: fixed;
+        bottom: 0px;
+        float: right;
+        width: 162%;
+        height: 50px;
+        border-top: 1px solid #ddd;
+    }
+
+    .uploader-list {
+        height: 90%;
+        overflow-y: auto;
+    }
+
+    #picker input {
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
+<script>
+    var keyValue = $.request("keyValue");
+    var tableId = $.request("tableId");
+    var isInput = $.request("isInput");
+    $(function () {
+        initControl();
+    })
+    function initControl() {
+        var GetDataUrl = '@SubmitUrl';
+        var where = "?1=1";
+        if (keyValue && keyValue != "") {
+            //参数条件
+            var searchArry = keyValue.split("|");
+            if (searchArry.length > 1) {
+                $.each(searchArry, function (index, value) {
+                    var arry = value.split("/");
+                    if (arry.length > 1) {
+                        where += "&" + arry[0] + "=" + arry[1];
+                    }
+                    else {
+                        where = "?keyValue=" + keyValue;
+                    }
+                });
+                GetDataUrl = GetDataUrl + where;
+            } else {
+                GetDataUrl = GetDataUrl + "?keyValue=" + keyValue;
+            }
+        }
+        var uploader = WebUploader.create({
+            auto: false, // 选择文件后自动上传
+            runtimeOrder: 'html5', // 直接使用html5模式，还有flash的我就忽略了..
+            pick: {
+                id: '#picker', // 按钮元素
+                multiple: false // 是否支持文件多选，false表示只能选一个
+            },
+            server: GetDataUrl, // 上传文件的接口（替换成你们后端给的接口路径）
+            accept: {
+                extensions: 'xls,xlsx', // 允许的文件后缀，不带点，多个用逗号分割，这里支持老版的Excel和新版的
+                mimeTypes: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            },
+            disableGlobalDnd: true, // 禁掉全局的拖拽功能。
+            fileNumLimit: 1, // 验证文件总数量, 超出则不允许加入队列
+            fileSizeLimit: 30 * 1024 * 1024, // 限制所有上传文件的大小
+            fileSingleSizeLimit: 30 * 1024 * 1024 // 限制单个上传文件的大小
+        });
+        //当有文件被添加进队列的时候
+        uploader.on('fileQueued', function (file) {
+            var $li = $(
+                        '<div id="' + file.id + '" class="file-item thumbnail">' +
+                            '<div class="info">' + file.name + '</div>' +
+                            '<div class="remove-this">删除</div>' +
+                        '</div>'
+                        );
+            $("#thelist").append($li);
+            //删除上传的文件
+            $("#thelist").on('click', '.remove-this', function () {
+                if ($(this).parent().attr('id') == file.id) {
+                    uploader.removeFile(file);
+                    $(this).parent().remove();
+                    $("#ExeclMsg").empty();
+                }
+            });
+        });
+        // 文件上传过程中创建进度条实时显示。
+        uploader.on('uploadProgress', function (file, percentage) {
+            var $li = $('#' + file.id),
+                   $percent = $li.find('.progress span');
+            // 避免重复创建
+            if (!$percent.length) {
+                $percent = $('<p class="progress"><span></span></p>')
+                        .appendTo($li)
+                        .find('span');
+            }
+            $percent.css('width', percentage * 100 + '%');
+        });
+        // 导入成功
+        uploader.on('uploadSuccess', function (file, response) {
+            $.loading(false);
+            if (isInput) {//主表导入
+                if (response.state == "success") {
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");//刷新列表信息
+                    if (response.message) {
+                        $("#ExeclMsg").html(response.message);
+                    } else {
+                        //关闭导入窗口
+                        var index = top.layer.getFrameIndex("InputNew");//弹框Id
+                        top.layer.close(index);
+                    }
+                }
+                else {
+                    //$.modalMsg("导入失败:" + response.message, "warning");
+                    $("#ExeclMsg").html(response.message);
+                    return false;
+                }
+            }
+            else {//明细表导入
+                if (response.IsSuccess) {
+                    if (tableId != "") {
+                        top.frames["Form"].lodeList(response.Data, "#" + tableId);
+                    } else {
+                        top.frames["Form"].lodeList(response.Data);
+                    }
+                    //关闭导入窗口
+                    var index = top.layer.getFrameIndex("InputNew");//弹框Id
+                    top.layer.close(index);
+                }
+                else {
+                    //$.modalMsg("导入失败:" + response.Msg, "warning");
+                    $("#ExeclMsg").html(response.Msg);
+                    return false;
+                }
+            }
+        });
+        // 上传失败
+        uploader.on('uploadError', function (file) {
+            $.modalMsg("导入失败", "warning");
+            return false;
+        });
+        // 完成上传完了，成功或者失败，先删除进度条跟文件。
+        uploader.on('uploadComplete', function (file) {
+            $('#' + file.id).find('.progress').remove();
+        });
+        // 上传错误
+        uploader.on('error', function (status) {
+            var errorTxt = '';
+            if (status == 'Q_TYPE_DENIED') {
+                errorTxt = '文件类型错误';
+            } else if (status == 'Q_EXCEED_SIZE_LIMIT') {
+                errorTxt = '文件大小超出限制，请控制在30M以内哦';
+            } else if (status == 'Q_EXCEED_NUM_LIMIT') {
+                errorTxt = '最多一个文件';
+            }
+            else {
+                errorTxt = '其他错误';
+            }
+            $.modalMsg("导入失败:" + errorTxt, "warning");
+            return false;
+        });
+        //导入
+        $("#ctlBtn").on('click', function () {
+            var content = $("#thelist").html();
+            if (content == null || content.length == 0) {
+                $.modalMsg("请先选择导入文件", "warning");
+                return false;
+            }
+            $.loading(true, "正在导入数据...");
+            uploader.upload();
+        });
+    }
+</script>
+
+<div class="panel panel-danger" style="margin-bottom:10px">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-warning alert-dismissible" style="position: relative; top: 1px; font-size: 15px; padding-right: 5px;"></i>导入模板下载</h3>
+    </div>
+    <div class="panel-body" style="width: 98%; padding: 5px;">
+        <table class="form">
+            <tr>
+                <th class="formTitle">模板下载：</th>
+                <td class="formValue">
+                    <a href="@address/UpFiles/TemplateFiles/@(ExclName).xlsx">@ExclName</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
+<div class="panel  panel-primary" style="margin-bottom:10px">
+    <div class="panel-heading">
+        <h3 class="panel-title">上传导入文件</h3>
+    </div>
+    <div class="panel-body" style="width: 98%;padding:5px;">
+        <div id="uploader" class="wu-example ">
+
+            <div id="thelist" class="uploader-list"></div>
+
+            <div class="btns">
+                <div id="picker" style="display:inline-block;float:none !important;vertical-align:top;margin-top:5px; height:40px; ">
+                    选择文件
+                </div>
+                <button id="ctlBtn" class="layui-layer-btn0 btn btn-primary" style="vertical-align:top; height:37px; margin-top:5px;">
+                    <span class="glyphicon glyphicon-upload" style="margin-top:-5px;"></span> 导入
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel  panel-primary" style="margin-bottom:10px">
+    <div class="panel-heading">
+        <h3 class="panel-title">导入结果</h3>
+    </div>
+    <div class="panel-body" style="width: 98%; padding: 5px;">
+        <div id="ExeclMsg" style="height:175px;overflow: auto; overflow-x: hidden; ">
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,193 @@
+﻿@{
+    ViewBag.Title = "预警开始时间设置";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+
+<script>
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = "";
+    $(function () {
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "FormEarlyWarningBegTime")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    ProjectId = data.Item1[0].ProjectId;
+                }
+            });
+        } else {
+            ProjectId = $("#ProjectId").val()
+        }
+    });
+
+    //选择分部
+    function selectCompanyBranch(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type + "|ProjectId/" + ProjectId;
+        var str = "BranchCode=CompanyCode,BranchName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+            $("#WorkAreaCode").val("");
+            $("#WorkAreaName").val("");
+            $("#SiteCode").val("");
+            $("#SiteName").val("");
+        });
+    }
+
+    //选择工区
+    function selectWorkArea(type) {
+        if ($("#BranchCode").val() == "" || $("#BranchCode").val() == null || $("#BranchCode").val() == undefined) {
+            $.modalMsg("请选择分部信息", "warning");
+        } else {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyWorkAreaOrSiteList&keyValue=parentCode/" + $("#BranchCode").val() + "|type/" + type;
+            var str = "WorkAreaCode=CompanyCode,WorkAreaName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+                $("#SiteCode").val("");
+                $("#SiteName").val("");
+            });
+        }
+    }
+
+    //选择站点
+    function selectCompanyWorkAreaOrSite(type) {
+        if ($("#WorkAreaCode").val() == "" || $("#WorkAreaCode").val() == null || $("#WorkAreaCode").val() == undefined) {
+            $.modalMsg("请选择工区信息", "warning");
+        } else {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyWorkAreaOrSiteList&keyValue=parentCode/" + $("#WorkAreaCode").val() + "|type/" + type;
+            var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+        }
+    }
+    //选择加工厂
+    function selectCompanyProcessFactory(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "FormEarlyWarningBegTime")" + "?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 25%;">
+        <input id="ID" name="ID" type="hidden" />
+        <input id="ProjectId" name="ProjectId" type="hidden" value="@ViewBag.ProjectId" />
+        <input id="MenuCode" name="MenuCode" type="hidden" value="@ViewBag.MenuCode" />
+        <div style="padding-top: 20px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">预警编号<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EarlyWarningCode" name="EarlyWarningCode" type="text" value="" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警名称<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EarlyWarningTitle" name="EarlyWarningTitle" type="text" value="" class="form-control required" placeholder="请输入预警名称" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">类型<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <select id="MsgType" name="MsgType" class="form-control required">
+                            <option value="0">短信</option>
+                            <option value="1">预警</option>
+                            <option value="2">消息</option>
+                            <option value="3">短信、预警</option>
+                            <option value="4">短信、消息</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">分部名称</th>
+                    <td class="formValue" colspan="2">
+                        <div class="input-group input-group-with" style="width:258px;">
+                            <input id="BranchCode" name="BranchCode" hidden="hidden" />
+                            <input id="BranchName" name="BranchName" type="text" readonly="readonly" class="form-control" />
+                            <span class="input-group-btn" onclick="selectCompanyBranch('3')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">工区名称</th>
+                    <td class="formValue" colspan="2">
+                        <div class="input-group input-group-with" style="width:258px;">
+                            <input id="WorkAreaCode" name="WorkAreaCode" hidden="hidden" />
+                            <input id="WorkAreaName" name="WorkAreaName" type="text" readonly="readonly" class="form-control" />
+                            <span class="input-group-btn" onclick="selectWorkArea('4')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">站点名称</th>
+                    <td class="formValue" colspan="2">
+                        <div class="input-group input-group-with" style="width:258px;">
+                            <input id="SiteCode" name="SiteCode" hidden="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" readonly="readonly" class="form-control" />
+                            <span class="input-group-btn" onclick="selectCompanyWorkAreaOrSite('5')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">加工厂名称</th>
+                    <td class="formValue" colspan="2">
+                        <div class="input-group input-group-with" style="width:258px;">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" hidden="hidden" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" readonly="readonly" class="form-control" />
+                            <span class="input-group-btn" onclick="selectCompanyProcessFactory('1')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警时间（天）<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EWBegDay" name="EWBegDay" type="text" value="" class="form-control required input-wdatepicker" onfocus="WdatePicker({dateFmt: 'dd'})" placeholder="请输入天" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警时间（小时）<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EWBegHour" name="EWBegHour" type="text" value="" class="form-control required input-wdatepicker" onfocus="WdatePicker({ dateFmt: 'HH' })" placeholder="请输入小时" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">预警时间（分钟）<span class="required1">*</span></th>
+                    <td class="formValue" colspan="2">
+                        <input id="EWBegMinute" name="EWBegMinute" type="text" value="" class="form-control required input-wdatepicker" onfocus="WdatePicker({ dateFmt: 'mm' })" placeholder="请输入分钟" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

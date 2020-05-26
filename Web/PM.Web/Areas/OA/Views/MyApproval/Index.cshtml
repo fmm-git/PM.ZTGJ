@@ -1,0 +1,303 @@
+﻿@{
+    ViewBag.Title = "我的审批";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<link href="~/Content/js/select2/select2.min.css" rel="stylesheet" />
+<script src="~/Content/js/select2/select2.min.js"></script>
+<style>
+    .active {
+        background: #46f7c6;
+    }
+
+    .active1 {
+        background: #46f7c6;
+        padding-left: 10px;
+    }
+</style>
+<script>
+    $(function () {
+        $('#layout').layout();
+        $.LodeMenuBtn("/OA/MyApproval/Index");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        FlowDefineView();
+        //初始化选中待办
+        $("#li_1").addClass("active");
+        $("#li_1").siblings().removeClass("active");
+        gridList();
+        $("#btn_search").click(function () {
+            var sdt = $("#SDT").val();
+            var edt = $("#EDT").val();
+            var startTime = new Date(Date.parse(sdt));
+            var endTime = new Date(Date.parse(edt));
+            if (startTime > endTime) {
+                $.modalMsg("起始时间不能大于结束时间", "warning");
+                return false;
+            }
+            FlowDefineView();
+            var typeId = $("#pultree .active").attr("id");
+            var typeVaule = typeId.split("_");
+            var status = typeVaule[1];
+            status = status == null ? -1 : status;
+            if (typeVaule[1] == "1") {//待办
+                status = -1;
+            }
+            else if (typeVaule[1] == "2") {//已办
+                status = 111;
+            }
+            else if (typeVaule[1] == "3") {//已同意
+                status = 1;
+            }
+            else if (typeVaule[1] == "4") {//已撤销
+                status = 4;
+            }
+            else if (typeVaule[1] == "5") {//退回
+                status = 3;
+            }
+            else if (typeVaule[1] == "6") {//抄送
+                status = 0;
+            }
+            else if (typeVaule[1] == "7") {//其他用户处理
+                status = 9;
+            }
+            var param = JSON.stringify({ state: status, SDT: sdt, EDT: edt });
+            $('#gridList').jqGrid('setGridParam', {
+                postData: { param: param },
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    });
+
+    function FlowDefineView() {
+        var sdt = $("#SDT").val();
+        var edt = $("#EDT").val();
+        var param = JSON.stringify({ SDT: sdt, EDT: edt });
+        $.ajax({
+            type: 'POST',
+            url: '/MyApproval/GetMyApprovalState',
+            data: { param: param },
+            async: false,
+            cache: false,
+            success: function (data) {
+                var approvalState = JSON.parse(data);
+                var count = 0;
+                var dbCount = 0;
+                for (var i = 0; i < approvalState.length; i++) {
+                    if (approvalState[i]["PerformStateName"] != "db" && approvalState[i]["PerformStateName"] != "dbyy") {
+                        count += approvalState[i]["PerformStateCount"];
+                    }
+                    if (approvalState[i]["PerformStateName"] == "db") {
+                        dbCount += approvalState[i]["PerformStateCount"];
+                    }
+                    if (approvalState[i]["PerformStateName"] == "dbyy") {
+                        dbCount += approvalState[i]["PerformStateCount"];
+                    }
+                    $("#" + approvalState[i]["PerformStateName"]).html(approvalState[i]["PerformStateCount"]);
+                }
+                $("#yb").html(count);
+                $("#db").html(dbCount);
+            }
+        });
+    }
+
+    function onclickPerformState(type) {
+        $("#li_" + type).addClass("active");
+        $("#li_" + type).siblings().removeClass("active");
+        if (type == "1") {//待办
+            GetGridList(-1);
+        }
+        else if (type == "2") {//已办
+            GetGridList(111);
+        }
+        else if (type == "3") {//已同意
+            GetGridList(1);
+        }
+        else if (type == "4") {//已撤销
+            GetGridList(4);
+        }
+        else if (type == "5") {//退回
+            GetGridList(3);
+        }
+        else if (type == "6") {//抄送
+            GetGridList(0);
+        }
+        else if (type == "7") {//其他用户处理
+            GetGridList(9);
+        }
+    }
+
+    function GetGridList(type) {
+        var sdt = $("#SDT").val();
+        var edt = $("#EDT").val();
+        var param = JSON.stringify({ state: type, SDT: sdt, EDT: edt });
+        $("#gridList").jqGrid('setGridParam', {
+            postData: { param: param },
+        }).trigger('reloadGrid');
+    }
+
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: false,
+            treeGridModel: 'adjacency',
+            url: "/MyApproval/GetMyApproval",
+            height: $(window).height() - 128,
+            rownumbers: false,
+            colModel: [
+                { label: "流程编码", name: "FlowCode", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "流程节点", name: "FlowNodeCode", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "流水号", name: "FlowPerformID", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "数据ID", name: "FormDataCode", width: 100, align: 'left', hidden: true, sortable: false },
+                { label: "操作类型状态", name: "UserType", width: 80, align: 'left', hidden: true, sortable: false },
+                { label: "状态", name: "PerformState", width: 80, align: 'left', hidden: true, sortable: false },
+                { label: "表单编码", name: "FormCode", width: 80, align: 'left', hidden: true, sortable: false },
+                { label: "菜单", name: "MenuName", width: 150, align: 'left', sortable: false },
+                { label: "流程状态", name: "FlowState", width: 100, align: 'left', sortable: false, formatter: NewCellFlowState },
+                { label: "流程操作状态", name: "PerformState", width: 100, align: 'left', sortable: false },
+                { label: "等级", name: "FlowLevel", width: 100, align: 'left', sortable: false },
+                { label: "流程主题", name: "FlowTitle", width: 300, align: 'left', sortable: false },
+                { label: "流程名称", name: "FlowName", width: 80, align: 'left', sortable: false },
+                { label: "发起人", name: "UserName", width: 80, align: 'left', sortable: false },
+                { label: "发起时间", name: "BeginTime", width: 150, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "上一步处理时间", name: "PreNodeCompleteDate", width: 200, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "结束时间", name: "EndTime", width: 150, align: 'left', sortable: false, formatter: "date", formatoptions: { srcformat: 'Y-m-d H:i:s', newformat: 'Y-m-d H:i:s' } },
+                { label: "当前节点", name: "FlowNodeName", width: 150, align: 'left', sortable: false },
+                { label: "流程类型", name: "FlowType", hidden:true },
+            ],
+            ondblClickRow: function (rowid) {
+                Approval(rowid);
+            },
+            sortorder: "desc",
+            sortname: 'BeginTime',
+            shrinkToFit: false,
+            rowNum: -1,
+        });
+
+
+    }
+    //流程状态
+    function NewCellFlowState(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.FormCode == "InOrder") {
+            tdhtml += "抄送";
+        } else {
+            tdhtml += rowObject.FlowState;
+        }
+        return tdhtml;
+    }
+
+    //打开审批界面
+    function Approval() {
+        var row = $("#gridList").jqGridRowValue();
+        var FlowCode = row.FlowCode;
+        var FormCode = row.FormCode;
+        var ID = row.FormDataCode;
+        var FlowPerformID = row.FlowPerformID;
+        var FlowNodeCode = row.FlowNodeCode;
+        var PerformState = row.PerformState;
+        var UserType = row.UserType;
+        var FlowType = row.FlowType;
+        $.modalOpen({
+            id: "Approval",
+            title: "审批单据信息",
+            url: "/OA/MyApproval/Approval?PerformState=" + PerformState + "&FlowNodeCode=" + FlowNodeCode + "&FlowPerformID=" + FlowPerformID + "&ID=" + ID + "&FormCode=" + FormCode + "&FlowCode=" + FlowCode + "&UserType=" + UserType + "&FlowType="+FlowType,
+            width: "100%",
+            height: "100%",
+            btn: null,
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            },
+            cancelBack: aa(PerformState, UserType)
+        });
+    }
+    function aa(PerformState, UserType) {
+        if (PerformState == "未阅" && UserType == "-1") {
+            return true;
+        } else {
+            return null;
+        }
+    }
+
+    //刷新
+    function reload() {
+        $.reload();
+    }
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow:no-display;">
+        @*<table id="leftgridList"></table>*@
+        <ul id="pultree" class="ultree" style="list-style:none;padding-left:2px;">
+            <li style="padding: 10px 5px;" id="li_1" onclick="onclickPerformState(1)">
+                <a href="javascript:;" style="text-decoration: none;">【待&nbsp;办】(<label id="db">0</label>)</a>
+            </li>
+            <li style="padding: 10px 5px;" id="li_2" onclick="onclickPerformState(2)">
+                <a href="javascript:;" style="text-decoration: none;">【已&nbsp;办】(<label id="yb">0</label>)</a>
+            </li>
+            <li style="padding: 10px 5px;" id="li_3" onclick="onclickPerformState(3)">
+                <a href="javascript:;" style="text-decoration: none;padding-left:10px;">【已同意】(<label id="ty">0</label>)</a>
+            </li>
+            <li style="padding: 10px 5px; " id="li_4" onclick="onclickPerformState(4)">
+                <a href="javascript:;" style="text-decoration: none; padding-left: 10px;">【已撤销】(<label id="cx">0</label>)</a>
+            </li>
+            <li style="padding: 10px 5px;" id="li_5" onclick="onclickPerformState(5)">
+                <a href="javascript:;" style="text-decoration: none; padding-left: 10px;">【退&nbsp;回】(<label id="th">0</label>)</a>
+            </li>
+            <li style="padding: 10px 5px;" id="li_6" onclick="onclickPerformState(6)">
+                <a href="javascript:;" style="text-decoration: none; padding-left: 10px;">【抄&nbsp;送】(<label id="cs">0</label>)</a>
+            </li>
+            <li style="padding: 10px 5px; " id="li_7" onclick="onclickPerformState(7)">
+                <a href="javascript:;" style="text-decoration: none; padding-left: 10px;">【非会签其他用户已处理】(<label id="qtyh">0</label>)</a>
+            </li>
+        </ul>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            起始时间：
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="SDT" name="SDT" type="text" @*value="@(DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd"))"*@ class="form-control required input-wdatepicker" onfocus="WdatePicker({ maxDate: '%y-%M-%d', })" />
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;截止时间：
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="EDT" name="EDT" type="text" @*value="@(DateTime.Now.ToString("yyyy-MM-dd"))"*@ class="form-control required input-wdatepicker" onfocus="WdatePicker({ maxDate: '%y-%M-%d', })" />
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a id="btn_search" class="btn btn-primary"><i class="fa fa-search">查询</i></a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

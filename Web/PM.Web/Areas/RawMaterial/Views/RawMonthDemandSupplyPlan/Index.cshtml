@@ -1,0 +1,285 @@
+﻿@{
+    ViewBag.Title = "原材料月度需求补充计划";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script>
+    var SiteCode = "";
+    $(function () {
+        $.LodeMenuBtn("/RawMaterial/RawMonthDemandSupplyPlan/Index");
+        $('#layout').layout();
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 130;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 180;
+        } else {
+            Height = 130;
+        }
+        leftList();
+        gridList(Height);
+        //钢筋类型
+        $("#RebarType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "RebarType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+            });
+        });
+    });
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "@Url.Action("GetLoginUserAllCompanyNoSite", "RawMonthDemandPlan")",
+            height: $(window).height() - 46,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '组织机构类型', name: 'OrgType', hidden: true },
+               { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            sortname: 'CompanyCode',
+            onCellSelect: function (id) {//单击
+                SiteCode = getOrganizationalCode(id);
+            }
+        });
+    }
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "RawMonthDemandSupplyPlan")",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false },
+                { label: "补充计划编号", name: "SupplyPlanCode", width: 120, align: 'left', sortable: false },
+                { label: '需求计划编号', name: 'DemandPlanCode', width: 120, align: 'left', sortable: false },
+                { label: '钢筋类型', name: 'RebarTypeNew', width: 80, align: 'left', sortable: false },
+                { label: '分部编号', name: 'BranchCode', hidden: true },
+                { label: "分部名称", name: "BranchName", width: 140, align: 'left', sortable: false },
+                { label: '工区编号', name: 'WorkAreaCode', hidden: true },
+                { label: "工区名称", name: "WorkAreaName", width: 140, align: 'left', sortable: false },
+                { label: '站点编号', name: 'SiteCode', hidden: true },
+                //{ label: '站点名称', name: 'SiteName', width: 140, align: 'left', sortable: false },
+                { label: '加工厂编号', name: 'ProcessFactoryCode', hidden: true },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 140, align: 'left', sortable: false },
+                { label: "补充计划总量(kg)", name: "SupplyPlanNum", width: 120, align: 'left', sortable: false },
+                { label: "累计计划总量(kg)", name: "GrandTotalPlanNum", width: 120, align: 'left', sortable: false },
+                //{ label: '补充计划时间', name: 'SupplyTime', width: 120, align: 'left', sortable: false },
+                { label: '交货地点', name: 'DeliveryAdd', width: 150, align: 'left', sortable: false },
+                //{ label: '供应商编号', name: 'SupplierCode', hidden: true },
+                //{ label: '供应商名称', name: 'SupplierName', width: 120, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 140, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add&CompanyCode=" + SiteCode;
+        var dataMonth = getNewMonth();//获取当前年份月份
+        var date1 = getNowFormatDate();//获取当前天
+        var date2 = getLastDay();//获取当前月份的最后一天
+        var date3 = dataMonth + "-16";
+        var oDate1 = new Date(date1);
+        var oDate2 = new Date(date2);
+        var oDate3 = new Date(date3);
+        //if (oDate1.getTime() >= oDate3.getTime() && oDate3.getTime() <= oDate2.getTime()) {
+        //CommonOpen("Form", "新增原材料月度需求补充计划", "@Url.Action("Form", "RawMonthDemandSupplyPlan")" + where, true, true);
+        //} else {
+        //    $.modalMsg("原材料月度需求补充计划只能在当月的16号之后录入", "warning");
+        //    return false;
+        //}
+        CommonOpenAdd({
+            id: "Form",
+            title: "新增原材料月度需求补充计划",
+            url: "@Url.Action("Form", "RawMonthDemandSupplyPlan")" + where,
+        });
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改原材料月度需求补充计划",
+            url: "@Url.Action("Form", "RawMonthDemandSupplyPlan")",
+            anyUrl: "@Url.Action("AnyInfo", "RawMonthDemandSupplyPlan")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "RawMonthDemandSupplyPlan")",
+            anyUrl: "@Url.Action("AnyInfo", "RawMonthDemandSupplyPlan")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看原材料月度需求补充计划",
+            url: "@Url.Action("Details", "RawMonthDemandSupplyPlan")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'RawMonthDemandSupplyPlan', rowData.Examinestatus, rowData.DemandPlanCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "RawMonthDemandSupplyPlan")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+<script type="text/javascript">
+    //选择加工厂
+    function selectCompanyProcessFactory(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+    //选择分部
+    function selectCompanyBranch(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "BranchCode=CompanyCode,BranchName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) { });
+    }
+    //选择站点
+    function selectCompanyWorkAreaOrSite(type) {
+        if ($("#BranchCode").val() == "" || $("#BranchCode").val() == null || $("#BranchCode").val() == undefined) {
+            $.modalMsg("请选择分部信息", "warning");
+        } else {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyWorkAreaOrSiteList&keyValue=parentCode/" + $("#BranchCode").val() + "|type/" + type;
+            var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+        }
+
+    }
+    //选择供应商
+    function selectSupplier() {
+        var url = "/RawMaterial/InOrder/GetSupplierGridJson";
+        var str = "SupplierCode,SupplierName";
+        var ret = selectClick('	win_Supplier', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+</script>
+<script src="~/Content/js/Comm.js"></script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div id="toolbar" class="toolbar divwidth2" style="float:left;margin-left:15px;">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="SupplyPlanCode">补充计划编号</option>
+                                    <option value="DemandPlanCode">需求计划编号</option>
+                                    <option value="RebarType">钢筋类型</option>
+                                    <option value="HistoryMonth">历史月份</option>
+                                </select>
+                                <input id="SupplyPlanCode" name="SupplyPlanCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="补充计划编号">
+                                <input id="DemandPlanCode" name="DemandPlanCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="需求计划编号">
+                                <select id="RebarType" name="RebarType" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                </select>
+                                <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+

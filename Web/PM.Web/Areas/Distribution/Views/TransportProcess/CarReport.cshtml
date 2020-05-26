@@ -1,0 +1,215 @@
+﻿@{
+    ViewBag.Title = "车辆运输卸货统计列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<style type="text/css">
+    .redBG {
+        background-color: #c9302c;
+        color: white;
+    }
+
+    .yBG {
+        background-color: #FFD306;
+        color: white;
+    }
+
+    .table > tbody > tr.active > td, .table > tbody > tr.success > td {
+        color: black;
+    }
+</style>
+<script src="~/Content/js/uploadFile.js"></script>
+<script>
+    var OrderCode = $.request("OrderCode");
+    $(function () {
+        $.LodeMenuBtn("/Distribution/TransportProcess/CarReport");
+        $('#layout').layout();
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        gridList();
+        leftList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetCarReportGridJson", "TransportProcess")",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "卸货站点", name: "SiteName", width: 80, align: 'left', sortable: false },
+                { label: '订单编号', name: 'OrderCode', width: 100, align: 'left', sortable: false },
+                { label: '装车配送编号', name: 'DistributionCode', width: 100, align: 'left', sortable: false },
+                { label: "类型编号", name: "TypeCode", width: 150, align: 'left', sortable: false },
+                { label: "类型名称", name: "TypeName", width: 150, align: 'left', sortable: false },
+                { label: "卸货过程状态", name: "FlowState", width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'PlanDistributionTime', width: 120, align: 'left', sortable: false },
+                { label: "实际配送时间", name: "LoadCompleteTime", width: 120, align: 'left', sortable: false },
+                { label: '车牌号及司机', name: 'CarCph', width: 120, align: 'left', sortable: false },
+                { label: "出厂时间", name: "LeaveFactoryTime", width: 150, align: 'left', sortable: false },
+                { label: '运输到场时间', name: 'EnterSpaceTime', width: 150, align: 'left', sortable: false },
+                { label: '等待卸货时间', name: 'WaitTime', width: 80, align: 'left', sortable: false },
+                { label: '开始卸货时间', name: 'StartDischargeTime', width: 150, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'EndDischargeTime', width: 150, align: 'left', sortable: false },
+                { label: '车辆出场时间', name: 'OutSpaceTime', width: 150, align: 'left', sortable: false },
+                { label: "各环节照片", name: "OperateP", width: 100, align: 'center', sortable: false, formatter: ConfirmButton },
+                { label: '是否存在问题', name: 'IsProblem', width: 80, align: 'left', sortable: false, formatter: IsProblem },
+                { label: '附件', name: 'Enclosure', hidden: true },
+            ],
+            beforeRequest: function () {
+                var postData = $gridList.jqGrid("getGridParam", "postData");
+                if (OrderCode) {
+                    postData.OrderCode = OrderCode;
+                }
+            },
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            gridComplete: function () {
+                var ids = $("#gridList").getDataIDs();
+                for (let i = 0; i < ids.length; i++) {
+                    var rowData = $("#gridList").getRowData(ids[i]);
+                    var state = $('#' + ids[i]).find("[aria-describedby='gridList_FlowState']");
+                    $(state).html("正常");
+                    var title = parseInt(rowData.WaitTime);
+                    if (title > 30) {
+                        $('#' + ids[i]).find("td").addClass("redBG");
+                        $(state).html("等待超过30分钟");
+                    }
+                    if (rowData.IsProblem == '是') {
+                        $('#' + ids[i]).find("td").addClass("yBG");
+                        $(state).html("卸货存在问题");
+                    }
+                }
+                $('.aTable').on('click', $.nfinetab.syaddtab);
+            },
+            pager: "#gridPager",
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 46,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+            ],
+            treeGrid: true,
+            treeGridModel: 'adjacency',
+            ExpandColumn: 'CompanyFullName',
+            rownumbers: false,
+            onCellSelect: function (ucode) {//单击
+                var siteCode = getOrganizationalCode(ucode);
+            }
+        });
+    }
+    function ConfirmButton(cellvalue, options, rowObject) {
+        if (rowObject.Enclosure != "") {
+            var butHtm = "<a class='btn btn-primary' Enclosure='"+rowObject.Enclosure+"' onclick='onButClick(this)'>查看</a> ";
+            return butHtm;
+        } else {
+            return "";
+        }
+    }
+    function onButClick(obj) {
+        var Enclosure= $(obj).attr("Enclosure");
+        showFile(Enclosure, "details", "DistributionEnt");
+    }
+
+    function IsProblem(cellvalue, options, rowObject) {
+        if (rowObject.IsProblem == "是") {
+            var butHtm = "是&nbsp;&nbsp;<a class='btn btn-primary aTable' data-id='Article'  href='/Article/Article/Index?DistributionCode=" + rowObject.DistributionCode + "'>查看</a> ";
+            return butHtm;
+        } else {
+            return "否";
+        }
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "TransportProcess")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+
+<script src="~/Content/js/indextab.js?v=1.1" charset="gbk"></script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="DistributionCode">装车编号</option>
+                                    <option value="OrderCode">订单编号</option>
+                                    <option value="TypeCode">类型编号</option>
+                                    <option value="FlowState">卸货过程状态</option>
+                                    <option value="IsProblem">是否记录问题</option>
+                                </select>
+                                <input id="DistributionCode" name="DistributionCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="装车编号">
+                                <input id="OrderCode" name="OrderCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="订单编号">
+                                <input id="TypeCode" name="TypeCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="类型编号">
+                                <select id="FlowState" name="FlowState" class="form-control SearchContent hidSearchContent" style="width: 100px;">
+                                    <option value="-111">请选择</option>
+                                    <option value="1">正常</option>
+                                    <option value="2">等待超时</option>
+                                </select>
+                                <select id="IsProblem" name="IsProblem" class="form-control SearchContent hidSearchContent" style="width: 100px;">
+                                    <option value="">请选择</option>
+                                    <option value="3">是</option>
+                                    <option value="1,2">否</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="topPanel-btn" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,163 @@
+﻿@{
+    ViewBag.Title = "耗材管理";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/Production/WastagerReportForm/Index");
+        gridList();
+    });
+
+    var gridList=function() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "WastagerReportForm")",
+            height: $(window).height() - 170,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true},
+                { label: '物资名称', name: 'MaterialName', width: 130, align: 'left', sortable: false},
+                { label: '规格型号', name: 'SpecificationType', width: 150, align: 'left' },
+                { label: '计量单位', name: 'MeasurementUnitNew', width: 150, align: 'left' },
+                { label: '初期数量', name: 'InitialNumber', width: 80, align: 'left', },
+                { label: '进场时间', name: 'ApproachTime', width: 80, align: 'left', },
+                { label: '进场数量', name: 'ApproachNumber', width: 80, align: 'left', },
+                { label: '使用数量', name: 'UsageQuantity', width: 80, align: 'left', },
+                { label: '使用时间', name: 'UsageTime', width: 80, align: 'left', },
+                { label: '库存数量', name: 'RepertoryQuantity', width: 80, align: 'left', },
+                { label: '录入人编号', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false },
+                { label: '备注', name: 'remark', width: 180, align: 'left' }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                //$('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            pager: "#gridPager",
+            sortname: 'id',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+           var param= $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    }
+    function btn_add() {
+        $.modalOpen({
+            id: "Form",
+            title: "新增耗材管理",
+            url: "/Production/WastagerReportForm/Form?type=add",
+            width: "55%",
+            height: "490px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Form",
+                title: "修改耗材管理",
+                url: "/Production/WastagerReportForm/Form?keyValue=" + keyValue ,
+                width: "55%",
+                height: "490px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].submitForm();
+                }
+            });
+        } else {
+            $.modalMsg("请选择要修改的物资信息", "warning");
+            return false;
+        }
+    }
+    function btn_delete() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.deleteForm({
+                url: "/Production/WastagerReportForm/DeleteForm",
+                param: { keyValue: keyValue },
+                success: function () {
+                    $.currentWindow().$("#gridList").resetSelection();
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            });
+        } else {
+            $.modalMsg("请选择要删除的物资信息", "warning");
+            return false;
+        }
+    }
+    function btn_details() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Details",
+                title: "查看耗材管理",
+                url: "/Production/WastagerReportForm/Details?keyValue=" + keyValue,
+                width: "55%",
+                height: "490px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要查看的菜单信息", "warning");
+            return false;
+        }
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="topPanel-btn" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="MaterialName">物资名称</option>
+                                    <option value="SpecificationType">规格型号</option>
+                                </select>
+                                <input id="MaterialName" name="MaterialName" type="text" value="" placeholder="物资名称" class="form-control SearchContent hidSearchContent" />
+                                <input id="SpecificationType" name="SpecificationType" type="text" value="" placeholder="规格型号" class="form-control SearchContent hidSearchContent" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,407 @@
+﻿@{
+    ViewBag.Title = "原材料初期库存编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = top.clients.projectId;
+    var CompanyCode = $.request("CompanyCode") == "" ? top.clients.companyId : $.request("CompanyCode");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        initControl();
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "RawMaterialStock")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data[0]);
+                    ProjectId = data[0].ProjectId;
+                    $("#ProjectId").val(ProjectId);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data);
+                    $(".toolbar").hide();
+                }
+            });
+        }
+        $(window).resize(function () {
+            $("#gridList").setGridHeight($(window).height() - 160);
+            $("#gridList").setGridWidth($(window).width);
+        });
+    });
+
+    function initControl() {
+        var data = GetParnetCompany();
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].OrgType == "4") {//工区
+                $("#WorkAreaCode").val(data[i].CompanyCode);
+                $("#WorkAreaName").val(data[i].CompanyFullName);
+            }
+            if (data[i].OrgType == "5") {//站点
+                $("#SiteCode").val(data[i].CompanyCode);
+                $("#SiteName").val(data[i].CompanyFullName);
+            }
+        }
+    }
+    function GetParnetCompany() {
+        var dataCompany;
+        $.ajax({
+            url: "@Url.Action("GetParentCompany", "RawMonthDemandPlan")",
+            data: { CompanyCode: CompanyCode },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                dataCompany = data;
+            }
+        });
+        return dataCompany;
+    }
+
+    //仓库选择
+    function selectStorage() {
+        var url = "/RawMaterial/RawMaterialStock/GetStorageGridJson&keyValue=MaterialType/RawMaterial";
+        var ret = selectClick('win_MaterialStock_Storage', url, 'Grid', 'InsertTime', '', '', '550px', '450px', function () {
+        })
+    }
+    //选择工区
+    function selectWorkArea() {
+        var url = "/SystemManage/Company/GetWorkAreaByProjectId&keyValue=ProjectId/" + ProjectId;
+        var str = "WorkAreaCode=CompanyCode,WorkAreaName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+            $("#SiteCode").val("");
+            $("#SiteName").val("");
+            $("#ProjectId").val(row[0].ProjectId);
+        });
+    }
+    //站点选择
+    function selectSite() {
+        if ($("#WorkAreaCode").val() == "" || $("#WorkAreaCode").val() == null || $("#WorkAreaCode").val() == undefined) {
+            $.modalMsg("请选择工区信息", "warning");
+        } else {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyWorkAreaOrSiteList&keyValue=parentCode/" + $("#WorkAreaCode").val() + "|type/5";
+            var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () { });
+        }
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = [];
+        var tableData = GetGridRowData();
+        if (tableData.length < 1) {
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "RawMaterialStock")",
+            param: { itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '原材料编号', name: 'MaterialCode', height: 10, align: "left", sortable: false },
+                { label: '原材料名称', name: 'MaterialName', height: 10, align: "left", sortable: false },
+                { label: '计量单位', name: 'MeasurementUnitText', align: "left", sortable: false },
+                { label: '规格', name: 'SpecificationModel', align: "left", sortable: false },
+                { label: '钢筋类型', name: 'RebarTypeName', align: "left", sortable: false },
+                { label: "重量(kg)", name: "Count", align: "right", sortable: false, editable: true },
+                { label: "动态库存重量(kg)", name: "UseCountS", align: "right", sortable: false, editable: true },
+                { label: '厂家', name: 'Factory', align: "left", sortable: false, editable: true },
+                { label: '炉批号', name: 'BatchNumber', align: "left", sortable: false, editable: true },
+                { label: '计量单位', name: 'MeasurementUnit', hidden: true },
+                { label: '钢筋类型', name: 'RebarType', hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                valid(rowid);
+            }
+        });
+    }
+    //批量添加
+    function btn_add() {
+        var url = "/RawMaterial/RawMaterialStock/GetMaterialGridJson";
+        var winid = "win_MaterialStock_RawMaterial";
+        var ret = selectClick(winid, url, 'Grid', '', '', '', '50%', '500px', function (row) {
+            AllMyBack(row);
+        }, true);
+    }
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+    //批量添加回调函数
+    function AllMyBack(row) {
+        var rowData = [];
+        if (row && row.length > 0) {
+            for (var i = 0; i < row.length; i++) {
+                var mydata = {
+                    id: 0,
+                    MaterialCode: row[i].MaterialCode,
+                    MaterialName: row[i].MaterialName,
+                    SpecificationModel: row[i].SpecificationModel,
+                    MeasurementUnitText: row[i].MeasurementUnitText,
+                    RebarTypeName: row[i].RebarTypeName,
+                    Count: "",
+                    UseCountS: "",
+                    Factory: "",
+                    BatchNumber: "",
+                    MeasurementUnit: row[i].MeasurementUnit,
+                    RebarType: row[i].RebarType,
+                };
+                rowData.push(mydata);
+            }
+        }
+        lodeList(rowData);
+    }
+
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData = [];
+        var projectIdstr = "";
+        if (top.clients.projectId != "" && top.clients.projectId != null && top.clients.projectId != undefined) {
+            projectIdstr = top.clients.projectId;
+        } else {
+            projectIdstr = $("#ProjectId").val();
+        }
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = $("#ID").val();
+            if (rowData.ID == null || rowData.ID == "" || rowData.ID == undefined) {
+                rowData.ID = 0;
+            }
+            rowData.WorkAreaCode = $("#WorkAreaCode").val();
+            rowData.SiteCode = $("#SiteCode").val();
+            rowData.StorageCode = $("#StorageCode").val();
+            rowData.InsertTime = $("#InsertTime").val();
+            rowData.Enclosure = $("#Enclosure").val();
+            if (projectIdstr != "") {
+                rowData.ProjectId = projectIdstr;
+            }
+            var count = parseFloat(rowData.Count);
+            if (isNaN(count)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            }
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        $("#" + rowid + "_Count")
+               .keyup(function () { regTextBox(this, true); })
+               .bind("paste", function () { regTextBox(this, true); })
+               .blur(function () { }).css("ime-mode", "disabled");
+        $("#" + rowid + "_UseCountS")
+               .keyup(function () { regTextBox(this, true); })
+               .bind("paste", function () { regTextBox(this, true); })
+               .blur(function () { }).css("ime-mode", "disabled");
+    }
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "RawMaterialStock");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "RawMaterialStock");
+    }
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        else {
+            GetGridRowData();
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">工区名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="WorkAreaCode" name="WorkAreaCode" hidden="hidden" />
+                            <input id="WorkAreaName" name="WorkAreaName" type="text" readonly="readonly" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectWorkArea()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">仓库名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="StorageCode" name="StorageCode" type="hidden" />
+                            <input id="StorageName" name="StorageName" type="text" readonly="readonly" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectStorage()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    @*<th class="formTitle">站点名称</th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SiteCode" name="SiteCode" type="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" readonly="readonly" class="form-control" />
+                            <span class="input-group-btn" onclick="selectSite()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>*@
+                </tr>
+                <tr>
+                    
+                    @*<th class="formTitle">钢筋类型<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="RebarType" name="RebarType" type="hidden" />
+                            <input id="RebarTypeName" name="RebarTypeName" type="text" disabled="disabled" class="form-control required" />
+                        </td>*@
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3" >
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

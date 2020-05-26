@@ -1,0 +1,569 @@
+﻿@{
+    ViewBag.Title = "流程节点审批超时预警定义";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>节点属性</title>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+    <link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+</head>
+<body>
+    <div>
+        <form id="form_nodeinfo" class="form" role="form">
+            <div class="form-group" style="margin-top: 10px; width: 80%; padding-left: 40px;">
+                <h4>预警条件信息</h4>
+                <table style="width:100%">
+                    <tr>
+                        <td style="text-align:right">节点名称：</td>
+                        <td>
+                            <input type="hidden" id="FlowCode" name="FlowCode" />
+                            <input type="hidden" id="FlowNodeCode" name="FlowNodeCode" />
+                            <input type="text" class="form-control" id="FlowNodeName" name="FlowNodeName" readonly="readonly" style="width:400px" />
+                        </td>
+                        <td style="text-align:right">是否启用：</td>
+                        <td>
+                            <select id="IsStart" name="IsStart" class="form-control" style="width: 190px;height:20px;">
+                                <option value="0">禁用</option>
+                                <option value="1">启用</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">预警条件名称：</td>
+                        <td>
+                            <input type="hidden" id="EarlyWarningCode" name="EarlyWarningCode" value="@ViewBag.EarlyWarningCode" />
+                            <input type="text" class="form-control required" id="EarlyWarningName" name="EarlyWarningName" style="width:200px;" placeholder="请输入预警条件名称" />
+                        </td>
+                        <td style="text-align:right">预警时间：</td>
+                        <td>
+                            <input type="text" class="form-control required" id="EarlyWarningTime" name="EarlyWarningTime" style="width: 200px;" placeholder="请输入预警时间" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">预警时间类型：</td>
+                        <td>
+                            <select id="EarlyWarningTimeType" name="EarlyWarningTimeType" class="form-control required" style="width: 190px;height:20px;">
+                                <option value="日" selected="selected">日</option>
+                                <option value="时">时</option>
+                                <option value="分">分</option>
+                            </select>
+                        </td>
+                        <td style="text-align:right">预警顺序：</td>
+                        <td>
+                            <input type="text" class="form-control required" id="EarlyWarningOrder" name="EarlyWarningOrder" style="width: 200px;" placeholder="请输入预警顺序" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">预警说明：</td>
+                        <td>
+                            <input type="text" class="form-control" id="Remark" name="Remark" style="width:400px" placeholder="请输入预警说明" />
+                        </td>
+                        <td style="text-align:right">预警方式：</td>
+                        <td>
+                            <input id="App" name="App" type="checkbox">App
+                            <input id="Pc" name="Pc" type="checkbox">Pc端
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="form-group" style="margin-top: 10px; width: 80%; padding-left: 40px;">
+                <h4>已选审批超时预警人员</h4>
+            </div>
+            <div title="选择审批、抄送人员" style="width: 80%; padding-left: 40px;">
+                <div id="DialogDiv1" class="panel panel-success" style="width: 30%; height: 99%; float: left; margin-right: 5px; border-color: #1ABC9C;margin-bottom:0px;">
+                    <div class="panel-heading" style="border-color: #1ABC9C">
+                        <h3 class="panel-title">组织机构</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div style="width:100%;height:35px;">
+                            <div style="height: 30px; float: left;line-height:2.5;">
+                                <input value="2" type="radio" name="OrgType" checked="checked" style="margin-top:0px;" />经理部&nbsp;
+                                <input value="3" type="radio" name="OrgType" style="margin-top:0px;" />分部&nbsp;
+                                <input value="4" type="radio" name="OrgType" style="margin-top:0px;" />工区&nbsp;
+                                <input value="1" type="radio" name="OrgType" style="margin-top:0px;" />加工厂&nbsp;
+                            </div>
+                        </div>
+                        <table id="leftgridList"></table>
+                    </div>
+                </div>
+                <div id="DialogDiv2" class="panel panel-success" style="width: 50%; height: 99%; float: left; margin-right: 5px; border-color: #1ABC9C; margin-bottom: 0px; ">
+                    <div class="panel-heading" style="border-color: #1ABC9C">
+                        <h3 class="panel-title">已选审批超时预警人员</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul class="nav nav-tabs" style="margin-bottom:5px">
+                            <li id="Jlb" class="active"><a href="javascript:void(0);">经理部</a></li>
+                            <li id="Fb"><a href="javascript:void(0);">分部</a></li>
+                            <li id="Gq"><a href="javascript:void(0);">工区</a></li>
+                            <li id="Jgc"><a href="javascript:void(0);">加工厂</a></li>
+                        </ul>
+                        <div id="JlbInfo">
+                            <div style="margin-bottom:5px;">
+                                <button id="btn_search1" type="button" class="btn  btn-primary" onclick="UnSelectedEmployee1();"><i class="fa fa-trash-o">删除</i></button>
+                            </div>
+                            <table id="gridList1"></table>
+                            <div id="gridPager1"></div>
+                        </div>
+                        <div id="FbInfo" style="display:none">
+                            <div style="margin-bottom:5px;">
+                                <button id="btn_search2" type="button" class="btn  btn-primary" onclick="UnSelectedEmployee2();"><i class="fa fa-trash-o">删除</i></button>
+                            </div>
+                            <table id="gridList2"></table>
+                            <div id="gridPager2"></div>
+                        </div>
+                        <div id="GqInfo" style="display:none">
+                            <div style="margin-bottom:5px;">
+                                <button id="btn_search3" type="button" class="btn  btn-primary" onclick="UnSelectedEmployee3();"><i class="fa fa-trash-o">删除</i></button>
+                            </div>
+                            <table id="gridList3"></table>
+                            <div id="gridPager3"></div>
+                        </div>
+                        <div id="JgcInfo" style="display:none">
+                            <div style="margin-bottom:5px;">
+                                <button id="btn_search4" type="button" class="btn  btn-primary" onclick="UnSelectedEmployee4();"><i class="fa fa-trash-o">删除</i></button>
+                            </div>
+                            <table id="gridList4"></table>
+                            <div id="gridPager4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <script src="/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+        <script src="/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+        <script src="/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+        <script src="/UiFrame/FlowChartTool/jquery.window.js"></script>
+        <script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+        <link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+        <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+        <script src="~/Content/js/layer/layer.js"></script>
+        <script type="text/javascript">
+            var type = $.request("type");
+            var FlowCode = $.request("FlowCode");
+            var FlowNodeCode = $.request("FlowNodeCode");
+            var EarlyWarningCode = $.request("EarlyWarningCode");
+            var lastsel1;
+            var lastsel2;
+            var lastsel3;
+            var lastsel4;
+            var number1 = 0;
+            var number2 = 0;
+            var number3 = 0;
+            var number4 = 0;
+            $(function () {
+                leftgridList();//获取组织部门角色人员
+                gridList1(FlowCode, FlowNodeCode, EarlyWarningCode, "2");//获取选中的审批、抄送人员
+                gridList2(FlowCode, FlowNodeCode, EarlyWarningCode, "3");//获取选中的审批、抄送人员
+                gridList3(FlowCode, FlowNodeCode, EarlyWarningCode, "4");//获取选中的审批、抄送人员
+                gridList4(FlowCode, FlowNodeCode, EarlyWarningCode, "1");//获取选中的审批、抄送人员
+                initControl();
+            });
+
+            //选项卡
+            function selectTab(v) {
+                $("#" + v + "").addClass("active").siblings().removeClass("active");
+                $("#" + v + "Info").show();
+                $("#" + v + "Info").siblings('div').hide();
+            }
+            //初始化
+            function initControl() {
+                var OrgType = $("input[name='OrgType']:checked").val();
+                $("input[type='radio']").on("click",
+                 function () {
+                     OrgType = $(this).val();
+                     $("#leftgridList").jqGrid('setGridParam', {
+                         postData: { OrgType: OrgType },
+                     }).trigger('reloadGrid');
+                     if (OrgType == "1") {
+                         selectTab("Jgc");
+                     } else if (OrgType == "2") {
+                         selectTab("Jlb");
+                     } else if (OrgType == "3") {
+                         selectTab("Fb");
+                     } else if (OrgType == "4") {
+                         selectTab("Gq");
+                     }
+                 });
+                if (type == "edit") {
+                    $.post("/Flow/Flow/GetNodeEarlyWarningNew", { EarlyWarningCode: EarlyWarningCode }, function (data) {
+                        var node = JSON.parse(data);
+                        $("#FlowCode").val(node[0].FlowCode);
+                        $("#FlowNodeCode").val(node[0].FlowNodeCode);
+                        $("#FlowNodeName").val(node[0].FlowNodeName);
+                        $("#EarlyWarningCode").val(node[0].EarlyWarningCode);
+                        $("#EarlyWarningName").val(node[0].EarlyWarningName);
+                        $("#EarlyWarningTime").val(node[0].EarlyWarningTime);
+                        $("#EarlyWarningTimeType").val(node[0].EarlyWarningTimeType);
+                        $("#EarlyWarningOrder").val(node[0].EarlyWarningOrder);
+                        $("#Remark").val(node[0].Remark);
+                        if (node[0].App == 1) {
+                            $("#App").prop('checked', true);
+                        }
+                        if (node[0].Pc == 1) {
+                            $("#Pc").prop('checked', true);
+                        }
+                        if (node[0].length > 0) {
+                            $.post("/Flow/Flow/GetNodeEarlyWarningPersonnelNew", { FlowCode: FlowCode, FlowNodeCode: FlowNodeCode, OrgType: OrgType }, function (data) {
+                                var rows = JSON.parse(data);
+                                if (rows.length > 0) {
+                                    $("div.unwritten").remove();
+                                    for (var i = 0; i < rows.length; i++) {
+                                        $("#gridList").jqGrid("addRowData", i, rows[i]);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    $.post("/Flow/Flow/GetNodeNew", { FlowCode: FlowCode, FlowNodeCode: FlowNodeCode }, function (data) {
+                        var node = JSON.parse(data);
+                        $("#FlowCode").val(node[0].FlowCode);
+                        $("#FlowNodeCode").val(node[0].FlowNodeCode);
+                        $("#FlowNodeName").val(node[0].FlowNodeName);
+                    });
+                }
+            }
+            //获取组织部门角色人员
+            function leftgridList() {
+                var $leftgridList = $("#leftgridList");
+                $leftgridList.dataGrid({
+                    url: '/Flow/Flow/GetDeptOrRoleOrUserNew',
+                    height: $(window).height() - 350,
+                    colModel: [
+                        { label: '组织机构', name: 'Name', width: 220, align: 'left', sortable: false, },
+                        { label: "编号", name: "id", hidden: true, key: true },
+                        { label: "部门id", name: "DeptId", hidden: true },
+                        { label: "部门名称", name: "DeptName", hidden: true },
+                        { label: "角色id", name: "RoleId", hidden: true },
+                        { label: "角色名称", name: "RoleName", hidden: true },
+                        { label: "项目id", name: "ProjectId", hidden: true },
+                    ],
+                    treeGrid: true,//启用树型Grid功能
+                    treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+                    ExpandColumn: 'Name',//树型结构在哪列显示
+                    rownumbers: false,
+                    onCellSelect: function (id) {//单击
+                        var OrgType = $("input[name='OrgType']:checked").val();
+                        clickDeptOrRoleOrUser(id, OrgType);
+                    }
+                });
+            }
+
+            function clickDeptOrRoleOrUser(id, OrgType) {
+                if (OrgType == "1") {
+                    $("#gridList4").jqGrid('saveRow', lastsel4);
+                    var ids4 = $("#gridList4").jqGrid('getDataIDs');//获取多行的id
+                    if (ids4.length > 0) number4 = parseInt(ids4[ids4.length - 1]) + 1;
+                } else if (OrgType == "2") {
+                    $("#gridList1").jqGrid('saveRow', lastsel1);
+                    var ids1 = $("#gridList1").jqGrid('getDataIDs');//获取多行的id
+                    if (ids1.length > 0) number1 = parseInt(ids1[ids1.length - 1]) + 1;
+                } else if (OrgType == "3") {
+                    $("#gridList2").jqGrid('saveRow', lastsel2);
+                    var ids2 = $("#gridList2").jqGrid('getDataIDs');//获取多行的id
+                    if (ids2.length > 0) number2 = parseInt(ids2[ids2.length - 1]) + 1;
+                } else if (OrgType == "4") {
+                    $("#gridList3").jqGrid('saveRow', lastsel3);
+                    var ids3 = $("#gridList3").jqGrid('getDataIDs');//获取多行的id
+                    if (ids3.length > 0) number3 = parseInt(ids3[ids3.length - 1]) + 1;
+                }
+                var druData = $("#leftgridList").jqGrid('getRowData', id);
+                var DataId = id;
+                var OrgType = $("input[name='OrgType']:checked").val();
+                if (druData.level == "0") {//选择了部门
+                    $.modalMsg("审批超时预警人员不能选择部门");
+                    return;
+                }
+                else if (druData.level == "1") {//选择了角色
+                    if (OrgType == "1") {
+                        $("#gridList4").jqGrid('addRowData', number4, { UserTypeId: DataId, TypeName: 'Role', Name: druData.Name, ActionType: '审批超时预警', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: druData.ProjectId, OrgType: OrgType });
+                    } else if (OrgType == "2") {
+                        $("#gridList1").jqGrid('addRowData', number1, { UserTypeId: DataId, TypeName: 'Role', Name: druData.Name, ActionType: '审批超时预警', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: druData.ProjectId, OrgType: OrgType });
+                    } else if (OrgType == "3") {
+                        $("#gridList2").jqGrid('addRowData', number2, { UserTypeId: DataId, TypeName: 'Role', Name: druData.Name, ActionType: '审批超时预警', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: druData.ProjectId, OrgType: OrgType });
+                    } else if (OrgType == "4") {
+                        $("#gridList3").jqGrid('addRowData', number3, { UserTypeId: DataId, TypeName: 'Role', Name: druData.Name, ActionType: '审批超时预警', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: druData.ProjectId, OrgType: OrgType });
+                    }
+
+                } else if (druData.level == "2") {//选择了用户
+                    var a = DataId.split('-');
+                    DataId = a[0];
+                    if (OrgType == "1") {
+                        $("#gridList4").jqGrid('addRowData', number4, { UserTypeId: DataId, TypeName: 'Personnel', Name: druData.Name, ActionType: '审批超时预警', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: druData.ProjectId, OrgType: OrgType });
+                    } else if (OrgType == "2") {
+                        $("#gridList1").jqGrid('addRowData', number1, { UserTypeId: DataId, TypeName: 'Personnel', Name: druData.Name, ActionType: '审批超时预警', DeptId: druData.DeptId, DeptName: druData.DeptName, RoleId: druData.RoleId, RoleName: druData.RoleName, ProjectId: druData.ProjectId, OrgType: OrgType });
+                    }
+                }
+            }
+
+            //加经理部下的审批抄送人员
+            function gridList1(FlowCode, FlowNodeCode, EarlyWarningCode, OrgType) {
+                var $gridList1 = $("#gridList1");
+                $gridList1.dataGrid({
+                    url: '/Flow/Flow/GetNodeEarlyWarningPersonnelNew?FlowCode=' + FlowCode + '&FlowNodeCode=' + FlowNodeCode + '&EarlyWarningCode=' + EarlyWarningCode + '&OrgType=' + OrgType,
+                    height: $(window).height() - 392,
+                    colModel: [
+                        { label: "主键", name: "id", hidden: true, key: true },
+                        { label: "人员类型ID", name: "UserTypeId", hidden: true },
+                        { label: '人员来源', name: 'TypeName', width: 80, align: 'left', formatter: function (v) { if (v == "Dep") return "部门"; else if (v == "Personnel") return "人员"; else if (v == "Role") return "角色"; } },
+                        { label: '人员名称', name: 'Name', width: 90, align: 'left' },
+                       { label: '操作类型', name: 'ActionType', width: 90, align: 'left', edittype: "select", editoptions: { value: "6:审批超时预警" } },
+                       { label: "部门id", name: "DeptId", hidden: true },
+                       { label: "部门名称", name: "DeptName", width: 80, align: 'left' },
+                       { label: "角色id", name: "RoleId", hidden: true },
+                       { label: "角色名称", name: "RoleName", width: 80, align: 'left' },
+                       { label: "项目id", name: "ProjectId", hidden: true },
+                       { label: "组织机构类型", name: "OrgType", hidden: true },
+                    ],
+                    multiselect: false,
+                    sortname: 'UserTypeId',
+                    viewrecords: true,
+                    gridComplete: function () {
+                        $("div.unwritten").remove();
+                    },
+                    onCellSelect: function (rowid, iCol, cellContent, e) {
+                        //获取表格最后一行Id
+                        var selectedRowIds = $gridList1.jqGrid("getDataIDs");
+                        var id = selectedRowIds[selectedRowIds.length - 1];
+                        if (rowid && (rowid !== lastsel1 || rowid == id)) {
+                            $gridList1.jqGrid('saveRow', lastsel1);
+                            $gridList1.jqGrid('editRow', rowid, true);
+                            lastsel1 = rowid;
+                            $("#gridList1>tbody").find("select").each(function () {
+                                var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                                $(this).css("height", "20px").css("width", width + "px");
+                            });
+                        }
+                    },
+                });
+            }
+            //加载分部下的审批抄送人员
+            function gridList2(FlowCode, FlowNodeCode, EarlyWarningCode, OrgType) {
+                var $gridList2 = $("#gridList2");
+                $gridList2.dataGrid({
+                    url: '/Flow/Flow/GetNodeEarlyWarningPersonnelNew?FlowCode=' + FlowCode + '&FlowNodeCode=' + FlowNodeCode + '&EarlyWarningCode=' + EarlyWarningCode + '&OrgType=' + OrgType,
+                    height: $(window).height() - 392,
+                    colModel: [
+                       { label: "主键", name: "id", hidden: true, key: true },
+                        { label: "人员类型ID", name: "UserTypeId", hidden: true },
+                        { label: '人员来源', name: 'TypeName', width: 80, align: 'left', formatter: function (v) { if (v == "Dep") return "部门"; else if (v == "Personnel") return "人员"; else if (v == "Role") return "角色"; } },
+                        { label: '人员名称', name: 'Name', width: 90, align: 'left' },
+                        { label: '操作类型', name: 'ActionType', width: 90, align: 'left', edittype: "select", editoptions: { value: "6:审批超时预警" } },
+                       { label: "部门id", name: "DeptId", hidden: true },
+                       { label: "部门名称", name: "DeptName", width: 80, align: 'left' },
+                       { label: "角色id", name: "RoleId", hidden: true },
+                       { label: "角色名称", name: "RoleName", width: 80, align: 'left' },
+                       { label: "项目id", name: "ProjectId", hidden: true },
+                       { label: "组织机构类型", name: "OrgType", hidden: true },
+                    ],
+                    multiselect: false,
+                    sortname: 'UserTypeId',
+                    viewrecords: true,
+                    gridComplete: function () {
+                        $("div.unwritten").remove();
+                    },
+                    onCellSelect: function (rowid, iCol, cellContent, e) {
+                        //获取表格最后一行Id
+                        var selectedRowIds = $gridList2.jqGrid("getDataIDs");
+                        var id = selectedRowIds[selectedRowIds.length - 1];
+                        if (rowid && (rowid !== lastsel2 || rowid == id)) {
+                            $gridList2.jqGrid('saveRow', lastsel2);
+                            $gridList2.jqGrid('editRow', rowid, true);
+                            lastsel2 = rowid;
+                            $("#gridList2>tbody").find("select").each(function () {
+                                var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                                $(this).css("height", "20px").css("width", width + "px");
+                            });
+                        }
+                    },
+                });
+            }
+            //加载工区下的审批抄送人员
+            function gridList3(FlowCode, FlowNodeCode, EarlyWarningCode, OrgType) {
+                var $gridList3 = $("#gridList3");
+                $gridList3.dataGrid({
+                    url: '/Flow/Flow/GetNodeEarlyWarningPersonnelNew?FlowCode=' + FlowCode + '&FlowNodeCode=' + FlowNodeCode + '&EarlyWarningCode=' + EarlyWarningCode + '&OrgType=' + OrgType,
+                    height: $(window).height() - 392,
+                    colModel: [
+                         { label: "主键", name: "id", hidden: true, key: true },
+                        { label: "人员类型ID", name: "UserTypeId", hidden: true },
+                        { label: '人员来源', name: 'TypeName', width: 80, align: 'left', formatter: function (v) { if (v == "Dep") return "部门"; else if (v == "Personnel") return "人员"; else if (v == "Role") return "角色"; } },
+                        { label: '人员名称', name: 'Name', width: 90, align: 'left' },
+                        { label: '操作类型', name: 'ActionType', width: 90, align: 'left', edittype: "select", editoptions: { value: "6:审批超时预警" } },
+                       { label: "部门id", name: "DeptId", hidden: true },
+                       { label: "部门名称", name: "DeptName", width: 80, align: 'left' },
+                       { label: "角色id", name: "RoleId", hidden: true },
+                       { label: "角色名称", name: "RoleName", width: 80, align: 'left' },
+                       { label: "项目id", name: "ProjectId", hidden: true },
+                       { label: "组织机构类型", name: "OrgType", hidden: true },
+                    ],
+                    multiselect: false,
+                    sortname: 'UserTypeId',
+                    viewrecords: true,
+                    gridComplete: function () {
+                        $("div.unwritten").remove();
+                    },
+                    onCellSelect: function (rowid, iCol, cellContent, e) {
+                        //获取表格最后一行Id
+                        var selectedRowIds = $gridList3.jqGrid("getDataIDs");
+                        var id = selectedRowIds[selectedRowIds.length - 1];
+                        if (rowid && (rowid !== lastsel3 || rowid == id)) {
+                            $gridList3.jqGrid('saveRow', lastsel3);
+                            $gridList3.jqGrid('editRow', rowid, true);
+                            lastsel3 = rowid;
+                            $("#gridList3>tbody").find("select").each(function () {
+                                var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                                $(this).css("height", "20px").css("width", width + "px");
+                            });
+                        }
+                    },
+                });
+            }
+            //加载加工厂审批抄送人员
+            function gridList4(FlowCode, FlowNodeCode, EarlyWarningCode, OrgType) {
+                var $gridList4 = $("#gridList4");
+                $gridList4.dataGrid({
+                    url: '/Flow/Flow/GetNodeEarlyWarningPersonnelNew?FlowCode=' + FlowCode + '&FlowNodeCode=' + FlowNodeCode + '&EarlyWarningCode=' + EarlyWarningCode + '&OrgType=' + OrgType,
+                    height: $(window).height() - 392,
+                    colModel: [
+                        { label: "主键", name: "id", hidden: true, key: true },
+                        { label: "人员类型ID", name: "UserTypeId", hidden: true },
+                        { label: '人员来源', name: 'TypeName', width: 80, align: 'left', formatter: function (v) { if (v == "Dep") return "部门"; else if (v == "Personnel") return "人员"; else if (v == "Role") return "角色"; } },
+                        { label: '人员名称', name: 'Name', width: 90, align: 'left' },
+                        { label: '操作类型', name: 'ActionType', width: 90, align: 'left', edittype: "select", editoptions: { value: "6:审批超时预警" } },
+                        { label: "部门id", name: "DeptId", hidden: true },
+                        { label: "部门名称", name: "DeptName", width: 80, align: 'left' },
+                        { label: "角色id", name: "RoleId", hidden: true },
+                        { label: "角色名称", name: "RoleName", width: 80, align: 'left' },
+                        { label: "项目id", name: "ProjectId", hidden: true },
+                        { label: "组织机构类型", name: "OrgType", hidden: true },
+                    ],
+                    multiselect: false,
+                    sortname: 'UserTypeId',
+                    viewrecords: true,
+                    gridComplete: function () {
+                        $("div.unwritten").remove();
+                    },
+                    onCellSelect: function (rowid, iCol, cellContent, e) {
+                        //获取表格最后一行Id
+                        var selectedRowIds = $gridList4.jqGrid("getDataIDs");
+                        var id = selectedRowIds[selectedRowIds.length - 1];
+                        if (rowid && (rowid !== lastsel4 || rowid == id)) {
+                            $gridList4.jqGrid('saveRow', lastsel4);
+                            $gridList4.jqGrid('editRow', rowid, true);
+                            lastsel4 = rowid;
+                            $("#gridList4>tbody").find("select").each(function () {
+                                var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                                $(this).css("height", "20px").css("width", width + "px");
+                            });
+                        }
+                    },
+                });
+            }
+            //删除已选用户
+            function UnSelectedEmployee1() {
+                var rowId = $("#gridList1").jqGrid('getGridParam', 'selrow');
+                if (!rowId) {
+                    $.modalMsg("请选择数据", "warning");
+                    return false;
+                }
+                $("#gridList1").jqGrid('delRowData', rowId);
+            }
+            //删除已选用户
+            function UnSelectedEmployee2() {
+                var rowId = $("#gridList2").jqGrid('getGridParam', 'selrow');
+                if (!rowId) {
+                    $.modalMsg("请选择数据", "warning");
+                    return false;
+                }
+                $("#gridList2").jqGrid('delRowData', rowId);
+
+            }
+            //删除已选用户
+            function UnSelectedEmployee3() {
+                var rowId = $("#gridList3").jqGrid('getGridParam', 'selrow');
+                if (!rowId) {
+                    $.modalMsg("请选择数据", "warning");
+                    return false;
+                }
+                $("#gridList3").jqGrid('delRowData', rowId);
+            }
+            //删除已选用户
+            function UnSelectedEmployee4() {
+                var rowId = $("#gridList4").jqGrid('getGridParam', 'selrow');
+                if (!rowId) {
+                    $.modalMsg("请选择数据", "warning");
+                    return false;
+                }
+                $("#gridList4").jqGrid('delRowData', rowId);
+            }
+            function BackData() {
+                var tableOrderData = GetGridRowData();
+                if (tableOrderData.length < 1) {
+                    $.modalMsg("请选择审批超时预警人员", "warning");
+                    return false;
+                }
+                var Result = {};
+                Result["SPLIST"] = tableOrderData;
+                Result["FlowCode"] = $("#FlowCode").val();
+                Result["FlowNodeCode"] = $("#FlowNodeCode").val();
+                Result["EarlyWarningCode"] = $("#EarlyWarningCode").val();
+                Result["EarlyWarningName"] = $("#EarlyWarningName").val();
+                Result["EarlyWarningTime"] = $("#EarlyWarningTime").val();
+                Result["EarlyWarningTimeType"] = $("#EarlyWarningTimeType").val();
+                Result["EarlyWarningOrder"] = $("#EarlyWarningOrder").val();
+                Result["Remark"] = $("#Remark").val();
+                if ($('#App').prop('checked')) {
+                    Result["App"] = 1;
+                }
+                else {
+                    Result["App"] = 0;
+                }
+                if ($('#Pc').prop('checked')) {
+                    Result["Pc"] = 1;
+                }
+                else {
+                    Result["Pc"] = 0;
+                }
+                Result["IsStart"] = $("#IsStart").val();
+                return Result;
+            }
+            //获取表格数据
+            function GetGridRowData() {
+                var columnData = [];
+                $("#gridList1").jqGrid('saveRow', lastsel1);
+                var ids1 = $("#gridList1").jqGrid('getDataIDs');//获取多行的id
+                $(ids1).each(function (index, yu) {
+                    var rowData = $("#gridList1").jqGrid("getRowData", yu);
+                    columnData.push(rowData);
+                });
+                $("#gridList2").jqGrid('saveRow', lastsel2);
+                var ids2 = $("#gridList2").jqGrid('getDataIDs');//获取多行的id
+                $(ids2).each(function (index, yu) {
+                    var rowData = $("#gridList2").jqGrid("getRowData", yu);
+                    columnData.push(rowData);
+                });
+                $("#gridList3").jqGrid('saveRow', lastsel3);
+                var ids3 = $("#gridList3").jqGrid('getDataIDs');//获取多行的id
+                $(ids3).each(function (index, yu) {
+                    var rowData = $("#gridList3").jqGrid("getRowData", yu);
+                    columnData.push(rowData);
+                });
+                $("#gridList4").jqGrid('saveRow', lastsel4);
+                var ids4 = $("#gridList4").jqGrid('getDataIDs');//获取多行的id
+                $(ids4).each(function (index, yu) {
+                    var rowData = $("#gridList4").jqGrid("getRowData", yu);
+                    columnData.push(rowData);
+                });
+                return columnData;
+            }
+        </script>
+    </div>
+</body>
+</html>

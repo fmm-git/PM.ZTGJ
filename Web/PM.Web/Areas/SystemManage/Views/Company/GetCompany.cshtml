@@ -1,0 +1,286 @@
+﻿@{
+    ViewBag.Title = "公司GetCompany";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        $.LodeMenuBtn("/SystemManage/Company/GetCompany");//这里是对应网页的菜单管理地址
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        gridList();
+    })
+    function gridList() {
+        var Tc = $.request("tc");
+        var $gridList = $("#gridList");
+        if (Tc == undefined || Tc == "") {
+            $gridList.dataGrid({
+                url: "/SystemManage/Company/GetAllCompanyOrBySearch",
+                height: $(window).height() - 128,
+                colModel: [
+                    { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+                    { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                    { label: '上级组织机构', name: 'ParentCompanyName', width: 200 },
+                    {
+                        label: "组织机构类型", name: "OrgType", width: 100, formatter: function (value, options, rowObject) {
+                            var code = rowObject.OrgType;
+
+                            if (code == "1") {//加工厂
+                                return "加工厂"
+                            } else if (code == "2") {//经理部
+                                return "经理部"
+                            } else if (code == "3") {//分部
+                                return "分部"
+                            } else if (code == "4") {//工区
+                                return "工区"
+                            } else if (code == "5") {//工点
+                                return "工点"
+                            }
+                            else {
+                                return "";
+                            }
+                        }
+                    },
+                    { label: '组织机构地址', name: 'Address', width: 200, align: 'left', sortable: false }
+                ],
+                treeGrid: true,//启用树型Grid功能
+                treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+                ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+                rownumbers: false,
+                onCellSelect: function (ucode) {
+                    clickCompany(ucode);
+                }
+
+            });
+        } else if (Tc == 1) {
+            $gridList.dataGrid({
+                treeGrid: true,
+                treeGridModel: "adjacency",
+                ExpandColumn: "CompanyShortName",
+                url: "/SystemManage/Company/GetAllCompanyOrBySearch",
+                height: $(window).height() - 96,
+                multiselect: true,//复选框
+                colModel: [
+                    { label: '标识ID', name: 'id', width: 80, hidden: true, },
+                    { label: '公司全称', name: 'CompanyFullName', width: 230, align: 'left', key: true, sortable: false },
+                    { label: '公司简称', name: 'CompanyShortName', width: 100, align: 'left', sortable: false },
+                    { label: '公司编码', name: 'CompanyCode', width: 200, align: 'left', sortable: false }
+                ]
+            });
+            $(".toolbar").css("display", "none");
+        }
+
+        $("#btn_search").click(function () {
+            search();
+        });
+    }
+    function QiOrJin(doc, id) {
+        var IsEnable = 0;
+        if ($(doc).html() === "已启用") {
+            IsEnable = 1;
+        } else {
+            IsEnable = 0;
+        }
+        $.ajax({
+            url: "/SystemManage/Company/EditIsEnable",
+            data: { code: id, val: IsEnable },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+
+    //其他页面调用，选择返回公司
+    function GetCompany() {
+        var rowId = $("#gridList").jqGrid("getGridParam", 'selrow');
+        var rowData = $("#gridList").jqGrid("getRowData", rowId);
+        var companyJson = [];
+        if (rowData.CompanyCode == undefined || rowData.CompanyCode == "") {
+            return 1;
+        } else {
+            var companyJson = rowData;
+            companyJson.CompanyFullName = rowId;
+            return companyJson;
+        }
+    }
+    function search() {
+        $("#gridList").jqGrid('clearGridData');
+        $("#gridList").jqGrid('setGridParam', {
+            url: "/SystemManage/Company/GetAllCompanyOrBySearch?keyword=" + $("#txt_keyword").val()
+        }).trigger('reloadGrid');
+    }
+    function btn_add() {
+        $.modalOpen({
+            id: "Form",
+            title: "新增公司信息",
+            url: "/SystemManage/Company/Form?type=add",
+            width: "51%",
+            height: "77%",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().CompanyCode;
+        if (keyValue != undefined) {
+            $.modalOpen({
+                id: "Form",
+                title: "修改公司信息",
+                url: "/SystemManage/Company/Form?keyValue=" + keyValue + "&type=edit",
+                width: "51%",
+                height: "77%",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].submitForm();
+                }
+            });
+        } else {
+            $.modalMsg("请选中公司，再执行修改操作", "warning");
+        }
+    }
+    function btn_delete() {
+        var keyValue = $("#gridList").jqGridRowValue().CompanyCode;
+        if (keyValue != undefined) {
+            $.deleteForm({
+                url: "/SystemManage/Company/DeleteForm",
+                param: { keyValue: keyValue },
+                success: function () {
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            })
+        } else {
+            $.modalMsg("请选中公司，再执行删除操作", "warning");
+        }
+    }
+    function btn_details(co) {
+        var keyValue;
+        if (co != undefined) {
+            keyValue = co;
+        } else {
+            keyValue = $("#gridList").jqGridRowValue().CompanyCode;
+        }
+        if (keyValue != undefined) {
+            $.modalOpen({
+                id: "Details",
+                title: "查看公司信息",
+                url: "/SystemManage/Company/Details?keyValue=" + keyValue,
+                width: "51%",
+                height: "77%",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选中公司，再执行新增操作", "warning");
+        }
+    }
+    function Ent(event) {
+        if (event.keyCode == 13) {
+            search();
+        }
+    };
+    //同步组织机构项目
+    function SynchronizationCompPro() {
+        $.loading(true, "正在同步数据...");
+        $.ajax({
+            url: "/SystemManage/Company/SynchronizationPro",
+            type: "get",
+            success: function (data) {
+                var datanew = JSON.parse(data);
+                if (datanew.state == "success") {
+                    $.loading(false);
+                    $.modalMsg("同步成功", datanew.state);
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                } else {
+                    $.loading(false);
+                    $.modalMsg("同步失败", "error");
+                }
+            },
+            error: function () {
+                $.loading(false);
+                $.modalMsg("同步失败", "error");
+            }
+        });
+    }
+    //同步组织机构
+    function SynchronizationComp() {
+        var url = "server/byServer/queryOrgList.json";
+        $.loading(true, "正在同步数据...");
+        $.ajax({
+            url: "/api/SystemManage/GetCompanyList",
+            data: { url: url },
+            type: "get",
+            success: function (data) {
+                if (data.state == "success") {
+                    $.loading(false);
+                    $.modalMsg("同步成功", data.state);
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                } else {
+                    $.loading(false);
+                    $.modalMsg("同步失败", "error");
+                }
+            },
+            error: function () {
+                $.loading(false);
+                $.modalMsg("同步失败", "error");
+            }
+        });
+    }
+    //同步项目
+    function SynchronizationPro() {
+        var url = "server/byServer/queryProjectList.json";
+        $.loading(true, "正在同步数据...");
+        $.ajax({
+            url: "/api/SystemManage/GetProjectInfoList",
+            data: { url: url },
+            type: "get",
+            success: function (data) {
+                if (data.state == "success") {
+                    $.loading(false);
+                    $.modalMsg("同步成功", data.state);
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                } else {
+                    $.loading(false);
+                    $.modalMsg("同步失败", "error");
+                }
+            },
+            error: function () {
+                $.loading(false);
+                $.modalMsg("同步失败", "error");
+            }
+        });
+    }
+</script>
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div id="toolbar" class="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><i class="glyphicon glyphicon-refresh"></i>刷新</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="SynchronizationComp()"><i class="fa fa-sava"></i>同步组织机构</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="SynchronizationPro()"><i class="fa fa-sava"></i>同步项目</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="SynchronizationCompPro()"><i class="fa fa-sava"></i>同步组织机构项目</a>
+            </div>
+        </div>
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group">
+                            <input id="txt_keyword" type="text" onkeydown="Ent(event)" class="form-control" placeholder="公司编码/公司名称" style="width: 200px;">
+                            <span class="input-group-btn">
+                                <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+    </div>
+</div>

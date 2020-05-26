@@ -1,0 +1,187 @@
+﻿@{
+    ViewBag.Title = "资料分类归档信息查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container { box-sizing: border-box; display: inline-block; margin: 0; position: relative; vertical-align: middle; width: 102% !important; }
+</style>
+<script type="text/javascript">
+    $(function () {
+        var keyValue = '@ViewBag.keyValue';
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "FileType")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                }
+            });
+        }
+    });   
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "detail", "FileType");
+    }
+    //$(function () {
+    //    //加载附件列表
+    //    AttachmentList();
+    //});
+
+    ////加载附件列表
+    //function AttachmentList() {
+    //    $("#AttachmentList").dataGrid({
+    //        url: "/Attachment/GetAttachmentJson?FileID=" + $("#Enclosure").val(),
+    //        height: $(window).height() - 160,
+    //        colModel: [
+    //           { label: "附件名称", name: "FileName", width: 250, align: 'left', formatter: defaultformatterNameC },
+    //            { label: '附件大小', name: 'FileSize', width: 150, align: 'left', sortable: false },
+    //            { label: '上传人', name: 'UserName', width: 110, align: 'left', sortable: false },
+    //            { label: '上传时间', name: 'LastTime', width: 110, align: 'left', sortable: false },
+    //            { label: '地址', name: 'FileStoragePath', align: 'left', hidden: true, sortable: false },
+    //            { label: '操作', name: 'FileID', width: 120, align: 'left', sortable: false, formatter: defaultformatterC },
+    //            { label: "主键", name: "FileID", hidden: true, key: true }
+    //        ],
+    //        multiselect: true,
+    //        gridComplete: function (id) {
+    //            $("#AttachmentList>tbody").find("input:checkbox").each(function () {
+    //                $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+    //            });
+    //            $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+    //        }
+    //    });
+    //}
+    ////选项卡
+    //function selectTab(v) {
+    //    var id = v.attr('id');
+    //    $("#" + id + "").addClass("active").siblings().removeClass("active");
+    //    $("#" + id + "Info").show();
+    //    $("#" + id + "Info").siblings('div').hide();
+    //}
+
+</script>
+
+
+<div style="margin-top: 10px;">
+    @*<ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="FJXX" onclick="selectTab($(this))"><a href="javascript:void(0);">附件信息</a></li>
+    </ul>*@
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="formd">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">资料编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DataCode" name="DataCode" type="text" disabled="disabled" class="form-control required" value="@ViewBag.DataCode " />
+                    </td>
+                    <th class="formTitle">资料名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DataName" name="DataName" type="text" class="form-control required" placeholder="资料名称" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">资料类别<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TypeName" name="TypeName" type="text" class="form-control required" placeholder="资料类别" readonly="readonly" />
+                    </td>
+                    <th class="formTitle">文件编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="FileCode" name="FileCode" type="text" class="form-control required" placeholder="文件编号" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" readonly="readonly" type="text"
+                                   class="form-control required" placeholder="加工厂名称" />
+                            <span id="ProcessFactoryName" class="input-group-btn">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i style="padding-bottom:8px;padding-top:8px;" class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">所属部门<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="DepartmentCode" name="DepartmentCode" type="hidden" />
+                            <input id="DepartmentName" name="DepartmentName" readonly="readonly" type="text"
+                                   class="form-control required" placeholder="所属部门" />
+                            <span id="ProcessFactoryName" class="input-group-btn">
+                                    <i style="padding-bottom:8px;padding-top:8px;" class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">内容摘抄</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="DataContent" name="DataContent" class="form-control" style="height: 120px; padding-right:2px;" readonly="readonly"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserCode" name="InsertUserCode"  type="hidden" />
+                        <input id="InsertUserName" name="InsertUserName" type="text" readonly="readonly" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" readonly="readonly" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 70px; padding-right:2px;" readonly="readonly"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    @*<div id="FJXXInfo" style="padding-top: 5px; padding-left: 10px; display: none; overflow-x: scroll;">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()"><i class="fa fa-arrow-down"></i>下载</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top:1px;">
+            <table id="AttachmentList"></table>
+        </div>
+    </div>*@
+</div>
+

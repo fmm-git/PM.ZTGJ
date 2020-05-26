@@ -1,0 +1,72 @@
+﻿@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "ShortMessageTemplate")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data[0]);
+                }
+            });
+        }
+    });
+
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "ShortMessageTemplate")",
+            param: { model: JSON.stringify(formData), type: type },
+            success: function() {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+</script>
+<div style="margin-top: 10px;">
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">模板编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TemplateCode" name="TemplateCode" type="text" class="form-control required" />
+                    </td>
+
+                </tr>
+                <tr>
+                    <th class="formTitle">模板名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TemplateType" name="TemplateType" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">模板内容</th>
+                    <td class="formValue">
+                        <textarea id="TemplateContent" name="TemplateContent" class="form-control required" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue">
+                        <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>

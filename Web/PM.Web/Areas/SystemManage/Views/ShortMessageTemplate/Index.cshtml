@@ -1,0 +1,90 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script>
+    $(function () {
+        $.LodeMenuBtn("/SystemManage/ShortMessageTemplate/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetAllTemplate", "ShortMessageTemplate")",
+            height: $(window).height() - 122,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '模板编号', name: 'TemplateCode', width: 120, align: 'left', sortable: false },
+                { label: '模板名称', name: 'TemplateType', width: 200, align: 'left', sortable: false },
+                { label: '模板内容', name: 'TemplateContent', width: 300, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'ID',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增短信模板", "@Url.Action("Form", "ShortMessageTemplate")" + where, true, true)
+    }
+
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        var where = "?keyValue=" + keyValue + "&type=edit";
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            CommonOpen("Form", "修改短信模板", "@Url.Action("Form", "ShortMessageTemplate")" + where, true, true)
+        }
+        else {
+            $.modalMsg("请选择修改的短信模板信息", "warning");
+            return false;
+        }
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看短信模板",
+            url: "@Url.Action("Details", "ShortMessageTemplate")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "50%",
+            height: "400px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+</script>
+
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar" style="float:left">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

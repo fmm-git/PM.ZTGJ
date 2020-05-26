@@ -1,0 +1,523 @@
+﻿@{
+    /*
+     * 新增/编辑页
+     * 人员工日消耗
+     */
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();//加载明细信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "PersonnelWorkDayConsume")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data.Item2);//加载明细信息
+                }
+            });
+        }
+    });
+    //选择订单
+    function selectOrder() {
+        var url = "/Production/PersonnelWorkDayConsume/GetJGDDGridJson";
+        var str = "OrderCode,TypeCode,TypeName,OrderReceiveDate=DistributionTime,ProcessFactoryCode,ProcessFactoryName,ProjectId";
+        var ret = selectClick('win_OrderWIN', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+
+    //选择站点
+    function selectSite(type) {
+        if (!$("#OrderCode").val()) {
+            $.modalMsg("请先选择订单信息", "warning");
+            return;
+        }
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            return false;
+        }
+        //totalDemandNum();
+        var formData = $("#form1").formSerialize();
+        formData.ProjectId = $("#ProjectId").val();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "PersonnelWorkDayConsume")" + "?type=" + type,
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var ConsumeCode = $("#ConsumeCode").val();
+        var columnData = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.ConsumeCode = ConsumeCode;
+            //var DemandNum = parseFloat(rowData.BatchPlanQuantity);
+            //if (isNaN(DemandNum)) {
+            //    $.modalMsg("明细数据不完整", "warning");
+            //    columnData = [];
+            //    return false;
+            //}
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+    
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }// else {
+        //    totalDemandNum();
+        //}
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "PersonnelWorkDayConsume");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "PersonnelWorkDayConsume");
+    }
+
+    //$(function () {
+    //    //加载附件列表
+    //    AttachmentList();
+    //});
+
+    ////加载附件列表
+    //function AttachmentList() {
+    //    $("#AttachmentList").dataGrid({
+    //        url: "/Attachment/GetAttachmentJson?FileID=" + $("#Enclosure").val(),
+    //        height: $(window).height() - 160,
+    //        colModel: [
+    //           { label: "附件名称", name: "FileName", width: 250, align: 'left', formatter: defaultformatterNameC },
+    //            { label: '附件大小', name: 'FileSize', width: 150, align: 'left', sortable: false },
+    //            { label: '上传人', name: 'UserName', width: 110, align: 'left', sortable: false },
+    //            { label: '上传时间', name: 'LastTime', width: 110, align: 'left', sortable: false },
+    //            { label: '地址', name: 'FileStoragePath', align: 'left', hidden: true, sortable: false },
+    //            { label: '操作', name: 'FileID', width: 120, align: 'left', sortable: false, formatter: defaultformatterC },
+    //            { label: "主键", name: "FileID", hidden: true, key: true }
+    //        ],
+    //        multiselect: true,
+    //        gridComplete: function (id) {
+    //            $("#AttachmentList>tbody").find("input:checkbox").each(function () {
+    //                $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+    //            });
+    //            $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+    //        }
+    //    });
+    //}
+</script>
+
+<!---------明细信息------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: '构件名称', name: 'ComponentCode', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '规格', name: 'Standard', width: 120, align: "left", sortable: false },
+                    { label: '订单加工量', name: 'OrderProcessQuantity', width: 100, align: "left", sortable: false, editable: true, },
+                    { label: '原材料消耗数量', name: 'RawMaterialConsumeQuantity', width: 140, align: "left", sortable: false, editable: true, },
+                    { label: '加工开始时间', name: 'ProcessStartTime', width: 140, align: "left", editoptions: { maxlength: "50" }, editable: true, },
+                    { label: '加工结束时间', name: 'ProcessEndTime', width: 140, align: "left", editoptions: { maxlength: "50" }, editable: true, },
+                    { label: '人数', name: 'NumberOfPeople', width: 80, align: "left", sortable: false, editable: true },
+                    { label: '工日数', name: 'NumberOfDays', width: 80, align: "left",},
+                    { label: '单位人工消耗', name: 'UnitManpowerConsume', width: 120, align: "left", }
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                //$("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                valid(rowid);
+            },
+        });
+    }
+
+    /*JQuery 限制文本框只能输入数字和小数点 || 日期控件 || 弹框选择*/
+    function valid(rowid) {
+
+        $("#" + rowid + "_OrderProcessQuantity")
+            .keyup(function () { regTextBox(this, true); })
+            .bind("paste", function () { regTextBox(this, true); })
+            .blur(function () { Calculation(this); }).css("ime-mode", "disabled");
+        $("#" + rowid + "_NumberOfPeople")
+            .keyup(function () { regTextBox(this, true); })
+            .bind("paste", function () { regTextBox(this, true); })
+            .blur(function () { Calculation(this); }).css("ime-mode", "disabled");
+
+        $("#" + rowid + "_ProcessStartTime").focus(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd HH:mm:ss',
+                //onpicked: formatDate
+            });
+        }).blur(function () { Calculation(this); });
+        if ($("#" + rowid + "_ProcessStartTime").val() == "") {
+            $("#" + rowid + "_ProcessStartTime").val(new Date().Format("yyyy-MM-dd HH:mm:ss"));
+        }
+        $("#" + rowid + "_ProcessEndTime").focus(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM-dd HH:mm:ss',
+                //onpicked: formatDate
+            });
+        }).blur(function () { Calculation(this); });
+        if ($("#" + rowid + "_ProcessEndTime").val() == "") {
+            $("#" + rowid + "_ProcessEndTime").val(new Date().Format("yyyy-MM-dd HH:mm:ss"));
+        }
+        //格式化日期
+        function formatDate() {
+            var time = $("#" + rowid + "_TechnicalRequirement").val();
+            var date = new Date();
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+            var second = date.getSeconds();
+            var timeStr = time + " " + hour + ":" + minute + ":" + second
+            $("#" + rowid + "_InvoiceDate").val(timeStr);
+        }
+    }
+
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,4}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+
+    //明细计算
+    function Calculation(obj) {
+        //订单加工量
+        var OrderProcessQuantity = $($(obj).parent().parent().children()[6]).children();
+        //原材料消耗数量
+        var RawMaterialConsumeQuantity = $($(obj).parent().parent().children()[7]).children();
+        //加工开始时间
+        var ProcessStartTime = $($(obj).parent().parent().children()[8]).children();
+        //加工结束时间
+        var ProcessEndTime = $($(obj).parent().parent().children()[9]).children();
+        //人数
+        var NumberOfPeople = $($(obj).parent().parent().children()[10]).children();
+        //工日数
+        var NumberOfDays = $($(obj).parent().parent().children()[11]);
+        //单位人工消耗
+        var UnitManpowerConsume = $($(obj).parent().parent().children()[12]);
+
+        var sdate = new Date(ProcessStartTime.val());
+        var edate = new Date(ProcessEndTime.val());
+        var days = edate.getTime() - sdate.getTime();
+        var day = Number(days / (1000 * 60 * 60)).toFixed(2);
+
+        var grs = (day / 8 * parseFloat(NumberOfPeople.val())).toFixed(1);
+        $(NumberOfDays).html(grs);
+        var rgxh = (grs / parseFloat(OrderProcessQuantity.val())).toFixed(4);
+        $(UnitManpowerConsume).html(rgxh);
+    }
+
+    //加载列表数据
+    function lodeList(data) {
+        //if (data != null && data != "") {
+        //    mydata = filterGridData(data);
+        //}
+        //$("#gridList").jqGrid('clearGridData');
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length > 0) {
+            index = Number(ids[ids.length - 1]);
+        } else
+        {
+            index = 0;
+        }
+        $.each(data, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+
+    //原材料选择
+    function selectMaterial() {
+        var url = "/RawMaterial/RawMaterialStock/GetMaterialGridJson&keyValue=OrderCode/" + $("#OrderCode").val();
+        var str = "MaterialCode,MaterialName,SpecificationModel,MeasurementUnit";
+        var ret = selectClick('win_MaterialStock_RawMaterial', url, 'Grid', '', '', str, '550px', '450px', function () {
+        })
+    }
+
+    //批量添加
+    function btn_add() {
+        var url = "/Production/PersonnelWorkDayConsume/GetOrderItemGridJson&keyValue=OrderCode/" + $("#OrderCode").val();
+        var str = "";
+        //"RawMaterialNum=MaterialCode,MaterialName,Standard=SpecificationModel,MeasurementUnitText,MeasurementUnit";
+        var ret = selectClick('win_OrderItemWIN', url, 'Grid', '', '', str, '50%', '500px', function (row) {
+            AllMyBack(row);
+        }, true);
+    }
+
+    //批量添加回调函数
+    function AllMyBack(row) {
+        var rowData = [];
+        if (row && row.length > 0) {
+            for (var i = 0; i < row.length; i++) {
+                var mydata = {
+                    ID: 0,
+                    ComponentCode: row[i].ComponentName,
+                    MaterialCode: row[i].MaterialCode,
+                    MaterialName: row[i].MaterialName,
+                    Standard: row[i].SpecificationModel,
+                    OrderProcessQuantity: "0.0000",
+                    RawMaterialConsumeQuantity: "0.0000",
+                    ProcessStartTime: new Date().Format("yyyy-MM-dd HH:mm:ss"),
+                    ProcessEndTime: new Date().Format("yyyy-MM-dd HH:mm:ss"),
+                    NumberOfPeople:0,
+                    NumberOfDays:"0.0000",
+                    UnitManpowerConsume: "0.0000"
+                };
+                rowData.push(mydata);
+            }
+        }
+        lodeList(rowData);
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.MaterialCode); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.MaterialCode, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+        @*<li id="FJXX" onclick="selectTab($(this))"><a href="javascript:void(0);">附件信息</a></li>*@
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <!---------标识ID------->
+            <input id="ID" name="ID" type="hidden" />
+            <!---------审批状态------->
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <!---------附件------->
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">工日消耗单号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ConsumeCode" name="ConsumeCode" type="text" disabled="disabled" value="@ViewBag.ConsumeCode" class="form-control required" />
+                    </td>
+                    <th class="formTitle">订单编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="OrderCode" name="OrderCode" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectOrder()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">订单名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TypeCode" name="TypeCode" type="hidden" />
+                        <input id="TypeName" name="TypeName" disabled="disabled" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">站点名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SiteCode" name="SiteCode" type="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectSite('5')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">订单接收日期<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="OrderReceiveDate" name="OrderReceiveDate" disabled="disabled" type="text" class="form-control required" />
+                    </td>
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                        <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserCode" name="InsertUserCode" type="hidden" value="@ViewBag.UserCode" class="form-control" />
+                        <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-input" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_input()"><i class="fa fa-pencil-square-o"></i>导入</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+    @*<div id="FJXXInfo" style="padding-top: 5px; padding-left: 10px; display: none; overflow-x: scroll;">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="PM-fileUplode" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonUpload()"><i class="fa fa-arrow-up"></i>上传</a>
+            </div>
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()"><i class="fa fa-arrow-down"></i>下载</a>
+            </div>
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDeleteFile()"><i class="fa fa-remove "></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top:1px;">
+            <table id="AttachmentList"></table>
+        </div>
+    </div>*@
+</div>

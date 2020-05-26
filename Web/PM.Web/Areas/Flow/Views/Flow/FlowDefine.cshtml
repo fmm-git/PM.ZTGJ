@@ -1,0 +1,388 @@
+﻿@{
+    ViewBag.Title = "流程定义";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>流程定义</title>
+    <link href="~/UiFrame/EasyUi/themes/default/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+    <link href="~/UiFrame/pmicon.css" rel="stylesheet" />
+    <script src="~/UiFrame/EasyUi/jquery.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/EasyUi/easyui-lang-zh_CN.js"></script>
+    <script src="~/UiFrame/jeasyui.extensions.js"></script>
+    <script src="~/UiFrame/jeasyui.extensions.js"></script>
+    <script src="~/SysConfig/genericOperate.js"></script>
+    <style type="text/css">
+        #FlowDetail {
+            height: 41px;
+            width: 481px;
+        }
+
+        .auto-style1 {
+            width: 80px;
+            height: 25px;
+        }
+    </style>
+</head>
+<body style="padding: 0; margin: 0;">
+    <div class="easyui-layout" data-options="fit:true">
+        <div data-options="region:'north',border:false" style="height: 30px;">
+            <div class="easyui-panel" data-options="fit:true" style="padding: 1px;">
+                <a href="#" id="btn_View" iconcls="pmicon-wizard-16" plain="true" onclick="javascript:viewItem()">查看</a>
+                <a href="#" id="btn_Add" iconcls="pmicon-add-16" plain="true" onclick="javascript:add()">添加</a>
+                <a href="#" id="btn_Edit" iconcls="pmicon-edit-16" plain="true" onclick="javascript:edit()">修改</a>
+                <a href="#" id="btn_Delete" iconcls="pmicon-remove-16" plain="true" onclick="javascript:del()">删除</a>
+                <a href="#" id="btn_Other1" iconcls="pmicon-design-16" plain="true" onclick="javascript:other1()">流程设计</a>
+                <a href="#" id="btn_Close" iconcls="pmicon-close-16" plain="true" onclick="javascript:closeSelectedTab()">关闭</a>
+                <div id="dlg_Query" title="高级查询" class="easyui-dialog" closed="true" style="width:800px;height:200px;"></div>
+                <script type="text/javascript">
+                    $('#btn_View').linkbutton();
+                    $('#btn_Add').linkbutton();
+                    $('#btn_Edit').linkbutton();
+                    $('#btn_Delete').linkbutton();
+                    $('#btn_Other1').linkbutton();
+                    $('#btn_Close').linkbutton();
+                    $('#btn_View').linkbutton();
+                    $('#btn_Add').linkbutton();
+                    $('#btn_Edit').linkbutton();
+                    $('#btn_Delete').linkbutton();
+                    $('#btn_Other1').linkbutton();
+                    $('#btn_Close').linkbutton();
+                </script>
+
+            </div>
+        </div>
+        <div data-options="region:'west',split:true,border:true" title="分类导航" style="width: 240px;">
+            <ul id="treeList" data-options="lines:'true'"></ul>
+        </div>
+        <div id="dgTitle" data-options="region:'center',split:true,border:true" title="数据列表" style="overflow: hidden;">
+            <table id="gridList" data-options="fit:true,singleSelect:true,fit:true, rownumbers:true,pagination:true">
+                <thead>
+                    <tr>
+                        <th data-options="field:'id',align:'left'" hidden="hidden"></th>
+                        @*<%--
+                            <th data-options="field:'FlowCategoryCode',width:120,align:'left'">流程分类代码</th>--%>*@
+                        <th data-options="field:'FlowCode',width:120,align:'left'">流程代码</th>
+                        <th data-options="field:'FlowName',width:150,align:'left'">流程名称</th>
+                        <th data-options="field:'FlowDetail',width:150,align:'left'">流程说明</th>
+                        <th data-options="field:'FlowIsPublic',width:80,align:'center',formatter: function(value,row,index){
+				            if (value == 1){return '是';} else {return '否';}}">公开流程</th>
+                        <th data-options="field:'FlowIsFree',width:80,align:'center',formatter: function(value,row,index){
+				            if (value == 1){return '是';} else {return '否';}}">自由流程</th>
+                        <th data-options="field:'FormCode',width:120,align:'left'">表单代码</th>
+                        <th data-options="field:'FormName',width:150,align:'left'">表单名称</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+    <div id="dlgEdit" class="easyui-dialog" data-options="closed:true,buttons:'#dlg-buttons'" style="width: 400px; height: 330px; padding: 20px;">
+        <form id="fmEdit" method="post" data-options="novalidate:true">
+            <input type="hidden" id="id" name="id" />
+            <table style="margin: auto;">
+                <tbody>
+                    <tr>
+                        <td style="text-align: right; width: 80px">流程分类：</td>
+                        <td style="text-align: left;" colspan="3">
+                            <input class="easyui-combotree" name="FlowCategoryCode" style="width: 180px;" id="FlowCategoryCode" data-options="valueField:'id',textField:'text',url:'@Url.Action("TreeListByDoubleAllCode", "Flow", new { funcode = "GetFlowCategoryCode" })'" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right; width: 80px">流程名称：</td>
+                        <td style="text-align: left;" colspan="3">
+                            <input class="easyui-textbox" name="FlowName" style="width: 180px;" id="FlowName" data-options="required:true,missingMessage:'流程名称不能为空',validType:'length[1,25]'" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right; width: 80px">公开流程：</td>
+
+                        <td style="text-align: left; width: 20px;">
+                            <input type="checkbox" id="FlowIsPublic" />
+                        </td>
+                        <td style="text-align: right; width: 80px">自由流程：</td>
+
+                        <td style="text-align: left; width: 20px">
+                            <input type="checkbox" id="FlowIsFree" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;" class="auto-style1">关联表单：</td>
+                        <td style="text-align: left;" colspan="3" class="datagrid-header-row">
+                            <input class="easyui-combobox" id="CorrelationForm" name="FormCode" data-options="valueField:'id',textField:'text',panelHeight:45,editable:false,onClickButton:openFormList,width:180" buttonicon="pmicon-find-16" />
+                        </td>
+
+                    </tr>
+
+                    <tr>
+                        <td style="text-align: right; width: 80px">退回重审：</td>
+                        <td style="text-align: left;" colspan="3">
+                            <input class="easyui-combobox" id="RollbackAttribute" style="width: 180px;" name="RollbackAttribute" data-options="value:0,editable:false,valueField:'id',textField:'text',panelHeight:90,data:[{id:'0',text:'重审当前步骤'},{id:'1',text:'重审所有步骤'},{id:'2',text:'重审当前及之后步骤'}]" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="text-align: right; width: 80px;">流程说明：</td>
+                        <td style="text-align: left;" colspan="3">
+                            <input class="easyui-textbox" name="FlowDetail" id="FlowDetail" multiline="true" style="width: 180px; height: 60px;" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+
+    <div id="dlgFormList" class="easyui-dialog" data-options="closed:true,width:600,height:450,maximizable:true,title:'选择流程关联表单'">
+        <div class="easyui-layout" data-options="fit:true">
+            <div data-options="region:'west',title:'表单分类',split:true" style="width: 180px;">
+                <ul id="categoryTree" data-options="lines:'true',border:false"></ul>
+            </div>
+            <div data-options="region:'center',title:'已启用流程表单列表'">
+                <table id="formList" data-options="fit:true,border:false,singleSelect:true,rownumbers:true">
+                    <thead>
+                        <tr>
+                            <th data-options="field:'FormCode',width:'40%'">表单代码</th>
+                            <th data-options="field:'FormName',width:'60%'">表单名称</th>
+                        </tr>
+                    </thead>
+
+                </table>
+            </div>
+            <div data-options="region:'south',height:40,border:false" style="text-align: center; padding-top: 5px;">
+                <a href="javascript:void(0);" onclick="setCorrelationForm();" class="easyui-linkbutton" iconcls="icon-ok">确定</a>&nbsp;&nbsp;
+                <a href="javascript:void(0);" onclick=" $('#dlgFormList').dialog('close');" class="easyui-linkbutton" iconcls="icon-cancel">取消</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="dlg-buttons" style="text-align: center">
+        <a href="javascript:void(0);" onclick="saveItem();" class="easyui-linkbutton" iconcls="icon-save" id="btnSave">保存</a>
+        <a href="javascript:void(0);" onclick="javascript: $('#dlgEdit').dialog('close');" class="easyui-linkbutton" iconcls="icon-cancel">取消</a>
+    </div>
+
+    <div id="win" class="easyui-window" title="流程设计" maximized="true" data-options="iconCls:'pmicon-design-16',modal:true,closed:true,minimizable:false,maximizable:false,collapsible:false">
+        <iframe frameborder="no" id="iframeFlowDesign" style="width: 100%; height: 99%"></iframe>
+    </div>
+    <script type="text/javascript">
+
+        //设置关联表单
+        function setCorrelationForm() {
+
+            var row = $('#formList').datagrid('getSelected');
+            if (row) {
+                $("#CorrelationForm").combobox({ data: [{ "id": "", "text": "-空-" }, { "id": row.FormCode, "text": row.FormName }] });
+                $("#CorrelationForm").combobox('setValue', row.FormCode);
+                $("#dlgFormList").dialog('close');
+            } else {
+                $.messager.alert('操作提示', '未选择表单', 'info');
+            }
+        }
+
+        //弹出关联表单列表
+        function openFormList() {
+            $("#dlgFormList").dialog('open');
+            $("#categoryTree").tree({
+                url: '@Url.Action("TreeListByDoubleAllCode", "Flow", new { FunCode = "GetFormCategoryTree" })',
+                onClick: function (node) {
+                    $.post('@Url.Action("GridListAPI", "Flow", new { FunCode = "GetFlowForm" })', { CategoryCode: node.id }, function (data) {
+                        $("#formList").datagrid('loadData', data);
+                    }, 'json');
+                }
+            });
+
+            $("#formList").datagrid().datagrid('loadData', []);
+        }
+
+        //获取关联表单
+        function GetCorrelationForm(FormCode) {
+            if (FormCode == null || FormCode == "") return;
+            $.post('@Url.Action("GridListAPI", "Flow", new { FunCode = "GetCorrelationForm" })', { FormCode: FormCode }, function (result) {
+                if (result.length > 0) {
+                    $("#CorrelationForm").combobox({ data: [{ "id": "", "text": "-空-" }, { "id": result[0].FormCode, "text": result[0].FormName }] });
+                    $("#CorrelationForm").combobox('setValue', result[0].FormCode);
+                } else {
+                    $.messager.alert('提示', '获取流程关联表单失败', 'warning');
+                }
+            }, 'json');
+
+        }
+
+        var ItemAddOrEditURL;
+        $.parser.onComplete = function () {
+            //初始化列表数据
+            $('#treeList').tree({
+                url: '@Url.Action("TreeListByDoubleAllCode", "Flow", new { FunCode = "GetFlowCategoryTree" })',
+                onClick: function (node) {
+                    if (node.attributes.FlowCategoryCode != 'false') {    //初始化列表数据
+                        var _url = '@Url.Action("GridListPagingAPI", "Flow", new { FunCode = "GetFlowDefineList1" })' + '&FlowCategoryCode=' + node.id;
+                        $('#gridList').datagrid({
+                            url: _url,
+                            onDblClickRow: function (rowIndex, rowData) {
+                                viewItem();
+                            }
+                        });
+                    } else {//将数据清空
+                        $('#gridList').datagrid('loadData', [{}]);
+                        $('#gridList').datagrid('deleteRow', 0);
+                    }
+                }
+            });
+            $('#gridList').datagrid();
+            ShowTheam(null);
+        }
+        //设置编码输入控件是否可编辑
+        function SetTextboxReadonly(IsRead) {
+            $("#FlowCode").textbox({ readonly: IsRead });
+        }
+
+        //查看
+        function viewItem() {
+            ItemAddOrEditURL = '';
+            $("#fmEdit").form('reset');
+            $("#CorrelationForm").combobox('loadData', []);
+            var row = $("#gridList").datagrid('getSelected');
+            if (row) {
+                $("#dlgEdit").dialog('open').dialog('setTitle', '流程定义' + ':查看');
+                $('#btnSave').linkbutton('disable');
+                $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowDefineInfo" })', { FlowCode: row.FlowCode }, function (result) {
+                    $("#fmEdit").form('load', result[0]);
+                    GetCorrelationForm(result[0].FormCode);//设置关联表单
+                    if (result[0].FlowIsPublic == 1) {
+                        $("#FlowIsPublic").attr("checked", "checked");
+                    } else {
+                        $("#FlowIsPublic").removeAttr("checked");
+                    }
+                    if (result[0].FlowIsFree == 1) {
+                        $("#FlowIsFree").attr("checked", "checked");
+                    } else {
+                        $("#FlowIsFree").removeAttr("checked");
+                    }
+                }, 'json');
+            } else {
+                $.messager.alert('操作提示', '请选择要查看的数据', 'info');
+            }
+        }
+        //添加
+        function add() {
+            $("#CorrelationForm").combobox('loadData', []);
+            ItemAddOrEditURL = '@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowDefine" })';
+            $("#dlgEdit").dialog('open').dialog('setTitle', '流程定义' + ':添加');
+            $('#btnSave').linkbutton('enable');
+            $("#fmEdit").form('reset');
+            var node = $('#treeList').tree('getSelected');
+            if (node.attributes.FlowCategoryCode != 'false') {
+                $("#FlowCategoryCode").combotree('setValue', node.id);
+            }
+            SetTextboxReadonly(false);
+        }
+        //修改
+        function edit() {
+            $("#CorrelationForm").combobox('loadData', []);
+            ItemAddOrEditURL = '@Url.Action("ItemCUD", "Flow", new { FunCode = "UpdateFlowDefine" })';
+            $("#fmEdit").form('reset');
+            SetTextboxReadonly(false);
+            var row = $("#gridList").datagrid('getSelected');
+            if (row) {
+                $("#dlgEdit").dialog('open').dialog('setTitle', '流程定义' + ':修改');
+                $('#btnSave').linkbutton('enable');
+
+                $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowDefineInfo" })', { FlowCode: row.FlowCode }, function (result) {
+                    $("#fmEdit").form('load', result[0]);
+                    GetCorrelationForm(result[0].FormCode);//设置关联表单
+                    if (result[0].FlowIsPublic == 1) {
+                        $("#FlowIsPublic").attr("checked", "checked");
+                    } else {
+                        $("#FlowIsPublic").removeAttr("checked");
+                    }
+                    if (result[0].FlowIsFree == 1) {
+                        $("#FlowIsFree").attr("checked", "checked");
+                    } else {
+                        $("#FlowIsFree").removeAttr("checked");
+                    }
+                }, 'json');
+            } else {
+                $.messager.alert('操作提示', '请选择要修改的数据', 'info');
+            }
+        }
+        //删除
+        function del() {
+            var row = $("#gridList").datagrid('getSelected');
+            if (row) {
+                $.messager.confirm('警告', "您确定要删除所选数据吗？", function (flag) {
+                    if (flag) {
+                        $.post( '@Url.Action("ItemCUD", "Flow", new { FunCode = "DeleteFlowDefine" })', { FlowCode: row.FlowCode }, function (result) {
+                            var result = eval('(' + result + ')');
+                            if (result.success) {
+                                refresh();
+                                $.messager.alert('操作提示', result.message, 'info');
+                            } else {
+                                $.messager.alert('操作提示', result.message, 'error');
+                            }
+                        });
+                    }
+                });
+            } else {
+                $.messager.alert('操作提示', '请选择要删除的数据', 'info');
+            }
+        }
+        //刷新
+        function refresh() {
+            $("#gridList").datagrid('reload');
+        }
+        //保存刷新
+        function saveItem() {
+            $.messager.progress();
+            $("#fmEdit").form('submit', {
+                url: ItemAddOrEditURL,
+                onSubmit: function (param) {
+                    param.FlowIsPublic = $('#FlowIsPublic').prop('checked') == true ? 1 : 0;
+                    param.FlowIsFree = $('#FlowIsFree').prop('checked') == true ? 1 : 0;
+                    var isValid = $(this).form('enableValidation').form('validate');
+                    if (!isValid) {
+                        $.messager.progress('close');
+                    }
+                    return isValid;
+                },
+                success: function (result) {
+                    result = eval('(' + result + ')');
+                    $.messager.progress('close');	// 如果提交成功则隐藏进度条
+                    if (result.success) {
+                        $("#dlgEdit").dialog('close');
+                        refresh();
+                    } else {
+                        $.messager.alert('操作提示', result.message, 'error');
+                    }
+                }
+            });
+        }
+        //打印
+        function print() {
+            CreateFormPage("流程定义", $("#gridList"));
+        }
+
+        //点击流程设计按钮打开流程设计窗口
+        function other1() {
+            var row = $("#gridList").datagrid('getSelected');
+            if (row) {
+                var url = '@Url.Action("FlowChartDesign", "Flow")'+ "?FlowCode=" + row.FlowCode;
+                $("#iframeFlowDesign").attr("src", url);
+                $('#win').window({
+                    title: '流程设计：' + row.FlowName
+                });
+                $("#win").window('open');
+            } else {
+                $.messager.alert('操作提示', '请选择要设计的流程', 'info');
+            }
+        }
+    </script>
+</body>
+
+</html>
+
+
+

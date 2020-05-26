@@ -1,0 +1,82 @@
+﻿@{
+    ViewBag.Title = "数据字典FormType";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var dCode = $.request("dCode");
+    var type = $.request("type");
+    $(function () {
+        initControl();
+        if (!!dCode) {
+            if (type == "add") {
+                $("#PDictionaryCode").val(dCode);
+                $("#PDictionaryCode").trigger("change", dCode);
+            } else
+            {
+                $.ajax({
+                    url: "/SystemManage/DataDictionary/GetFormJsonType",
+                    data: { keyValue: dCode },
+                    dataType: "json",
+                    async: false,
+                    success: function (data) {
+                        $("#form1").formSerialize(data);
+                        $("#DictionaryCode").attr("disabled", "disabled");
+                    }
+                });
+            }
+        }
+    });
+    function initControl() {
+        $("#PDictionaryCode").bindSelect({
+            url: "/SystemManage/DataDictionary/GetSelectJson",
+        });
+    }
+    function submitForm() {
+        var type = $.request("type");
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "/SystemManage/DataDictionary/SubmitFormType?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#leftgridList").resetSelection();
+                $.currentWindow().$("#leftgridList").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li role="presentation" class="active"><a href="#">基本信息</a></li>
+        </ul>
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <input id="id" name="id" type="hidden" class="form-control" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">上级分类</th>
+                    <td class="formValue">
+                        <select id="PDictionaryCode" name="PDictionaryCode" class="form-control required">
+                            <option value="0">请选择</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+
+                    <th class="formTitle">分类编码<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DictionaryCode" name="DictionaryCode" type="text" class="form-control required" placeholder="分类编码" />
+                    </td>
+                </tr>
+                <tr>
+                    
+                    <th class="formTitle">分类名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DictionaryType" name="DictionaryType" type="text" class="form-control required" placeholder="分类名称" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

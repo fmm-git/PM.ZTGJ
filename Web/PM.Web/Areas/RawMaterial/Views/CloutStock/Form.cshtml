@@ -1,0 +1,154 @@
+﻿@{
+    ViewBag.Title = "原材料余料库存编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var ProjectId = top.clients.projectId;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "CloutStock")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data[0]);
+                    ProjectId = data[0].ProjectId;
+                }
+            });
+        }
+    });
+
+    //原材料选择
+    function selectMaterial() {
+        var url = "/RawMaterial/RawMaterialStock/GetMaterialGridJson&keyValue=IsYL/true";
+        var ret = selectClick('win_MaterialStock_RawMaterial', url, 'Grid', '', '', '', '550px', '450px', function () {
+        })
+    }
+
+    //加工厂选择
+    function selectFactory() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/1";
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px');
+    }
+    //站点选择
+    function selectSite() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/5|ProjectId/" + ProjectId;
+        var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+            $("#ProjectId").val(row[0].ProjectId);
+        });
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "CloutStock")" + "?type=" + type,
+            param: $("#form1").formSerialize(),
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+
+
+<div style="margin-top: 10px;">
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">原材料编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="MaterialCode" name="MaterialCode" type="text" readonly="readonly" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectMaterial()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">原材料名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="MaterialName" name="MaterialName" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">规格型号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SpecificationModel" name="SpecificationModel" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">单位重量(kg/m,㎡)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="MeasurementUnitZl" name="MeasurementUnitZl" type="text" class="form-control required" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">尺寸<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Size" name="Size" type="text" class="form-control number required" />
+                    </td>
+                    <th class="formTitle">数量<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Number" name="Number" type="text" class="form-control number required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" readonly="readonly" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectFactory()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">站点名称</th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="SiteCode" name="SiteCode" type="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" readonly="readonly" class="form-control" />
+                            <span class="input-group-btn" onclick="selectSite()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">厂家</th>
+                    <td class="formValue">
+                        <input id="Factory" name="Factory" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">炉批号</th>
+                    <td class="formValue">
+                        <input id="BatchNumber" name="BatchNumber" type="text" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>

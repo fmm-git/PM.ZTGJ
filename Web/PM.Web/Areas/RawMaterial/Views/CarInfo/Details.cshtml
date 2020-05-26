@@ -1,0 +1,198 @@
+﻿@{
+    ViewBag.Title = "车辆信息编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        initControl();
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "CarInfo")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                    $("#CarBxEndData").val(fdate($("#CarBxEndData").val()));
+                    $("#CarNjEndData").val(fdate($("#CarNjEndData").val()));
+                    lodeList(data.Item2);
+                }
+            });
+        }
+    });
+    
+    function initControl() {
+        //车辆使用状态
+        $("#CarStartName").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "CarInfo" })",
+            id: "DictionaryText",
+        text: "DictionaryText"
+    });
+    }
+
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+    var index = 0;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '驾驶员编号', name: 'UserCode', width: 150, height: 10, align: "left", sortable: false },
+                { label: '驾驶员名称', name: 'UserName', width: 150, height: 10, align: "left", sortable: false },
+                { label: '身份证号', name: 'SFZCode', width: 180, align: "left", sortable: false },
+                { label: '联系电话', name: 'Tel', width: 150, align: "left", sortable: false },
+                { label: '驾驶证号', name: 'XszCode', width: 150, align: "left", sortable: false},
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+    }
+
+    //加载列表数据
+    function lodeList(data) {
+        $("#gridList").jqGrid('clearGridData');
+        $.each(data, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="formd">
+            <input id="ID" name="ID" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">车辆编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CarCode" name="CarCode" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">车牌号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CarCph" name="CarCph" type="text" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">车辆型号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CarXh" name="CarXh" type="text" class="form-control required">
+                    </td>
+                    <th class="formTitle">GPS定位编码</th>
+                    <td class="formValue">
+                        <input id="GPSLocationCoding" name="GPSLocationCoding" type="text" class="form-control">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">车辆所属单位<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="SupplierCode" name="SupplierCode" type="hidden">
+                            <input id="SupplierName" name="SupplierName" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">车辆使用状态<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <select id="CarStartName" name="CarStartName" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">年检到期时间<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CarBxEndData" name="CarBxEndData" type="text" class="form-control required input-wdatepicker" />
+                    </td>
+                    <th class="formTitle">保险到期时间<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CarNjEndData" name="CarNjEndData" type="text" class="form-control required input-wdatepicker" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">综合油耗(升)</th>
+                    <td class="formValue">
+                        <input id="HaoYou" name="HaoYou" type="text" value="0.00" class="form-control number required" />
+                    </td>
+                    <th class="formTitle">行驶证号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DrivingLicenseNum" name="DrivingLicenseNum" type="text" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">保险公司信息</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="CompanyInfo" name="CompanyInfo" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserName" name="InsertUserName" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+

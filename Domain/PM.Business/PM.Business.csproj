@@ -1,0 +1,199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{D004D0BC-BC6C-4C51-A58D-96DB183AE38A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PM.Business</RootNamespace>
+    <AssemblyName>PM.Business</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Dos.Common">
+      <HintPath>..\..\packages\Dos.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Dos.ORM, Version=1.10.7.3, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Dos.ORM.dll</HintPath>
+    </Reference>
+    <Reference Include="Dos.ORM.NoSql, Version=1.0.0.7, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Dos.ORM.NoSql.dll</HintPath>
+    </Reference>
+    <Reference Include="ExecuteDAL">
+      <HintPath>..\..\packages\ExecuteDAL.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PM.Collector">
+      <HintPath>..\..\packages\PM.Collector.dll</HintPath>
+    </Reference>
+    <Reference Include="PM.DAL">
+      <HintPath>..\..\packages\PM.DAL.dll</HintPath>
+    </Reference>
+    <Reference Include="PM.Utility">
+      <HintPath>..\..\packages\PM.Utility.dll</HintPath>
+    </Reference>
+    <Reference Include="StackExchange.Redis">
+      <HintPath>..\..\packages\StackExchange.Redis.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Article\ArticleLogic.cs" />
+    <Compile Include="BIExhibition\DistributionScheduleLogic.cs" />
+    <Compile Include="BIExhibition\EquipmentExhibitionLogic.cs" />
+    <Compile Include="BIExhibition\ProcessingScheduleLogic.cs" />
+    <Compile Include="BIExhibition\QualityIndexLogic.cs" />
+    <Compile Include="CostManage\CostReportLogic.cs" />
+    <Compile Include="CostManage\DistributionDeclareLogic.cs" />
+    <Compile Include="CostManage\MachineCostLogic.cs" />
+    <Compile Include="CostManage\TbMonthCostHeSuanLogic.cs" />
+    <Compile Include="CostManage\UserCostLogic.cs" />
+    <Compile Include="CostManage\ValuationDeclareLogic.cs" />
+    <Compile Include="DataManage\FileTypeBuessic.cs" />
+    <Compile Include="Distribution\DistributionPlan.cs" />
+    <Compile Include="Distribution\SemiFinishedSignLogic.cs" />
+    <Compile Include="Distribution\SiteDischargeCargoLogic.cs" />
+    <Compile Include="Distribution\TransportFlowLogic.cs" />
+    <Compile Include="Distribution\TransportProcessLogic.cs" />
+    <Compile Include="EarlyWarning\EarlyWarningTimer.cs" />
+    <Compile Include="EarlyWarning\TbFormEarlyWarningBegTimeLogic.cs" />
+    <Compile Include="EarlyWarning\TbFormEarlyWarningNodeInfoLogic.cs" />
+    <Compile Include="EarlyWarning\TbFormEarlyWarningNodeLogic.cs" />
+    <Compile Include="Flow\FlowNodeJudgeCriteriaLogic.cs" />
+    <Compile Include="Flow\FlowNodePersonnelLogic.cs" />
+    <Compile Include="Flow\FlowNodeUILogic.cs" />
+    <Compile Include="Flow\FlowNodeLogic.cs" />
+    <Compile Include="Flow\FlowNodeRelationLogic.cs" />
+    <Compile Include="Flow\FlowPerformLogic.cs" />
+    <Compile Include="Flow\TbFlowEarlyWarningConditionLogic.cs" />
+    <Compile Include="OA\EarlyWarningNews.cs" />
+    <Compile Include="OA\FlowDefineLogic.cs" />
+    <Compile Include="Distribution\DistributionEntLogic.cs" />
+    <Compile Include="OA\NoticeNewsLogic.cs" />
+    <Compile Include="Production\OrderProgressLogic.cs" />
+    <Compile Include="Production\PersonnelWorkDayConsumeLogic.cs" />
+    <Compile Include="Production\ProblemOrderLogic.cs" />
+    <Compile Include="Production\TbProcessingTechnologyLogic.cs" />
+    <Compile Include="Production\TbWorkOrderLogic.cs" />
+    <Compile Include="Production\WastagerReportFormLogic.cs" />
+    <Compile Include="RawMaterial\CarInfoLogic.cs" />
+    <Compile Include="RawMaterial\CloutStockLogic.cs" />
+    <Compile Include="RawMaterial\EndingStocksLogic.cs" />
+    <Compile Include="RawMaterial\FactoryBatchNeedPlanLogic.cs" />
+    <Compile Include="RawMaterial\InOrderLogic.cs" />
+    <Compile Include="RawMaterial\RawMaterialStockLogic.cs" />
+    <Compile Include="RawMaterial\RawMaterialStockRecordLogic.cs" />
+    <Compile Include="RawMaterial\RMProductionMaterialMark.cs" />
+    <Compile Include="RawMaterial\SampleOrderLogic.cs" />
+    <Compile Include="RawMaterial\StatisticsReportFormLogic.cs" />
+    <Compile Include="RawMaterial\StockTakingLogic.cs" />
+    <Compile Include="RawMaterial\StorageLogic.cs" />
+    <Compile Include="RawMaterial\SupplierLogic.cs" />
+    <Compile Include="RawMaterial\SupplyListLogic.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialArchivesLogic.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialMonthDemandPlanLogic.cs" />
+    <Compile Include="RawMaterial\TbRawMaterialMonthDemandSupplyPlanLogic.cs" />
+    <Compile Include="Safe\HoistingSafetyLogic.cs" />
+    <Compile Include="Safe\SafeAccidentReportLogic.cs" />
+    <Compile Include="Safe\SafeCheckLogic.cs" />
+    <Compile Include="Safe\SafeDatumManageLogic.cs" />
+    <Compile Include="Safe\TbFireInspectionLogic.cs" />
+    <Compile Include="Safe\TbInterimUseElectricCheckLogic.cs" />
+    <Compile Include="SettlementManage\SettlementOrderLogic.cs" />
+    <Compile Include="SettlementManage\SignforDuiZhangLogic.cs" />
+    <Compile Include="ShortMessage\CensusdemoTask.cs" />
+    <Compile Include="System\AuthorizeLogic.cs" />
+    <Compile Include="System\AuthorizeUserLogic.cs" />
+    <Compile Include="System\CompanyLogic.cs" />
+    <Compile Include="System\DataDictionaryLogic.cs" />
+    <Compile Include="System\DepartmentLogic.cs" />
+    <Compile Include="System\FlowPerformManageLogic.cs" />
+    <Compile Include="System\HomeLogic.cs" />
+    <Compile Include="System\MenuPointsLogic.cs" />
+    <Compile Include="System\PositionLogic.cs" />
+    <Compile Include="System\ShortMessageTemplateLogic.cs" />
+    <Compile Include="System\SysLogLogic.cs" />
+    <Compile Include="System\TbAreaAdministrationLogic.cs" />
+    <Compile Include="System\TbAttachmentLogic.cs" />
+    <Compile Include="System\TbFormWindowsShowFieldsLogic.cs" />
+    <Compile Include="System\TbPermissionsTeamLogic.cs" />
+    <Compile Include="System\TbPositionMenuLogic.cs" />
+    <Compile Include="System\TbProjectInfoLogic.cs" />
+    <Compile Include="System\TbRoleLogic.cs" />
+    <Compile Include="System\TbRoleMenuLogic.cs" />
+    <Compile Include="System\TbShortMessageTemplate.cs" />
+    <Compile Include="System\TbSysMenuLogic.cs" />
+    <Compile Include="System\TbSysMenuTableLogic.cs" />
+    <Compile Include="System\TbUserMenuLogic.cs" />
+    <Compile Include="System\TbUserRoleLogic.cs" />
+    <Compile Include="System\UserLogic.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="CreateCode.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PM.DataAccess\PM.DataAccess.csproj">
+      <Project>{4b67f1da-00df-4805-a41e-3ee56c198c10}</Project>
+      <Name>PM.DataAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PM.Common\PM.Common.csproj">
+      <Project>{50ae6597-24eb-44e6-93c4-944faf2a76ea}</Project>
+      <Name>PM.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PM.DataEntity\PM.DataEntity.csproj">
+      <Project>{60f0e685-b80f-4898-afa2-da8232ebfd23}</Project>
+      <Name>PM.DataEntity</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

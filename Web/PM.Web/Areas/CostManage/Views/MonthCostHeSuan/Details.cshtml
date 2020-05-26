@@ -1,0 +1,490 @@
+﻿@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        height: 34px;
+        line-height: 1.42857;
+        color: rgb(85, 85, 85);
+        background-color: rgb(255, 255, 255);
+        padding: 6px 0px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: rgb(221, 221, 221);
+    }
+
+    #MXXXInfo .ui-jqgrid .table-bordered .ui-jqgrid-labels th {
+        border-left: 0px none !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-weight: normal;
+        background: #eee;
+        border: 1px solid #ddd;
+    }
+
+    #divSr #gbox_gridList {
+        height: 113px;
+    }
+
+    #divSr #gview_gridList {
+        height: 113px;
+    }
+
+    #gridListCost {
+        border-right-width: 0px;
+    }
+</style>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<!---------基本信息------->
+<script type="text/javascript">
+
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var lastsel;
+    var index = 1;
+    var lastsel1;
+    var index1 = 1;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();//加载月收入信息
+        gridListCost();//加载月成本信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "MonthCostHeSuan")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                    var mydata = data.Item2;
+                    lodeList(mydata);
+                    lodeListCost(data.Item3, 2);
+                    GetHjOrAvgCost();
+                }
+            });
+        }
+    });
+
+    //---月收入信息
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: '重量(T)', name: 'SteelWeight', width: 120, align: "right", sortable: false, editable: true },
+                    { label: '单价(元/T)', name: 'SteelUnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'SteelTotalPrice', width: 120, align: "right", sortable: false },
+                    { label: '重量(T)', name: 'GeGouZhongLiWeight', width: 120, align: "right", sortable: false, editable: true },
+                    { label: '单价(元/T)', name: 'GeGouZhongLiUnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'GeGouZhongLiTotalPrice', width: 120, align: "right", sortable: false },
+                    { label: '重量(T)', name: 'HSectionSteelWeight', width: 120, align: "right", sortable: false, editable: true },
+                    { label: '单价(元/T)', name: 'HSectionSteelUnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'HSectionSteelTotalPrice', width: 120, align: "right", sortable: false },
+                    { label: '重量(T)', name: 'AGrilleWeight', width: 80, align: "right", sortable: false, editable: true },
+                    { label: '单价(元/T)', name: 'AGrilleUnitPrice', width: 120, align: "right", sortable: false },
+                    { label: '金额(元)', name: 'AGrilleTotalPrice', width: 120, align: "right", sortable: false },
+                    { label: '合计重量(T)', name: 'SumWeight', width: 140, align: "center", sortable: false },
+                    { label: '合计金额(元)', name: 'SumMoney', width: 140, align: "center", sortable: false },
+                    { label: '核算编号', name: 'HeSuanCode', hidden: true }
+            ],
+            gridComplete: function () {
+                $("#divSr .ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("#divSr .ui-jqgrid-bdiv").css("height", "40px");
+                $("div.unwritten").remove();
+            },
+        });
+        $("#gridList").jqGrid('destroyGroupHeader');//最关键的一步、销毁合并表头分组、防止出现表头重叠
+        $("#gridList").jqGrid('setGroupHeaders', {
+            useColSpanStyle: true,
+            groupHeaders: [
+                { startColumnName: 'SteelWeight', numberOfColumns: 3, titleText: '钢筋' },
+                { startColumnName: 'GeGouZhongLiWeight', numberOfColumns: 3, titleText: '格构柱中立柱' },
+                { startColumnName: 'HSectionSteelWeight', numberOfColumns: 3, titleText: 'H型钢' },
+                { startColumnName: 'AGrilleWeight', numberOfColumns: 3, titleText: '格栅' }
+            ]
+        });
+    }
+    //---月收入信息
+    function gridListCost() {
+        var $gridList = $("#gridListCost");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 95,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '项目', name: 'CostProjectName', width: 150, align: "center", sortable: false },
+                { label: '项目类型', name: 'CostType', hidden: true },
+                { label: '金额(元)', name: 'CostMoney', width: 120, align: "right", sortable: false, editable: true },
+                { label: '附件', name: 'Enclosure1', width: 200, align: "center", sortable: false },
+                { label: '核算编号', name: 'HeSuanCode', hidden: true },
+                { label: '其他成本明细', name: 'OtherCostList', hidden: true },
+                { label: '附件', name: 'Enclosure', hidden: true },
+                { label: '是否录入其他成本明细', name: 'IsOtherCostList', hidden: true },
+            ],
+            gridComplete: function () {
+                $("#divCb .ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                var addTyp = "";
+                if (rowid && (rowid !== lastsel1 || rowid == id)) {
+                    var data = $("#" + rowid + ">td");
+                    addType = data[3].innerHTML;
+                    if (addType == "9" || addType=="10") {
+                        $gridList.jqGrid('saveRow', lastsel1);
+                        $gridList.jqGrid('editRow', rowid, true);
+                        lastsel1 = rowid;
+                        $("#gridListCost>tbody").find("input:text").each(function () {
+                            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                            $(this).css("height", "20px").css("width", width + "px");
+                        });
+                    }
+
+                }
+                validCost(rowid, addType);
+            }
+        });
+    }
+
+    //选项卡切换
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#formd').formValid()) {
+                return false;
+            }
+        } else {
+            GetGridRowData();//月收入信息
+            GetGridRowData1();//月成本信息
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+
+    //加载月收入数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        var sumPassCount = 0;
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            var passCount = Number(item.TotalSum);
+            sumPassCount += passCount;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+        $("#AmountOfMoney").val(sumPassCount.toFixed(5));
+    }
+    //加载月成本数据
+    function lodeListCost(data,type) {
+        if (data != null && data != "") {
+            $("#gridListCost").jqGrid('clearGridData');
+            if (type==1) {
+                $.each(data, function (i, item) {
+                    index1++;
+                    item.id = 0;
+                    item.CostMoney = 0;
+                    item.HeSuanCode = $("#HeSuanCode").val();
+                    item.Enclosure = "";
+                    item.Enclosure1 = "<span id=\"uplaodFileTitle-" + index1 + "\" class=\"Isfile\">未上传</span>&nbsp;&nbsp;<a class=\"layui-layer-btn0 btn btn-primary\" id=\"uplaodFile-" + index1 + "\" onclick=\"Uplaod(" + item.id + "," + index1 + ");\">上传</a>&nbsp;&nbsp;<a class=\"layui-layer-btn0 btn btn-primary\" id=\"uplaodFilelook-" + index1 + "\" onclick=\"uplaodFilelook(" + index1 + ");\" style=\"display:none;\">查看</a>";
+                    item.OtherCostList = "";
+                    item.IsOtherCostList = 0;
+                    $("#gridListCost").jqGrid('addRowData', index1, item);
+                });
+            }
+            else {
+                $.each(data, function (i, item) {
+                    index1++;
+                    if (item.Enclosure) {
+                        item.Enclosure1 = "<span id=\"uplaodFileTitle-" + index1 + "\" class=\"Isfile\">已上传</span>&nbsp;&nbsp;<a class=\"layui-layer-btn0 btn btn-primary\" id=\"uplaodFilelook-" + index1 + "\" onclick=\"uplaodFilelook(" + index1 + ");\">查看</a>";
+                    } else {
+                        item.Enclosure1 = "<span id=\"uplaodFileTitle-" + index1 + "\" class=\"Isfile\">未上传</span>&nbsp;&nbsp;<a class=\"layui-layer-btn0 btn btn-primary\" id=\"uplaodFilelook-" + index1 + "\" onclick=\"uplaodFilelook(" + index1 + ");\" style=\"display:none;\">查看</a>";
+                    }
+                    $("#gridListCost").jqGrid('addRowData', index1, item);
+                });
+            }
+        }
+    }
+    //查看附件
+    function uplaodFilelook(index1) {
+        var data = $("#gridListCost #" + index1 + ">td");
+        var fj = data[8].innerHTML;
+        if (!fj||fj=="&nbps;") {
+            fj = "";
+        }
+        showFile(fj, "formd", "MonthCostHeSuan");
+    }
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.SigninNuber); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.SigninNuber, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    function GetHjOrAvgCost() {
+        GetGridRowData1();
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData = [];
+        var sumPassCount = 0;//总金额
+        var sumWeight = 0;//总重量
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            sumWeight += Number(rowData.SumWeight);
+            sumPassCount += Number(rowData.SumMoney);
+            columnData.push(rowData);
+        });
+        $("#TotalIncome").val(sumPassCount.toFixed(5));//合计收入
+        $("#MachiningTotal").val(sumWeight.toFixed(5));//加工重量
+        return columnData;
+    }
+    //获取表格数据
+    function GetGridRowData1() {
+        $("#gridListCost").jqGrid('saveRow', lastsel1);
+        var ids = $("#gridListCost").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData = [];
+        var sumPassCount = 0;//总金额
+        $(ids).each(function (index1, yu) {
+            var rowData = $("#gridListCost").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            sumPassCount += Number(rowData.CostMoney);
+            columnData.push(rowData);
+        });
+        $("#TotalCost").val(sumPassCount.toFixed(5));//合计成本
+        $("#labSumCost").html(sumPassCount.toFixed(5));//合计成本
+
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids1 = $("#gridList").jqGrid('getDataIDs');
+        var sumWeight=0;
+        $(ids1).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            sumWeight += Number(rowData.SumWeight);
+        });
+        var a = (Number(sumPassCount) / Number(sumWeight)).toFixed(5);
+        if (isNaN(a) || a == "Infinity") {
+            a = 0;
+        }
+        $("#AvgCost").val(a);//平均成本
+        $("#labAvgCost").html(a);//平均成本
+
+        return columnData;
+    }
+
+    /*JQuery 弹框选择*/
+    function validCost(rowid, addType) {
+        if (addType == "9" || addType == "10") {
+            $("#" + rowid + "_CostMoney").focus(function () {
+                $(this).removeAttr("readonly");
+                addSjOrQt(this, rowid, addType);//添加税金或者其他金额
+                $(this).attr("readonly", "readonly");
+            });
+        }
+    }
+
+    function OtherCostList(rowid) {
+        var data = $("#" + rowid + ">td");
+        if (data[7].innerText == "&nbsp;" || data[7].innerText == " ") {
+            if (Number(data[4].title) > 0) {
+              $.ajax({
+                     url: "@Url.Action("GetOtherCostList", "MonthCostHeSuan")",
+                     data: { HeSuanCode: data[6].innerHTML, addType: data[3].innerHTML },
+                     dataType: "json",
+                     async: false,
+                     success: function (data1) {
+                     data[7].innerHTML=JSON.stringify(data1.Item1);
+                    }
+                 });
+            }
+        }
+        return data[7].innerHTML;
+    }
+
+    function addSjOrQt(obj, rowid, addType) {
+        var where = "?type=details&addType=" + addType + "&HeSuanCode=" + $("#HeSuanCode").val() + "&rowid=" + rowid;
+            if (addType == "9") {
+                CommonOpen("DetailsOtherCost", "查看税金成本", "@Url.Action("DetailsOtherCost", "MonthCostHeSuan")" + where, true, true, obj)
+            } else {
+                CommonOpen("DetailsOtherCost", "查看其他成本", "@Url.Action("DetailsOtherCost", "MonthCostHeSuan")" + where, true, true, obj)
+            }
+
+    }
+
+    //修改，添加，查看界面载体
+    function CommonOpen(id, title, url, isbtn, isBack, obj) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "50%",
+            height: "400px",
+            btn: null
+        });
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="formd">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">核算编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ID" name="ID" type="hidden" />
+                        <input id="HeSuanCode" name="HeSuanCode" type="text" disabled="disabled" class="form-control required" value="@ViewBag.HeSuanCode" />
+                    </td>
+                    <th class="formTitle">所属加工厂<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" value="@ViewBag.ProcessFactoryName" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectProcessFactory('1')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">核算月份<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="HeSuanMonth" name="HeSuanMonth" type="text" value="" class="form-control required input-wdatepicker" onfocus="WdatePicker({dateFmt: 'MM'})" placeholder="请选择月份" />
+                    </td>
+                    <th class="formTitle">加工总量(T)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="MachiningTotal" name="MachiningTotal" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">合计收入(元)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TotalIncome" name="TotalIncome" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                    <th class="formTitle">合计成本(元)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TotalCost" name="TotalCost" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">平均成本(元)<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="AvgCost" name="AvgCost" type="text" disabled="disabled" value="0" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 70px; padding-right:2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input type="hidden" name="InsertUserCode" id="InsertUserCode" value="@ViewBag.UserCode" />
+                        <input id="UserName" name="UserName" type="text" disabled="disabled" class="form-control" value="@ViewBag.UserName" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control"
+                               value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; ">
+        <div id="divSr" class="panel panel-default" style="overflow-x: scroll;">
+            <div class="panel-heading" style="width:1801px">
+                <h3 class="panel-title">月收入信息</h3>
+            </div>
+            <div class="panel-body">
+                <div class="gridPanel" style="margin-top: 1px;height:115px;">
+                    <table id="gridList"></table>
+                </div>
+            </div>
+        </div>
+        <div id="divCb" class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">月成本信息</h3>
+            </div>
+            <div class="panel-body">
+                <div class="gridPanel" style="margin-top: 1px;">
+                    <table id="gridListCost"></table>
+                </div>
+            </div>
+
+            <div style="padding-left:15px;padding-bottom:15px;">
+                <span>合计金额(元)：<label id="labSumCost"></label></span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span>月平均成本(元/T)：<label id="labAvgCost"></label></span>
+            </div>
+        </div>
+    </div>
+</div>

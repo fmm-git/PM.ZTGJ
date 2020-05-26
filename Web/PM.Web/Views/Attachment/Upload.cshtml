@@ -1,0 +1,249 @@
+﻿@{
+
+    Layout = null;
+    //回调函数
+    //var fun = Request["fun"] ?? "";
+    //附件ID
+    var keyID = Request["keyID"] ?? "";
+    //业务数据ID
+    var DataId = Request["DataId"] ?? "";
+    //表单code
+    var menuTable = Request["menuTable"] ?? "";
+    //表单code
+    var index = Request["index"] ?? "";
+}
+
+<html>
+<head>
+    <meta http-equiv="UserContent-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>附件上传</title>
+    <link href="~/Content/js/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/js/webuploader-0.1.5/webuploader.css" rel="stylesheet" />
+    <script src="~/Content/js/jquery/jquery-2.1.1.min.js"></script>
+    <script src="~/Content/js/webuploader-0.1.5/webuploader.js"></script>
+    <style>
+        .upload-state-done {
+            border: 1px solid green;
+        }
+
+        .thumbnail {
+            margin-left: 10px;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+
+        .btns {
+            position: fixed;
+            bottom: 0px;
+            float: right;
+            width: 162%;
+            height: 50px;
+            border-top: 1px solid #ddd;
+        }
+
+        .uploader-list {
+            height: 90%;
+            overflow-y: auto;
+        }
+
+        #picker input {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <div align="center">
+
+        <div id="uploader" class="wu-example ">
+
+            <div id="thelist" class="uploader-list"></div>
+
+            <div class="btns">
+                <div id="picker" style="display:inline-block;float:none !important;vertical-align:top;margin-top:5px; height:40px; ">
+                    选择文件
+                </div>
+                <button id="ctlBtn" class="layui-btn layui-btn-primary" style="vertical-align:top; height:40px; margin-top:5px;">
+                    <span class="glyphicon glyphicon-upload" style="margin-top:-5px;"></span> 开始上传
+                </button>
+                <button id="fileSuccess" class="layui-btn layui-btn-primary" style="vertical-align:top; height:40px; margin-left:5px;margin-top:5px; ">
+                    <span class="glyphicon glyphicon-ok" style="margin-top:-5px;"></span> 上传完成
+                </button>
+            </div>
+        </div>
+
+    </div>
+    <script type="text/javascript">
+        var fun = "";
+        if ("@index" == "qyitem") {
+            //取样单上传
+            fun = function (data, index) {
+                if (data.length) {
+                    top.frames["Form"].changeEnclosure(data[0].keyID);
+                }
+            }
+        }
+        else if ("@index" != "-111") {//明细表上传
+            fun = function (data, index) {
+                if (data.length) {
+                    top.frames["Form"].$("#uplaodFileTitle-" + index).html("已上传");
+                    top.frames["Form"].$("#uplaodFilelook-" + index).show();
+                    var dataItem = top.frames["Form"].$("#gridListCost #" + index + ">td");
+                    dataItem[8].innerText = data[0].keyID;
+                    //top.frames["Form"].$("#gridListCost #"+index+" #Enclosure").val(data[0].keyID);
+                }
+            }
+        }
+        else {//主表上传
+            fun = function (data, index) {
+                if (data.length) {
+                    if (top.frames["Form"]) {
+                        top.frames["Form"].$("#uplaodFileTitle").html("已上传");
+                        top.frames["Form"].$("#uplaodFilelook").show();
+                        top.frames["Form"].$("#Enclosure").val(data[0].keyID);
+                    } else {
+                        var iframeId = top.$(".NFine_iframe:visible").attr("id");
+                        top.frames[iframeId].$("#gridList").trigger("reloadGrid");
+                    }
+                }
+            }
+        }
+        @*//var fun =@Html.Raw(fun)*@
+
+        $(function () {
+            initUploadFile();   //初始化上传
+            fileSuccess();       //文件上传完成，返回操作页面
+        });
+
+        var fileContext = [];
+
+        //文件上传完成，返回操作页面
+        function fileSuccess() {
+            $("#fileSuccess").on("click", function () {
+                if (fileContext.length <= 0) {
+                    alert("未上传任何文件");
+                    return;
+                }
+                //调用回调函数
+                fun(fileContext, "@index");
+                //关闭当前页面
+                var index = parent.layer.getFrameIndex(window.name); //获取窗口索引
+                parent.layer.close(index);
+
+            });
+        }
+
+        //初始化上传
+        function initUploadFile() {
+
+            /*init webuploader*/
+            var $list = $("#thelist");   //这几个初始化全局的百度文档上没说明
+            var $btn = $("#ctlBtn");   //开始上传
+            var thumbnailWidth = 100;   //缩略图高度和宽度 （单位是像素），当宽高度是0~1的时候，是按照百分比计算，具体可以看api文档
+            var thumbnailHeight = 100;
+
+            var uploader = WebUploader.create({
+                // 选完文件后，是否自动上传。
+                auto: false,
+                allowMagnify: true,
+
+                // swf文件路径
+                swf: "/Content/js/webuploader-0.1.5/Uploader.swf",
+
+                // 文件接收服务端。
+                server: '/Attachment/UplaodFile?keyID=@keyID&menuTable=@menuTable&DataId=@DataId',
+
+                // 选择文件的按钮。可选。
+                // 内部根据当前运行是创建，可能是input元素，也可能是flash.
+                pick: '#picker',
+
+                // 只允许选择图片文件。
+                accept: {
+                    title: 'Images',
+                    extensions: 'txt,xlsx,xls,docx,pdf,gif,jpg,jpeg,bmp,png,zip,rar',
+                    mimeTypes: '*/image'
+                },
+                method: 'POST',
+            });
+            // 当有文件添加进来的时候
+            uploader.on('fileQueued', function (file) {  // webuploader事件.当选择文件后，文件被加载到文件队列中，触发该事件。等效于 uploader.onFileueued = function(file){...} ，类似js的事件定义。
+                var $li = $(
+                        '<div id="' + file.id + '" class="file-item thumbnail">' +
+                            '<img>' +
+                            '<div class="info">' + file.name + '</div>' +
+                        '</div>'
+                        ),
+                    $img = $li.find('img');
+                // $list为容器jQuery实例
+                $list.append($li);
+
+                // 创建缩略图
+                // 如果为非图片文件，可以不用调用此方法。
+                // thumbnailWidth x thumbnailHeight 为 100 x 100
+                uploader.makeThumb(file, function (error, src) {   //webuploader方法
+                    if (error) {
+                        $img.replaceWith('<span>不能预览</span>');
+                        return;
+                    }
+
+                    $img.attr('src', src);
+                }, thumbnailWidth, thumbnailHeight);
+            });
+            // 文件上传过程中创建进度条实时显示。
+            uploader.on('uploadProgress', function (file, percentage) {
+                var $li = $('#' + file.id),
+                    $percent = $li.find('.progress span');
+
+                // 避免重复创建
+                if (!$percent.length) {
+                    $percent = $('<p class="progress"><span></span></p>')
+                            .appendTo($li)
+                            .find('span');
+                }
+
+                $percent.css('width', percentage * 100 + '%');
+            });
+
+
+
+            // 文件上传成功，给item添加成功class, 用样式标记上传成功。
+            uploader.on('uploadSuccess', function (file, fileDate) {
+                $('#' + file.id).addClass('upload-state-done');
+                var fileInfo = $('#' + file.id).find(".info");
+                $(fileInfo).html("上传成功    " + fileInfo.html());
+                $.each(fileDate, function (idnex, item) {
+                    fileContext.push(item);
+                })
+            });
+
+            // 文件上传失败，显示上传出错。
+            uploader.on('uploadError', function (file) {
+                var $li = $('#' + file.id),
+                    $error = $li.find('div.error');
+
+                // 避免重复创建
+                if (!$error.length) {
+                    $error = $('<div class="error"></div>').appendTo($li);
+                }
+
+                $error.text('上传失败');
+            });
+
+            // 完成上传完了，成功或者失败，先删除进度条。
+            uploader.on('uploadComplete', function (file) {
+                $('#' + file.id).find('.progress').remove();
+            });
+
+
+
+            $btn.on('click', function () {
+                //console.log("上传...");
+                uploader.upload();
+                //console.log("上传成功");
+            });
+        }
+    </script>
+</body>
+</html>

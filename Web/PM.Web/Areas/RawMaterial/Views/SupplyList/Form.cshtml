@@ -1,0 +1,630 @@
+﻿@{
+    ViewBag.Title = "供应清单编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script src="~/Content/js/indextab.js?v=1.1" charset="gbk"></script>
+<script src="~/Content/js/commonView.js?v=1.4"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+
+    .ui-jqgrid tr.jqgrow td {
+        vertical-align: middle;
+    }
+</style>
+
+<!---------明细信息------->
+<script type="text/javascript">
+    var
+    mydata = [];
+    index = 1,
+    lastsel = undefined,
+    keyValue = $.request("keyValue");
+    type = $.request("type");
+
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "SupplyList")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form").formSerialize(data.Item1);
+                    var myData = data.Item2;
+                    lodeList(myData); //加载明细数据
+                }
+            });
+        }
+
+    });
+    var gridList = function () {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 180,
+            rownumbers: false,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                {
+                    label: '原材料编号',
+                    name: 'RawMaterialNum',
+                    width: 120,
+                    height: 10,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'RawMaterialNum' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '原材料名称',
+                    name: 'MaterialName',
+                    width: 100,
+                    height: 10,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MaterialName' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '计量单位',
+                    name: 'MeasurementUnit',
+                    hidden: true,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MeasurementUnit' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '计量单位',
+                    name: 'MeasurementUnitText',
+                    width: 60,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MeasurementUnitText' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '规格',
+                    name: 'Standard',
+                    width: 100,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'Standard' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '批次计划数量(kg)',
+                    name: 'BatchPlanQuantity',
+                    width: 95,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'BatchPlanQuantity' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '技术要求',
+                    name: 'TechnicalRequirement',
+                    width: 100,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'TechnicalRequirement' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '备注',
+                    name: 'Remarks',
+                    width: 100,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'Remarks' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '完成供货量(kg)',
+                    name: 'HasSupplier',
+                    width: 100,
+                    align: "left",
+                    sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'HasSupplier' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '合格供货量(kg)',
+                    name: 'PassCount',
+                    width: 100,
+                    align: "left",
+                    sortable: false,
+                    formatter: NewCellPassCount
+                },
+                {
+                    label: '批次计划编号',
+                    name: 'BatchPlanNum',
+                    hidden: true,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'BatchPlanNum' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '批次计划明细ID',
+                    name: 'BatchPlanItemId',
+                    hidden: true,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'BatchPlanItemId' + rowId + "\'";
+                    }
+                },
+                { label: '本次供货ID', name: 'HistoryId', hidden: true },
+                { label: '供货类型', name: 'GhType', hidden: true },
+                { label: 'BatchPlanItemNewCode', name: 'BatchPlanItemNewCode', hidden: true },
+                {
+                    label: '本次供货时间', name: 'ThisTime', width: 140, align: "left", sortable: false, editable: true, editoptions: {
+                        dataInit: function (el) {
+                            $(el).click(function () {
+                                WdatePicker();
+                            });
+                        }
+                    }, formatter: formatDatebox
+                },
+                {
+                    label: '本次供货量', name: 'ThisTimeCount', width: 100, align: "left", sortable: false, editable: true
+                },
+                { label: '', name: '', width: 40, align: "left", sortable: false, formatter: NewCellBcGhlOrRk },
+                { label: '验收不合格量(kg)', name: 'NoPass', width: 100, align: "left", sortable: false },
+                { label: '不合格原因', name: 'NoPassReason', width: 140, align: "left", sortable: false },
+                { label: '检测不合格量(kg)', name: 'Unqualified', width: 100, align: "left", sortable: false, formatter: NewCellUnqualified },
+                { label: '检验文件', name: 'EnclosureShow', width: 80, align: "left", sortable: false, formatter: ConfirmButton },
+                { label: '检验文件', name: 'Enclosure', hidden: true },
+                { label: 'HasSupplierOld', name: 'HasSupplierOld', hidden: true },
+                { label: 'ReturnTime', name: 'ReturnTime', hidden: true }
+
+            ],
+            gridComplete: function () {
+                $("div.unwritten").remove();
+                //var ids = $("#gridList").getDataIDs();
+                //if (ids.length > 0) {
+                //    var rowData = $("#gridList").getRowData(ids[0]);
+                //    if (rowData.GhType=="1") {
+                //        $("#gridList").jqGrid('editRow', ids[0], true);
+                //        $("#gridList>tbody").find("input:text").each(function () {
+                //            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                //            $(this).css("height", "20px").css("width", width + "px");
+                //        });
+                //    }
+                //}
+                var gridName = "gridList";
+                Merger(gridName, 'RawMaterialNum');
+                Merger(gridName, 'MaterialName');
+                Merger(gridName, 'MeasurementUnit');
+                Merger(gridName, 'MeasurementUnitText');
+                Merger(gridName, 'Standard');
+                Merger(gridName, 'BatchPlanQuantity');
+                Merger(gridName, 'TechnicalRequirement');
+                Merger(gridName, 'Remarks');
+                Merger(gridName, 'HasSupplier');
+                //Merger(gridName, 'PassCount');
+                Merger(gridName, 'BatchPlanNum');
+                Merger(gridName, 'BatchPlanItemId');
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                ////获取表格最后一行Id
+                //var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                //var id = selectedRowIds[selectedRowIds.length - 1];
+                //if (rowid && (rowid !== lastsel || rowid == id)) {//为了编辑最后行
+                //    $gridList.jqGrid('saveRow', lastsel);
+                //    var data = $("#" + rowid + ">td");
+                //    var GhType = data[14].innerHTML;
+                //    if (GhType == "2") {
+                //        $("#gridList").setColProp("ThisTime", { editable: false });
+                //        $("#gridList").setColProp("ThisTimeCount", { editable: false });
+                //    } else {
+                //        $("#gridList").setColProp("ThisTime", { editable: true });
+                //        $("#gridList").setColProp("ThisTimeCount", { editable: true });
+                //    }
+                //    $gridList.jqGrid('editRow', rowid, true);
+                //    lastsel = rowid;
+                //    $("#gridList>tbody").find("input:text").each(function () {
+                //        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                //        $(this).css("height", "20px").css("width", width + "px");
+                //    });
+                //}
+                valid(rowid);
+            },
+            beforeSelectRow: function (rowid, e) {
+                $gridList.jqGrid('setSelection', rowid);
+                valid(rowid);
+            }
+        });
+    }
+    //合格供货数
+    function NewCellPassCount(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.GhType == "2") {
+            if (rowObject.PassCount && rowObject.PassCount > 0) {
+                if (rowObject.NoPass && rowObject.NoPass > 0) {
+                    if (rowObject.Unqualified && rowObject.Unqualified > 0) {
+                        tdhtml += "<span style=\"color:red\">0</span>";
+                    } else {
+                        tdhtml += "<span style=\"color:red\">" + rowObject.PassCount + "</span>";
+                    }
+                } else {
+                    if (rowObject.Unqualified && rowObject.Unqualified > 0) {
+                        tdhtml += "<span style=\"color:red\">0</span>";
+                    } else {
+                        tdhtml += "<span>" + rowObject.PassCount + "</span>";
+                    }
+                }
+            }
+        }
+        return tdhtml;
+    }
+    //本次供货量、入库
+    function NewCellBcGhlOrRk(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.ThisTimeCount > 0) {
+            if (rowObject.GhType == "2") {
+                if (rowObject.InorderId == null || rowObject.InorderId == "" || rowObject.InorderId == undefined) {
+                    tdhtml +=
+                        '<span style=\"color:red\">&nbsp;&nbsp;未入库</span>';
+                }
+                else {
+                    tdhtml += '<span style=\"color:green\">&nbsp;&nbsp;已入库</span>'
+                }
+            }
+        }
+        return tdhtml;
+    }
+    //检测退回
+    function NewCellUnqualified(cellValue, options, rowObject) {
+        var tdhtml = rowObject.Unqualified;
+        if (rowObject.ReturnTime) {
+            tdhtml += "&nbsp;&nbsp;<span style='color:red'>已退回</span>";
+        }
+        return tdhtml;
+    }
+    //附件查看
+    function ConfirmButton(cellvalue, options, rowObject) {
+        var text = "";
+        if (rowObject.Enclosure) {
+            text += '<a class="btn btn-primary" style="padding:4px;margin-bottom: 3px" onclick="SeeEnclosure(\'' + rowObject.Enclosure + '\')">查看</a>'
+        }
+        return text;
+    }
+    function SeeEnclosure(Enclosure) {
+        showFile(Enclosure, "detail", "SupplyList");
+    }
+
+    //合并单元格
+    function Merger(gridName, CellName) {
+        //得到显示到界面的id集合
+        var mya = $("#" + gridName + "").getDataIDs();
+        //数据总行数
+        var length = mya.length;
+        //定义合并行数
+        var rowSpanTaxCount = 1;
+        for (var i = 0; i < length; i += rowSpanTaxCount) {
+            //从当前行开始比对下面的信息
+            var before = $("#" + gridName + "").jqGrid('getRowData', mya[i]);
+            rowSpanTaxCount = 1;
+            for (j = i + 1; j <= length; j++) {
+                //和上边的信息对比 如果值一样就合并行数+1 然后设置rowspan 让当前单元格隐藏
+                var end = $("#" + gridName + "").jqGrid('getRowData', mya[j]);
+                if (before[CellName] == end[CellName] && before["ID"] == end["ID"]) {
+                    rowSpanTaxCount++;
+                    $("#" + gridName + "").setCell(mya[j], CellName, '', { display: 'none' });
+                } else {
+                    break;
+                }
+            }
+            $("#" + gridName + "").setCell(mya[i], CellName, '', '', { rowspan: rowSpanTaxCount });
+        }
+    };
+
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        $("#" + rowid + "_ThisTimeCount")
+            .keyup(function () { regTextBox(this, 5); })
+            .bind("paste", function () { regTextBox(this, 5) })
+            .blur(function () { validHistory(this, rowid); })
+    }
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+
+    function validHistory(obj, rowid) {
+        var ThisTimeCount = parseFloat($(obj).val());//本次供货量
+        var rowData = $("#gridList").jqGrid("getRowData", rowid);
+        var HasSupplier = parseFloat(rowData.HasSupplierOld);//已供货量
+        var yghl = parseFloat(ThisTimeCount) + parseFloat(HasSupplier);
+        $(obj).parent().parent().children()[9].innerText = yghl;
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.MaterialCode); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.MaterialCode, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    };
+
+    //提交数据
+    function submitForm() {
+        if (!$('#form').formValid()) {
+            return false;
+        }
+        var jqGridData = GetGridRowData();//获取供货明细信息
+        var jqGridData2 = GetGridRowHistoryData();//获取供货历史明细信息
+        if (jqGridData.length < 1 || jqGridData2.length < 1) {
+            return false;
+        }
+        totalDemandNum();
+        var formData = $("#form").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "SupplyList")",
+            param: {
+                model: JSON.stringify(formData),
+                detail: JSON.stringify(jqGridData),
+                detail2: JSON.stringify(jqGridData2),
+                type: "Detail"
+            },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    };
+
+
+    //加载grid列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            var hasSupplier = parseFloat(item.HasSupplier);
+            if (isNaN(hasSupplier))
+                hasSupplier = 0;
+            var syghl = parseFloat(item.BatchPlanQuantity) - hasSupplier;//剩余供货量
+            if (type == "pl") {//供货完成
+                if (item.GhType == "1") {
+                    if (syghl > 0) {
+                        item.ThisTimeCount = syghl;
+                    } else {
+                        item.ThisTimeCount = 0;
+                    }
+                }
+                item.HasSupplier = hasSupplier + syghl;
+            } else {
+                if (item.GhType == "1") {
+                    item.ThisTimeCount = 0;
+                }
+            }
+            if (item.BatchPlanItemNewCode == "" ||
+                item.BatchPlanItemNewCode == null && item.BatchPlanItemNewCode == undefined) {
+                var count = 0;
+                for (var j = 0; j < mydata.length; j++) {
+                    if (mydata[j].BatchPlanItemId == item.BatchPlanItemId) {
+                        count++;
+                    }
+                }
+                item.BatchPlanItemNewCode = item.BatchPlanItemId + "_" + count;
+            }
+            if (item.NoPass <= 0) {
+                item.NoPass = "";
+            }
+            if (item.Unqualified <= 0) {
+                item.Unqualified = "";
+            }
+            item.HasSupplierOld = hasSupplier;
+            $("#gridList").jqGrid('addRowData', index, item);
+            if (item.GhType=="1") {
+                $("#gridList").jqGrid('editRow', index, true);
+            }
+        });
+        editRow(1);
+    }
+
+    //获取供货明细表1的数据
+    function GetGridRowData() {
+        //$("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs'); //获取多行的id
+        //全部结束编辑
+        if (ids.length > 0) {
+            for (var i = 0; i < ids.length; i++) {
+                $("#gridList").jqGrid('saveRow', ids[i]);
+            }
+        }
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData1 = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            var status = false;
+            $.each(columnData1,
+                function (index, item) {
+                    if (item.BatchPlanItemId == rowData.BatchPlanItemId) {
+                        status = true;
+                        return false;
+                    }
+                });
+            if (status == false) {
+                columnData1.push({
+                    ID: 0,
+                    RawMaterialNum: rowData.RawMaterialNum,
+                    Standard: rowData.Standard,
+                    MeasurementUnit: rowData.MeasurementUnit,
+                    BatchPlanQuantity: rowData.BatchPlanQuantity,
+                    TechnicalRequirement: rowData.TechnicalRequirement,
+                    HasSupplier: rowData.HasSupplier,
+                    Remarks: rowData.Remarks,
+                    BatchPlanNum: rowData.BatchPlanNum,
+                    MaterialName: rowData.MaterialName,
+                    ThisTimeCount: 0,
+                    BatchPlanItemId: rowData.BatchPlanItemId
+                });
+            }
+        });
+        return columnData1;
+    }
+
+    //获取供货明细表2的数据
+    function GetGridRowHistoryData() {
+        //$("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs'); //获取多行的id
+        //全部结束编辑
+        if (ids.length > 0) {
+            for (var i = 0; i < ids.length; i++) {
+                $("#gridList").jqGrid('saveRow', ids[i]);
+            }
+        }
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData2 = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            if (rowData.ThisTimeCount > 0) {
+                columnData2.push({
+                    ID: 0,
+                    BatchPlanItemId: rowData.BatchPlanItemId,
+                    ThisTime: rowData.ThisTime,
+                    ThisTimeCount: rowData.ThisTimeCount,
+                    BatchPlanItemNewCode: rowData.BatchPlanItemNewCode,
+                    BatchPlanNum: rowData.BatchPlanNum,
+                });
+            }
+        });
+        return columnData2;
+    }
+
+    //汇总明细需求数量
+    function totalDemandNum() {
+        var data = GetGridRowData();
+        if (data && data.length > 0) {
+            var total = 0;
+            for (var i = 0; i < data.length; i++) {
+                total += parseFloat(data[i].HasSupplier);
+            }
+            $("#HasSupplierTotal").val(total.toFixed(5));
+        } else {
+            $("#HasSupplierTotal").val("0.00000");
+        }
+    }
+
+    //编辑行
+    function editRow(type) {
+        if (type == 1) {
+            $("#gridList>tbody").find("input:text").each(function () {
+                var width = 75;
+                if ($(this)[0].name == "ThisTime") {
+                    width = 115;
+                } else if ($(this)[0].name == "ThisTimeCount") {
+                    width = 75;
+                }
+                var GhType = $(this).parent().parent().children()[14].innerHTML;
+                if (GhType=="1") {
+                    $(this).css("height", "20px").css("width", width + "px");
+                }
+            });
+        }
+        else {
+            var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+            for (var i = 0; i < ids.length; i++) {
+                var rowData = $("#gridList").jqGrid("getRowData", ids[i]);
+                if (rowData.GhType == "1") {
+                    $("#gridList").jqGrid('editRow', ids[i], true);
+                }
+            }
+            editRow(1);
+        }
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <div id="MXXXInfo" style="padding-top: 5px; margin:10px;">
+        <div class="toolbar">
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+    <form id="form">
+        <!---------标识ID------->
+        <input id="ID" name="ID" type="hidden" />
+        <input id="BatchPlanTotal" name="BatchPlanTotal" type="hidden" />
+        <input id="HasSupplierTotal" name="HasSupplierTotal" type="text" style="visibility:hidden" />
+        <table class="form" style="margin-top:-20px;">
+            <tr>
+                <th class="formTitle" style="width:20px;">备注</th>
+                <td class="formValue">
+                    <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;width:98%; padding-right: 2px;"></textarea>
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>

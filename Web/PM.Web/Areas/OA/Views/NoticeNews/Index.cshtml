@@ -1,0 +1,319 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<div style="width: 100%;margin-top: 5px;height:99%;position:absolute">
+    <div id="DialogDiv1" style="width: 25%; height: 48%; float: left; margin-right: 5px; border-color: #1ABC9C;margin-bottom:0px;">
+        <table id="leftgridList"></table>
+    </div>
+    <div id="DialogDiv2" style="width: 70%; height: 48%; float: left; margin-right: 5px; border-color: #1ABC9C; margin-bottom: 0px; ">
+        <div style="margin-bottom:5px;">
+            <button id="btn_saveNoticeNews1" type="button" class="btn  btn-primary" onclick="SaveUpdate();">修改</button>
+        </div>
+        <table id="rightgridList1"></table>
+    </div>
+    <div id="DialogDiv3" style="width: 25%; height: 48%; float: left; margin-right: 5px; border-color: #1ABC9C; margin-bottom: 0px; ">
+        <div style="width:100%;height:35px;padding-bottom:5px;">
+            <div style="height: 30px; float: left;line-height:2.5;">
+                <input value="2" type="radio" name="OrgType" checked="checked" />经理部&nbsp;
+                <input value="3" type="radio" name="OrgType" />分部&nbsp;
+                <input value="4" type="radio" name="OrgType" />工区&nbsp;
+                <input value="1" type="radio" name="OrgType" />加工厂&nbsp;
+            </div>
+        </div>
+        <table id="centergridList"></table>
+    </div>
+    <div id="DialogDiv4" style="width: 70%; height: 48%; float: left; margin-right: 5px; border-color: #1ABC9C; margin-bottom: 0px; ">
+        <div style="margin-bottom:5px;">
+            <button id="btn_saveNoticeNews2" type="button" class="btn  btn-primary" onclick="SubmitForm2();">保存</button>
+        </div>
+        <table id="rightgridList2"></table>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        leftgridList();//获取菜单信息
+        rightgridList1();//消息推送
+        centergridList();//获取组织机构
+        rightgridList2();
+        initControl();
+    });
+    //初始化
+    function initControl() {
+        $("input[type='radio']").on("click",
+         function () {
+             var OrgType = $("input[name='OrgType']:checked").val();
+             $("#centergridList").jqGrid('setGridParam', {
+                 postData: { OrgType: OrgType },
+             }).trigger('reloadGrid');
+             //加载右边消息推送信息
+             $("#rightgridList2").jqGrid('setGridParam', {
+                 postData: { OrgType: OrgType, DeptId: '', RoleId: '', PersonnelSource: '', PersonnelCode: '', ProjectId: '', NewsType: 1 },
+             }).trigger('reloadGrid');
+         });
+    }
+    //获取菜单
+    function leftgridList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/OA/FlowDefine/GetTreeGridJsonNew",
+            height: 265,
+            colModel: [
+                { label: "菜单编码", name: "MenuCode", hidden: true, key: true },
+                { label: '菜单名称', name: 'MenuName', width: 240, align: 'left' },
+                { label: '父级菜单编码', name: 'MenuPcode', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'MenuName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                $("#rightgridList1").jqGrid('setGridParam', {
+                    postData: { MenuCode: ucode },
+                }).trigger('reloadGrid');
+            }
+        });
+    }
+    //加载推送消息
+    function rightgridList1() {
+        var $gridList = $("#rightgridList1");
+        $gridList.dataGrid({
+            url: '/OA/NoticeNews/GetNoticeNewsList',
+            height: 229,
+            colModel: [
+               { label: "主键", name: "ID", hidden: true },
+               { label: "通知消息编号", name: "NoticeNewsCode", key: true, hidden: true },
+               { label: "通知消息名称", name: "NoticeNewsName", width: 240, align: 'left' },
+               { label: "通知消息前置条件", name: "NoticeNewsQzTj", width: 260, align: 'left' },
+               { label: "App", name: "App", hidden: true },
+               {
+                   label: '短信', name: 'AppNew', width: 60, align: 'left', sortable: false,
+                   formatter: formatterApp
+               },
+               { label: "Pc", name: "Pc", hidden: true },
+               {
+                   label: '客户端', name: 'PcNew', width: 60, align: 'left', sortable: false,
+                   formatter: formatterPc
+
+               },
+               { label: "消息通知期限", name: "NoticeNewsFrequency", width: 80, align: 'left' },
+               {
+                   label: '是否启用', name: 'IsStart', width: 65, align: 'left', sortable: false, formatter: IsStartformatter
+               },
+               { label: "项目id", name: "ProjectId", hidden: true },
+            ],
+            multiselect: false,
+            sortname: 'UserTypeId',
+            viewrecords: true,
+            gridComplete: function () {
+                $("div.unwritten").remove();
+            },
+        });
+    }
+    //根据单元格结果显示复选框(0未选中 1选中)
+    function IsStartformatter(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (cellValue == 0) {
+            tdhtml += "<i class=\"fa fa-toggle-off\"></i>";
+        } else {
+            tdhtml += "<i class=\"fa fa-toggle-on\"></i>";
+        }
+        return tdhtml;
+    }
+    //根据单元格结果显示复选框(0未选中 1选中)
+    function formatterApp(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.App == 1) {
+            tdhtml = "<input type=\"checkbox\" checked = \"checked\" id=\"chx" + rowObject.NoticeNewsCode + "-App\" disabled=\"disabled\"/>";
+        } else {
+            tdhtml = "<input type=\"checkbox\" id=\"chx" + rowObject.NoticeNewsCode + "-App\"  disabled=\"disabled\"/>";
+        }
+        return tdhtml;
+    }
+    //根据单元格结果显示复选框(0未选中 1选中)
+    function formatterPc(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.Pc == 1) {
+            tdhtml = "<input type=\"checkbox\" checked = \"checked\" id=\"chx" + rowObject.NoticeNewsCode + "-Pc\" disabled=\"disabled\"/>";
+        } else {
+            tdhtml = "<input type=\"checkbox\" id=\"chx" + rowObject.NoticeNewsCode + "-Pc\" disabled=\"disabled\"/>";
+        }
+        return tdhtml;
+    }
+    //修改
+    function SaveUpdate() {
+        var keyValue = $("#rightgridList1").jqGridRowValue().ID;
+        if (keyValue) {
+            var where = "?type=edit&keyValue=" + keyValue;
+            CommonOpen("Form", "修改通知信息", "@Url.Action("Form", "NoticeNews")" + where, true, true)
+        }
+        else {
+            $.modalMsg("请选择要修改通知信息", "warning");
+            return false;
+        }
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "560px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //获取组织部门角色人员
+    function centergridList() {
+        var $leftgridList = $("#centergridList");
+        $leftgridList.dataGrid({
+            url: '/Flow/Flow/GetDeptOrRoleOrUserNew',
+            height: 228,
+            colModel: [
+                { label: '组织机构', name: 'Name', width: 220, align: 'left', sortable: false, },
+                { label: "编号", name: "id", hidden: true, key: true },
+                { label: "部门id", name: "DeptId", hidden: true },
+                { label: "部门名称", name: "DeptName", hidden: true },
+                { label: "角色id", name: "RoleId", hidden: true },
+                { label: "角色名称", name: "RoleName", hidden: true },
+                { label: "项目id", name: "ProjectId", hidden: true },
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'Name',//树型结构在哪列显示
+            rownumbers: false,
+            beforeSelectRow: function (rowid, e) {
+                //2、判断是否选择了部门
+                var druData = $("#centergridList").jqGrid('getRowData', rowid);
+                if (druData.level == "0") {
+                    //选择了部门
+                    $.modalMsg("审批超时预警组织机构不能选择部门", "warning");
+                    return false;
+                }
+                var PersonnelCode = rowid;
+                var PersonnelSource = "Role";
+                if (druData.level == "2") {
+                    var a = rowid.split('-');
+                    PersonnelCode = a[0];
+                    PersonnelSource = "Personnel";
+                }
+                var OrgType = $("input[name='OrgType']:checked").val();
+                //加载右边消息推送信息
+                $("#rightgridList2").jqGrid('setGridParam', {
+                    postData: { OrgType: OrgType, DeptId: druData.DeptId, RoleId: druData.RoleId, PersonnelSource: PersonnelSource, PersonnelCode: PersonnelCode, ProjectId: druData.ProjectId, NewsType: 1 },
+                }).trigger('reloadGrid');
+            }
+        });
+    }
+
+    //加载推送消息
+    function rightgridList2() {
+        var $gridList = $("#rightgridList2");
+        $gridList.dataGrid({
+            url: '/OA/NoticeNews/GetNoticeNewsList2',
+            height: 229,
+            multiselect: true,//不显示每一列前面的复选框
+            colModel: [
+               { label: "主键", name: "id", hidden: true, key: true },
+               { label: "通知消息编号", name: "NoticeNewsCode", hidden: true },
+               { label: "通知消息名称", name: "NoticeNewsName", width: 230, align: 'left' },
+               { label: "通知消息前置条件", name: "NoticeNewsQzTj", width: 230, align: 'left' },
+               { label: "App", name: "App", hidden: true },
+               {
+                   label: '短信', name: 'AppNew', width: 60, align: 'left', sortable: false,
+                   formatter: formatterApp2
+               },
+               { label: "Pc", name: "Pc", hidden: true },
+               {
+                   label: '客户端', name: 'PcNew', width: 60, align: 'left', sortable: false,
+                   formatter: formatterPc2
+               },
+               { label: "项目id", name: "ProjectId", hidden: true },
+               { label: "NewsType", name: "NewsType", hidden: true },
+               { label: "IsXz", name: "IsXz", hidden: true },
+            ],
+            sortname: 'UserTypeId',
+            viewrecords: true,
+            gridComplete: function () {
+                $("#rightgridList2>tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+                var ids = $("#rightgridList2").getDataIDs();
+                for (var i = 0; i < ids.length; i++) {
+                    var rowData = $("#rightgridList2").getRowData(ids[i]);
+                    if (rowData.IsXz > 0) {
+                        $("#rightgridList2").setSelection(ids[i], false);//默认选中
+                    }
+                }
+            },
+        });
+    }
+    //根据单元格结果显示复选框(0未选中 1选中)
+    function formatterApp2(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.App == 1) {
+            tdhtml = '<input type="checkbox" checked = "checked" id="chx' + rowObject.NoticeNewsCode + '-App" disabled="disabled"/>';
+        } else {
+            tdhtml = '<input type="checkbox" id="chx' + rowObject.NoticeNewsCode + '-App" disabled="disabled"/>';
+        }
+        return tdhtml;
+    }
+    function formatterPc2(cellValue, options, rowObject) {
+        if (rowObject.Pc == 1) {
+            tdhtml = '<input type="checkbox" checked = "checked" id="chx' + rowObject.NoticeNewsCode + '-Pc" disabled="disabled"/>';
+        } else {
+            tdhtml = '<input type="checkbox" id="chx' + rowObject.NoticeNewsCode + '-Pc" disabled="disabled"/>';
+        }
+        return tdhtml;
+    }
+    //保存
+    function SubmitForm2() {
+        var zzjgId = $("#centergridList").jqGrid('getGridParam', 'selrow');
+        if (zzjgId) {
+            var zzjgData = $("#centergridList").jqGrid('getRowData', zzjgId);
+            var PersonnelCode = zzjgId;
+            var PersonnelSource = "Role";
+            if (zzjgData.level == "2") {
+                var a = zzjgId.split('-');
+                PersonnelCode = a[0];
+                PersonnelSource = "Personnel";
+            }
+            var OrgType = $("input[name='OrgType']:checked").val();
+            var ids = $('#rightgridList2').jqGrid('getGridParam', 'selarrrow');
+            var columnData = [];
+            for (var i = 0; i < ids.length; i++) {
+                var rowData = $("#rightgridList2").jqGrid("getRowData", ids[i]);
+                rowData.id = 0;
+                rowData.NoticeNewsCode = rowData.NoticeNewsCode;
+                rowData.DeptId = zzjgData.DeptId;
+                rowData.RoleId = zzjgData.RoleId;
+                rowData.PersonnelSource = PersonnelSource;
+                rowData.PersonnelCode = PersonnelCode;
+                rowData.OrgType = OrgType;
+                rowData.ProjectId = zzjgData.ProjectId;
+                rowData.NewsType = rowData.NewsType;
+                delete rowData.AppNew;
+                delete rowData.PcNew;
+                delete rowData.Pc;
+                delete rowData.App;
+                columnData.push(rowData);
+            }
+            $.submitForm({
+                url: "@Url.Action("submitForm2", "NoticeNews")",
+                param: { postData: JSON.stringify(columnData), OrgType: OrgType, DeptId: zzjgData.DeptId, RoleId: zzjgData.RoleId, PersonnelSource: PersonnelSource, PersonnelCode: PersonnelCode, ProjectId: zzjgData.ProjectId, NewsType: 1 },
+                success: function () {
+                    $.currentWindow().$("#rightgridList1").trigger("reloadGrid");
+                }
+            });
+        } else {
+            //选择了部门
+            $.modalMsg("请先选择左边的组织机构信息", "warning");
+            return false;
+        }
+
+    }
+
+</script>

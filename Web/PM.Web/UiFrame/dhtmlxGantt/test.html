@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Custom sorting function</title>
+</head>
+<script src="dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+<script src="api.js" type="text/javascript" charset="utf-8"></script>
+<script src="ext/dhtmlxgantt_critical_path.js" type="text/javascript" charset="utf-8"></script>
+<script src="ext/dhtmlxgantt_tooltip.js" type="text/javascript" charset="utf-8"></script>
+
+<script src="locale/locale_cn.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="skins/dhtmlxgantt_terrace.css" type="text/css" media="screen" title="no title" charset="utf-8">
+<script src="testdata.js" type="text/javascript" charset="utf-8"></script>
+<body>
+    <input value="导出为PDF" type="button" onclick='gantt.exportToPDF()' style='margin:20px;'>
+    <input value="导出为PNG" type="button" onclick='exportToPNG()' style='margin:20px;'>
+    <input value="导出为Excel" type="button" onclick='gantt.exportToExcel()' style='margin:20px;'>
+    <input value="导出为MSProject" type="button" onclick='gantt.exportToMSProject()' style='margin:20px;'>
+
+<div id="gantt_here" style='width:100%; height:420px;'></div>
+
+
+<script type="text/javascript">  
+	gantt.config.readonly = true;	//只读		
+	//gantt.config.keep_grid_width = false;
+	//gantt.config.drag_resize = false;
+	//gantt.config.drag_progress = false;
+	//gantt.config.drag_links = false;
+	//gantt.config.drag_lightbox = false;
+	//gantt.config.drag_move = false;
+	//gantt.config.details_on_dblclick = false;
+	
+	gantt.config.highlight_critical_path = true; //显示关键路径
+	//gantt.config.grid_resize = true;
+	//gantt.config.show_grid = true; //显示grid
+	//gantt.config.show_chart = true;
+	//gantt.config.show_errors = true;
+	
+	//gantt.config.grid_width = 400;//表格宽度	
+	//gantt.config.autosize = "xy"; //自动大小时，控件本身的滚动条不会出现
+	gantt.config.row_height = 30; //设置表格行高
+	gantt.config.min_column_width = 50;//设置图形区域最小列宽
+	gantt.config.task_height = 18;//设置任务图形高度
+	gantt.config.min_grid_column_width = 10;//设置数据表格拖动时的最小调整宽度
+	gantt.config.open_tree_initially = true;//设置初始化时展开所有节点
+	//gantt.config.order_branch = true;//允许通过表格拖动调整节点顺序
+	//gantt.config.order_branch_free = true;//允许通过表格拖动节点（包括其下级节点一起）
+	
+	
+	/*日期格式*/
+	gantt.config.scale_unit = "month";
+	gantt.config.date_scale = "%Y %F";
+	gantt.config.scale_height = 50;
+	gantt.config.subscales = [
+		{unit:"day", step:1, date:"%D, %j" }
+	];
+	//gantt.config.start_date = new Date(2013, 08, 10);//设置开始日期刻度
+	//gantt.config.end_date = new Date(2013, 08, 20);//设置结束日期刻度
+	gantt.config.start_on_monday = true;//设置周开始于星期一
+	gantt.config.skip_off_time = true;//隐藏非工作时间
+	gantt.config.duration_unit = "day";
+	gantt.config.work_time = true;	
+	gantt.setWorkTime({day : 6, hours : false});//设置星期六为非工作日
+	gantt.setWorkTime({day : 7, hours : false});//设置星期天为非工作日
+	gantt.setWorkTime({date : '2013-04-02', hours : false});//设置指定日期为非工作日	
+	
+	/*定义任务列表grid列*/
+	gantt.config.columns = [
+        { name: "$index", label: "任务顺序", align: "center", width: 25, resize: true },
+		{ name: "id", label: "序号", align: "center", width: 25, resize: true },
+        {name:"text",       label:"任务名称",  tree:true, align:"left", width:150, resize:true},
+        { name: "start_date", label: "开始日期", align: "right", width: 70, resize: true },
+		{ name: "end_date", label: "结束日期", align: "right", width: 70, resize: true },
+        {name:"priority",   label:"优先级",   align: "center", resize:true, template:function(obj){
+            if (obj.priority== 1) return "High";
+            if (obj.priority== 2) return "Normal";
+            return "Low";
+        }},
+		{ name: "duration", label: "工期", align: "center", width: 30, resize: true },
+		{name:"users", label:"责任人", align: "center", resize:true}
+    ];
+		
+    gantt.init("gantt_here");
+    gantt.parse(demo_tasks);
+	
+	/*相关方法示例*/
+	//计算工期
+	gantt.calculateDuration(new Date(2013,04,3), new Date(2013,04,10));
+	//根据开始日期、工期、工期度量单位计算结束日期
+	gantt.calculateEndDate(new Date(2013,04,3),5,"day");	
+	//选中指定ID的任务	 
+	gantt.selectTask("2");
+	//获取选中的任务ID(id可为数字或字符)
+	gantt.getSelectedId();
+	//获取任务节点在树中的index
+	gantt.getGlobalTaskIndex("2");
+	//清除所有任务节点
+	//gantt.clearAll(); 
+	//加载数据
+	//gantt.load("url","json", function(){ //specifying the callback function 
+	//	alert("Data has been successfully loaded");
+	//});
+	
+	/*相关事件示例*/
+	//单击任务事件
+	//gantt.attachEvent("onTaskClick", function(id,e){		
+	//});
+	//双击事件
+	//gantt.attachEvent("onTaskDblClick", function(id,e){		
+    //});
+	gantt.attachEvent("onRowDragEnd", function (id, target) {
+	    //any custom logic here
+	});
+	gantt.attachEvent("onAfterTaskDrag", function (id, mode, e) {
+	    //any custom logic here
+	});
+
+	gantt.attachEvent("onAfterLinkAdd", function (id, item) {
+	    //any custom logic here
+	});
+	gantt.attachEvent("onAfterLinkUpdate", function (id, item) {
+	    //any custom logic here
+	});
+	gantt.attachEvent("onAfterLinkDelete", function (id, item) {
+	    //any custom logic here
+	});
+	
+
+	function exportToPNG() {
+	    gantt.exportToPNG({
+	        name: "mygantt.png",
+	        header: "<h1>自定义header</h1>",
+	        footer: "<h4>自定义footer</h4>"//,
+	        //locale: "en",
+	        //start: "01-04-2013",
+	        //end: "11-04-2013",
+	        //skin: 'terrace'
+	    });
+	}
+	
+</script>
+</body>

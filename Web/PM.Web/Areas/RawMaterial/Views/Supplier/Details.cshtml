@@ -1,0 +1,61 @@
+﻿@{
+    ViewBag.Title = "供应商查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    $(function () {
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "Supplier")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data[0]);
+                }
+            });
+        }
+    });
+
+</script>
+
+<div style="padding-top: 5px;margin-right:50px;">
+    <form id="formd">
+        <input id="ID" name="ID" type="hidden" />
+        <table class="form">
+            <tr>
+                <th class="formTitle">供应商编号<span class="required1">*</span></th>
+                <td class="formValue">
+                    <input id="SupplierCode" name="SupplierCode" type="text" disabled="disabled" class="form-control required" />
+                </td>
+                <th class="formTitle">供应商名称<span class="required1">*</span></th>
+                <td class="formValue">
+                    <input id="SupplierName" name="SupplierName" type="text" class="form-control required" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">供应商地址</th>
+                <td class="formValue" colspan="3">
+                    <input id="SupplierAdd" name="SupplierAdd" type="text" class="form-control" />
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">备注</th>
+                <td class="formValue" colspan="3">
+                    <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <th class="formTitle">录入人</th>
+                <td class="formValue">
+                    <input id="InsertUserName" name="InsertUserName" type="text" disabled="disabled" class="form-control" />
+                </td>
+                <th class="formTitle">录入时间</th>
+                <td class="formValue">
+                    <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control" />
+                </td>
+            </tr>
+        </table>
+    </form>
+</div>

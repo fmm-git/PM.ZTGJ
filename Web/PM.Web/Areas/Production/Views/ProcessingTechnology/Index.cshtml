@@ -1,0 +1,144 @@
+﻿@{
+    ViewBag.Title = "加工工艺列表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/Production/ProcessingTechnology/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: true,
+            treeGridModel: "adjacency",
+            rownumbers: false,
+            url: "@Url.Action("GetGridJson", "ProcessingTechnology")",
+            height: $(window).height() - 130,
+            colModel: [
+                { label: '加工工艺', name: 'ProcessingTechnologyName', width: 200, align: 'left', sortable: false },
+                { label: "主键", name: "ID", key: true, hidden: true, frozen: true },
+                { label: '排序', name: 'Sort', width: 150, align: 'left ', sortable: false }
+            ],
+            sortname: 'Sort',
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            }
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    }
+    function btn_add() {
+        $.modalOpen({
+            id: "Form",
+            title: "新增加工工艺",
+            url: "/Production/ProcessingTechnology/Form?type=add",
+            width: "40%",
+            height: "300px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Form",
+                title: "修改加工工艺",
+                url: "/Production/ProcessingTechnology/Form?keyValue=" + keyValue + "&type=edit",
+                width: "40%",
+                height: "300px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].submitForm();
+                }
+            });
+        } else {
+            $.modalMsg("请选择要修改的加工工艺信息", "warning");
+            return false;
+        }
+    }
+    function btn_delete() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.deleteForm({
+                url: "/Production/ProcessingTechnology/DeleteForm",
+                param: { keyValue: keyValue },
+                success: function () {
+                    $.currentWindow().$("#gridList").resetSelection();
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            });
+        } else {
+            $.modalMsg("请选择要删除的加工工艺信息", "warning");
+            return false;
+        }
+    }
+    function btn_details() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Details",
+                title: "查看加工工艺",
+                url: "/Production/ProcessingTechnology/Details?keyValue=" + keyValue,
+                width: "40%",
+                height: "300px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要查看的加工工艺信息", "warning");
+            return false;
+        }
+    }
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "ProcessingTechnology")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+<div class="topPanel">
+    <div id="toolbar" class="toolbar">
+        <div class="btn-group">
+            <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+        </div>
+    </div>
+    @*<div class="search">
+        <table>
+            <tr>
+                <td>
+                    <div class="input-group">
+                        <input id="ProcessingTechnologyName" name="ProcessingTechnologyName" type="text" placeholder="加工工艺名称" value="" class="form-control" />
+                    </div>
+                </td>
+                <td>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <a id="btn_search" class="btn btn-primary">查询</a>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>*@
+</div>
+<div class="gridPanel">
+    <table id="gridList"></table>
+    <div id="gridPager"></div>
+</div>

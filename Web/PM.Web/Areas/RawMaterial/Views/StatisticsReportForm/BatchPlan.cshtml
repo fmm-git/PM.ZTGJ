@@ -1,0 +1,51 @@
+﻿@{
+    ViewBag.Title = "BatchPlan";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script>
+    var ProjectId = $.request("ProjectId");
+    var SiteCode = $.request("SiteCode");
+    var MaterialCode = $.request("MaterialCode");
+    var BegTime = $.request("BegTime");
+    var EndTime = $.request("EndTime");
+    $(function () {
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetBatchPlanGridJson", "StatisticsReportForm")",
+            postData: { SiteCode: SiteCode, ProjectId: ProjectId, MaterialCode: MaterialCode, BegTime: BegTime, EndTime: EndTime },
+            height: $(window).height() - 78,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "批次编号", name: "BatchPlanNum", width: 120, align: 'left', sortable: false },
+                { label: "计划编号", name: "RawMaterialDemandNum", width: 120, align: 'left', sortable: false },
+                { label: '钢筋类型', name: 'RebarTypeNew', width: 80, align: 'left', sortable: false },
+                { label: '加工厂名称', name: 'ProcessFactoryName', width: 140, align: 'left', sortable: false },
+                { label: '原材料编号', name: 'RawMaterialNum', width: 140, align: 'left', sortable: false },
+                { label: '原材料名称', name: 'MaterialName', width: 140, align: 'left', sortable: false },
+                { label: "批次总量(kg)", name: "BatchPlanQuantity", width: 80, align: 'left', sortable: false },
+                { label: '交货时间', name: 'ArrivalDate', width: 120, align: 'left', sortable: false },
+                { label: "供货总量(kg)", name: "HasSupplier", width: 80, align: 'left', sortable: false },
+                { label: '供货时间', name: 'SupplyDate', width: 120, align: 'left', sortable: false },
+            ],
+            pager: "#gridPager",
+            sortname: 'DemandPlanCode',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+    }
+</script>
+
+<script src="~/Content/js/Comm.js"></script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-center">
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

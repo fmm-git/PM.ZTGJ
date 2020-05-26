@@ -1,0 +1,99 @@
+﻿@{
+    ViewBag.Title = "表单流程节点区域设置";
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>表单流程节点区域设置</title>
+    <link href="~/UiFrame/EasyUi/themes/gray/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+    <link href="~/UiFrame/pmicon.css" rel="stylesheet" />
+    <script src="~/UiFrame/EasyUi/jquery.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/EasyUi/easyui-lang-zh_CN.js"></script>
+    <script src="~/UiFrame/jeasyui.extensions.js"></script>
+    <script src="~/SysConfig/genericOperate.js"></script>
+</head>
+<body>
+    <table id='NodeFormPartList' class="easyui-datagrid" data-options="pagination:false,singleSelect:true,rownumbers:true,fit:true" toolbar="#tlbFormPart">
+        <thead>
+            <tr>
+                <th data-options="field:'ck',checkbox:true"></th>
+                <th data-options="field:'FormCode',width:100">表单代码</th>
+                <th data-options="field:'partName',width:150">区域名称（描述）</th>
+                <th data-options="field:'partSelector',width:200">区域选择器</th>
+                <th data-options="field:'partSubmitFunction',width:150">区域提交函数</th>
+            </tr>
+        </thead>
+    </table>
+    <div id="tlbFormPart" style="height: auto">
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="SaveNodePart()">保存</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'pmicon-remove-16',plain:true" onclick="DelNodePart()">删除</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'pmicon-close-16',plain:true" onclick="javascript:parent.$('#winFormPart').window('close')">关闭</a>
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#NodeFormPartList').datagrid({
+                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetFormPartList" })'+"&FlowCode=@ViewBag.FlowCode&FlowNodeCode=@ViewBag.FlowNodeCode",
+                onLoadSuccess: function (data) {
+                    $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetNodeFormPart" })' + "&FlowCode=@ViewBag.FlowCode&FlowNodeCode=@ViewBag.FlowNodeCode",
+                        function (result) {
+                            if (result) {
+                                var rows = $('#NodeFormPartList').datagrid('getRows');
+                                for (var i = 0; i < rows.length; i++) {
+                                    if (result[0].partSelector == rows[i].partSelector) {
+                                        $('#NodeFormPartList').datagrid('selectRow', i);
+                                        return;
+                                    }
+                                }
+                            }
+
+                        }, 'json')
+                }
+            });
+
+        })
+        function SaveNodePart() {
+            var saveUrl = '';
+            var row = $('#NodeFormPartList').datagrid('getSelected');
+            if (row) {
+                saveUrl = '@Url.Action("ItemCUD", "Flow", new { FunCode = "AddFlowNodeFormPart" })' + "&FlowCode=@ViewBag.FlowCode&FlowNodeCode=@ViewBag.FlowNodeCode";
+                $.post(saveUrl, { FormCode: row.FormCode, partSelector: row.partSelector, partSubmitFunction: row.partSubmitFunction, partName: row.partName }, function (result) {
+                    if (result.success) {
+                        $.messager.alert('操作提示', result.message, 'info');
+                    } else {
+                        $.messager.alert('操作提示', result.message, 'error');
+                    }
+                }, 'json')
+            } else {
+                saveUrl = '@Url.Action("ItemCUD", "Flow", new { FunCode = "DelFlowNodeFormPart" })' + "&FlowCode=@ViewBag.FlowCode&FlowNodeCode=@ViewBag.FlowNodeCode";
+                $.post(saveUrl, function (result) {
+                    //result = eval('(' + result + ')');
+                    if (result.success) {
+                        $.messager.alert('操作提示', result.message, 'info');
+                    } else {
+                        $.messager.alert('操作提示', result.message, 'error');
+                    }
+                }, 'json')
+            }
+        }
+        function DelNodePart() {
+            var saveUrl = '@Url.Action("ItemCUD", "Flow", new { FunCode = "DelFlowNodeFormPart" })' + "&FlowCode=@ViewBag.FlowCode&FlowNodeCode=@ViewBag.FlowNodeCode";
+            $.post(saveUrl, function (result) {
+                //result = eval('(' + result + ')');
+                if (result.success) {
+                    $.messager.alert('操作提示', result.message, 'info');
+                    $('#NodeFormPartList').datagrid('reload');
+                } else {
+                    $.messager.alert('操作提示', result.message, 'error');
+                }
+            }, 'json')
+        }
+    </script>
+</body>
+</html>
+
+

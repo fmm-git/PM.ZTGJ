@@ -1,0 +1,68 @@
+﻿@{
+    ViewBag.Title = "订单更多";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Highcharts-8.0.0/highcharts.js"></script>
+
+<div style="margin-top: 10px;">
+    <div id="container"></div>
+</div>
+<script type="text/javascript">
+    var request = {};
+    request.DayMonth = $.request("DayMonth");
+    request.SiteCode = $.request("SiteCode");
+    request.ProcessFactoryCode = $.request("ProcessFactoryCode");
+    $(function () {
+        GetOrderMore();
+    });
+
+    function GetOrderMore() {
+        $.ajax({
+            url: "@Url.Action("GetOrderMore", "Home")",
+            data: request,
+            dataType: "json",
+            success: function (data) {
+                CreatChar(data);
+            }
+        });
+    }
+
+    function CreatChar(dataList) {
+        var chart = Highcharts.chart("container", {
+            chart: {
+                type: 'column'
+            },
+            title: null,
+            tooltip: {
+                pointFormat: '{series.name}:{point.y}kg'
+            },
+            plotOptions: {
+                series: {
+                    dataLabels: {
+                        align: 'left',
+                        enabled: true,
+                        format: '{y} kg'
+                    }
+                }
+            },
+            credits: {
+                enabled: false // 禁用版权信息GQSHOW
+            },
+            xAxis: {
+                type: 'category',
+                categories: [
+                '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'
+                ],
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                },
+            },
+            series: [{
+                name: '接单量',
+                data: dataList
+            }]
+        });
+    }
+</script>

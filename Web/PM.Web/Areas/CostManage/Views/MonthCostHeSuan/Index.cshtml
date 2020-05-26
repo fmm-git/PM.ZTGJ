@@ -1,0 +1,160 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<div class="ui-layout-center">
+    <div class="topPanel divwidth1">
+        <div class="topPanel-btn divwidth2" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search divwidth2">
+            <form id="RMForm">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="HeSuanCode" name="HeSuanCode" type="text" class="form-control" placeholder="核算编号" style="width: 109px; margin-left: 5px;">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_search1">查询</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/CostManage/MonthCostHeSuan/Index");
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 128;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 178;
+        } else {
+            Height = 128;
+        }
+        //首页数据访问
+        gridList(Height);
+    })
+
+    //首页数据访问
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/CostManage/MonthCostHeSuan/GetGridJson",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '核算编号', name: 'HeSuanCode', width: 140, align: 'left', sortable: false },
+                { label: '所属加工厂', name: 'ProcessFactoryName', width: 140, align: 'left', sortable: false },
+                { label: '核算月份', name: 'HeSuanMonth', width: 80, align: 'left', sortable: false },
+                { label: '加工总量(T)', name: 'MachiningTotal', width: 120, align: 'left', sortable: false },
+                { label: '合计收入(元)', name: 'TotalIncome', width: 120, align: 'left', sortable: false },
+                { label: '合计成本(元)', name: 'TotalCost', width: 120, align: 'left', sortable: false },
+                { label: '平均成本(元)', name: 'AvgCost', width: 120, align: 'left', sortable: false },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入时间', name: 'InsertTime', width: 140, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();//双击执行查看事件
+            },
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                $('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            pager: "#gridPager",//分页DIV-ID
+            sortname: 'InsertTime',//按照什么列名排序
+            sortorder: "desc",
+            viewrecords: false,
+            rownumbers: true,
+        });
+        //查询按钮事件
+        $("#btn_search1").click(function () {
+                $gridList.jqGrid('setGridParam', {
+                    postData: $("#RMForm").formSerialize(),
+                    page: 1
+                }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search1').trigger("click");
+            }
+        }
+    }
+
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增月成本核算", "@Url.Action("Form", "MonthCostHeSuan")" + where, true, true)
+    }
+
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改月成本核算",
+            url: "@Url.Action("Form", "MonthCostHeSuan")",
+            anyUrl: "@Url.Action("AnyInfo", "MonthCostHeSuan")",
+            });
+    }
+
+    //删除按钮事件
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "MonthCostHeSuan")",
+            anyUrl: "@Url.Action("AnyInfo", "MonthCostHeSuan")",
+            isdel: true,
+        });
+    }
+
+
+    //查看按钮事件
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看月成本核算",
+            url: "@Url.Action("Details", "MonthCostHeSuan")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    //修改，添加，查看界面载体
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "500px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "MonthCostHeSuan")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>

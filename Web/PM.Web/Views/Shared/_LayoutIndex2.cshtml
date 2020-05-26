@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <title>@ViewBag.Title</title>
+    <link href="~/Content/css/framework-font.css" rel="stylesheet" />
+    <link href="~/Content/css/framework-theme.css" rel="stylesheet" />
+    <script src="~/Content/js/jquery/jquery-2.1.1.min.js"></script>
+    <script src="~/Content/js/jquery-ui/jquery-ui.min.js"></script>
+    <script src="~/Content/js/bootstrap/bootstrap.js"></script>
+    <link href="~/Content/js/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <script src="~/Content/js/layout/jquery.layout.js"></script>
+    <script src="~/Content/js/wdtree/tree.js"></script>
+    <link href="~/Content/js/wdtree/tree.css" rel="stylesheet" />
+    <script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+    <link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+    <script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+    <link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+    <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+    <script src="~/Content/js/layer/layer.js"></script>
+    <script src="~/Content/js/approval.js?v=1.1"></script>
+    <script src="~/Content/js/MaterialNameSelect.js"></script>
+    @*左侧导航表格收缩按钮事件JS*@
+    <script src="~/Content/js/Icon_Click.js"></script>
+    @*报表JS*@
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        .hidSearchContent {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    @RenderBody()
+    @Html.AntiForgeryToken()
+    <script src="~/Content/js/commonView.js?v=1.4"></script>
+</body>
+</html>

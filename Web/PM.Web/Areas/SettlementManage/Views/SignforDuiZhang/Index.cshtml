@@ -1,0 +1,239 @@
+﻿@{
+    ViewBag.Title = "签收对账首页Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div class="topPanel-btn divwidth2" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <form id="RMForm">
+                    <table>
+                        <tr>
+                            <td>
+                                <div class="input-group">
+                                    <input id="KSdatetime" name="KSdatetime" type="text" value="" placeholder="开始时间" class="form-control required input-wdatepicker" style="width: 140px;" onfocus="WdatePicker()" />
+                                </div>
+                            </td>
+                            <td>
+                                &nbsp;&nbsp;
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input id="JSdatetime" name="JSdatetime" type="text" value="" placeholder="结束时间" class="form-control required input-wdatepicker" style="width: 140px;" onfocus="WdatePicker()" />
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-search">
+                                    <a class="btn btn-primary" id="btn_search1">查询</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var SiteCode = "";
+    var OrgType = "";
+    var SiteName = "";
+    $(function () {
+        $('#layout').layout();
+        //加载菜单按钮
+        $.LodeMenuBtn("/SettlementManage/SignforDuiZhang/Index");
+        //首页数据访问
+        leftList();
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 158;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 208;
+        } else {
+            Height = 158;
+        }
+        gridList(Height);
+    });
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+                { label: '组织机构类型', name: 'OrgType', hidden: true },
+                { label: '地址', name: 'Address', hidden: true },
+                { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            sortname: 'CompanyCode',
+            onCellSelect: function (id) {//单击
+                SiteCode = getOrganizationalCode(id);
+                var CompanyData = $("#leftgridList").jqGrid('getRowData', id);
+                OrgType = CompanyData.OrgType;
+                SiteName = CompanyData.CompanyFullName;
+            }
+        });
+    }
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/SettlementManage/SignforDuiZhang/GetAllSignforDuiZhang",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 120, align: 'left', sortable: false, },
+                { label: '对账编号', name: 'SigninNuber', width: 120, align: 'left', sortable: false },
+                { label: '所属加工厂', name: 'ProcessFactoryName', width: 120, align: 'left', sortable: false },
+                { label: '站点', name: 'SiteName', width: 120, align: 'left', sortable: false },
+                { label: '对账时间', name: 'SignforTime', width: 120, align: 'left', sortable: false },
+                { label: '总量(T)', name: 'HavingAmount', width: 120, align: 'left', sortable: false, formatter: 'integer', formatoptions: { thousandsSeparator: ',', decimalPlaces: 5 }},
+                { label: '单位(T)', name: 'Unit', width: 120, align: 'left', sortable: false },
+                { label: '开始日期', name: 'StartDate', width: 120, align: 'left', sortable: false },
+                { label: '结束日期', name: 'EndDate', width: 120, align: 'left', sortable: false },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入时间', name: 'InsertTime', width: 120, align: 'left', sortable: false },
+                { label: '备注', name: 'Remark', width: 200, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();//双击执行查看事件
+            },
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                $('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            gridComplete: function () {
+                var ids = $gridList.getDataIDs(), sumWeight = 0;
+                for (var i = 0; i < ids.length; i++) {
+                    var rowData = $gridList.getRowData(ids[i]);
+                    sumWeight += Number(rowData.HavingAmount);
+                }
+                $gridList.jqGrid("footerData", "set", { SigninNuber: "--合计--", HavingAmount: sumWeight });
+            },
+            pager: "#gridPager",//分页DIV-ID
+            sortname: 'InsertTime',//按照什么列名排序
+            sortorder: "desc",
+            viewrecords: false,
+            rownumbers: true,
+            footerrow: true,
+        });
+        //查询按钮事件
+        $("#btn_search1").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $("#RMForm").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search1').trigger("click");
+            }
+        }
+    }
+
+    function btn_add() {
+        var where = "?type=add&CompanyCode=" + SiteCode + "&OrgType=" + OrgType + "&CompanyName=" + SiteName;
+        CommonOpen("Form", "新增对账单", "@Url.Action("Form", "SignforDuiZhang")" + where, true, true)
+    }
+
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改结算单",
+            url: "@Url.Action("Form", "SignforDuiZhang")",
+            anyUrl: "@Url.Action("AnyInfo", "SignforDuiZhang")",
+            });
+    }
+
+    //删除按钮事件
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "SignforDuiZhang")",
+            anyUrl: "@Url.Action("AnyInfo", "SignforDuiZhang")",
+            isdel: true,
+        });
+    }
+
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'SignforDuiZhang', rowData.Examinestatus, rowData.OrderCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+
+    //查看按钮事件
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "结算单查看界面",
+            url: "@Url.Action("Details", "SignforDuiZhang")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    //修改，添加，查看界面载体
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "500px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "SignforDuiZhang")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+</script>

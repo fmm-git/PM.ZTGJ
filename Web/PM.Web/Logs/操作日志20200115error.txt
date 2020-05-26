@@ -1,0 +1,150 @@
+2020-01-15 10:24:07
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 10:29:09
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 10:34:09
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 10:39:09
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 10:44:09
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 14:53:31
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 14:58:31
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 15:03:31
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 15:08:31
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------
+2020-01-15 15:13:31
+Text:	select TbAll.EarlyWarningCode,TbAll.BranchCode,TbAll.BranchName,TbAll.WorkAreaCode,TbAll.WorkAreaName,TbAll.SiteCode,TbAll.SiteName,TbAll.ProjectId,TbAll.YjMonth,TbAll.MenuCode,TbAll.EWNodeCode,TbAll.EWNodeName,TbAll.PersonnelCode,TbAll.PersonnelSource,TbAll.BegEwTiemNew from (select Tb.*,case when Tb.EWTimeType='年' then DATEADD(YEAR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='月' then DATEADD(MONTH,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='天' then DATEADD(DAY,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='时' then DATEADD(HOUR,Tb.EWTime,Tb.BegEwTiem) when Tb.EWTimeType='分' then DATEADD(MINUTE,Tb.EWTime,Tb.BegEwTiem) end as BegEwTiemNew,TbYjInfo.EarlyWarningCode as YjCode from (select ewt.EarlyWarningCode,DATENAME(year,GETDATE())+'-'+ DATENAME(MONTH,GETDATE())+'-'+ CONVERT(varchar(20),ewt.EWBegDay)+' '+CONVERT(varchar(20),ewt.EWBegHour)+':'+CONVERT(varchar(20),ewt.EWBegMinute)+':00' as BegEwTiem,ewt.BranchCode,cp1.CompanyFullName as BranchName,ewt.WorkAreaCode,cp2.CompanyFullName as WorkAreaName,ewt.SiteCode,cp3.CompanyFullName as SiteName,ewt.ProjectId,MONTH(GETDATE()) as YjMonth,ewt.MenuCode,ewn.EWNodeCode,ewn.EWNodeName,ewn.EWTimeType,ewn.EWTime,ewnp.PersonnelCode,ewnp.PersonnelSource,ewnp.DeptId,ewnp.RoleId from TbFormEarlyWarningBegTime ewt 
+left join TbFormEarlyWarningNode ewn on ewt.EarlyWarningCode=ewn.EarlyWarningCode and ewt.ProjectId=ewn.ProjectId and ewt.MenuCode=ewn.MenuCode
+left join TbFormEarlyWarningNodePersonnel ewnp on ewn.EarlyWarningCode=ewnp.EarlyWarningCode and ewn.EWNodeCode=ewnp.EWNodeCode and  ewn.MenuCode=ewnp.MenuCode and ewn.ProjectId=ewnp.ProjectId
+left join TbCompany cp1 on ewt.BranchCode=cp1.CompanyCode
+left join TbCompany cp2 on ewt.WorkAreaCode=cp2.CompanyCode
+left join TbCompany cp3 on ewt.SiteCode=cp3.CompanyCode
+where ewt.MenuCode='RawMonthDemandPlan') Tb 
+left join (select EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId from TbFormEarlyWarningNodeInfo ewni
+where ewni.EWFormDataCode=MONTH(GETDATE()) group by EWFormDataCode,ewni.EWNodeCode,ewni.WorkArea,ewni.EarlyWarningCode,ewni.MenuCode,ewni.ProjectId) TbYjInfo on Tb.EarlyWarningCode=TbYjInfo.EarlyWarningCode and Tb.EWNodeCode=TbYjInfo.EWNodeCode and Tb.MenuCode=TbYjInfo.MenuCode and  Tb.YjMonth=TbYjInfo.EWFormDataCode and Tb.WorkAreaCode=TbYjInfo.WorkArea and Tb.ProjectId=TbYjInfo.ProjectId
+where GETDATE()>=BegEwTiem and Tb.WorkAreaCode not in(select rmdp.WorkAreaCode from TbRawMaterialMonthDemandPlan rmdp where MONTH(InsertTime)=MONTH(GETDATE())
+group by rmdp.WorkAreaCode)) TbAll where TbAll.YjCode is null and TbAll.PersonnelCode is not null and GETDATE()>=TbAll.BegEwTiemNew	
+
+
+-----------------------------------------------------------------------------

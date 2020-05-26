@@ -1,0 +1,228 @@
+2020-05-11 16:42:16
+Text:	select TbEarlyInfo.*,DATEDIFF(MINUTE,TbEarlyInfo.EarlyBegTiem,GETDATE()) as SjJgMinute,cast(DATEDIFF(MINUTE,TbEarlyInfo.EarlyBegTiem,GETDATE())*1.0/60/24 as decimal(18,2)) as SjJgDay,cast(DATEDIFF(MINUTE,TbEarlyInfo.EarlyBegTiem,GETDATE())*1.0/60 as decimal(18,2)) as SjJgHour,TbFormEarlyInfo.ID as FormEarlyInfoID from (select TbEarlySz.ID,TbEarlySz.EarlyWarningNewsCode,TbEarlySz.EarlyWarningContent,TbEarlySz.MenuCode,TbEarlySz.EarlyWarningNewsName,TbEarlySz.App,TbEarlySz.Pc,TbEarlySz.IsStart,TbEarlySz.EarlyWarningFrequency,TbEarlySz.IsBackstage,TbEarlySz.EarlyMenuCodeNode,TbEarlySz.EarlyWarningFrequencyType,TbEarlySz.OrgType,TbEarlySz.PersonnelSource,TbEarlySz.PersonnelCode,TbEarlySz.DeptId,TbEarlySz.RoleId,TbEarlyMenu.ID as EarlyDataId,TbEarlyMenu.EarlyCode,TbEarlyMenu.ProjectId,TbEarlyMenu.EarlyTiem,case when TbEarlySz.EarlyWarningFrequencyType='天' then DATEADD(DAY,TbEarlySz.EarlyWarningFrequency,DATEADD(DAY,TbEarlySz.TriggerTimeDay,DATEADD(HOUR,TbEarlySz.TriggerTimeHour,DATEADD(MINUTE,TbEarlySz.TriggerTimeMinute,TbEarlyMenu.EarlyTiem)))) when TbEarlySz.EarlyWarningFrequencyType='时' then DATEADD(HOUR,TbEarlySz.EarlyWarningFrequency,DATEADD(DAY,TbEarlySz.TriggerTimeDay,DATEADD(HOUR,TbEarlySz.TriggerTimeHour,DATEADD(MINUTE,TbEarlySz.TriggerTimeMinute,TbEarlyMenu.EarlyTiem))))else DATEADD(MINUTE,TbEarlySz.EarlyWarningFrequency,DATEADD(DAY,TbEarlySz.TriggerTimeDay,DATEADD(HOUR,TbEarlySz.TriggerTimeHour,DATEADD(MINUTE,TbEarlySz.TriggerTimeMinute,TbEarlyMenu.EarlyTiem)))) end as EarlyBegTiem,TbEarlyMenu.SiteCode,TbEarlyMenu.SiteName,TbEarlyMenu.WorkAreaCode,TbEarlyMenu.WorkAreaName,TbEarlyMenu.BranchCode,TbEarlyMenu.BranchName,TbEarlyMenu.ManagerDepartmentCode,TbEarlyMenu.ProcessFactoryCode,TbEarlyMenu.TypeCode from (select a.*,b.OrgType,b.ProjectId,b.PersonnelSource,b.PersonnelCode,b.DeptId,b.RoleId from TbEarlyWarningSetUp a
+                           left join TbNoticeNewsOrg b on a.EarlyWarningNewsCode=b.NoticeNewsCode
+                           where a.IsStart=1 and a.EarlyMenuCodeNode=0 and b.NewsType=2) TbEarlySz
+                           left join (
+                           --供货超时预警
+                           select 'SupplyList' as MenuCode,a.ID,a.BatchPlanNum as EarlyCode,f.InsertTime as EarlyTiem,a.ProjectId,'' as SiteCode,'' as SiteName,a.WorkAreaCode,b.CompanyFullName as WorkAreaName,a.BranchCode,c.CompanyFullName as BranchName,c.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,'' as TypeCode,'' as SiteContacts,'' as SiteContactTel from TbSupplyList a 
+                           left join TbCompany b on a.WorkAreaCode=b.CompanyCode
+                           left join TbCompany c on a.BranchCode=c.CompanyCode
+                           left join TbFactoryBatchNeedPlan f on a.BatchPlanNum=f.BatchPlanNum
+                           where a.StateCode='未供货'
+                           union all
+                           --取样订单质检报告上传超时
+                           select * from (
+                           select 'SampleOrder1' as MenuCode,a.ID,a.SampleOrderCode,a.ProcessingStateTime,a.ProjectId,'' as SiteCode,'' as SiteName,a.WorkAreaCode,b.CompanyFullName as WorkAreaName,c.CompanyCode as BranchCode,c.CompanyFullName as BranchName,c.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,'' as TypeCode,'' as SiteContacts,'' as SiteContactTel from TbSampleOrder a
+                           left join TbCompany b on a.WorkAreaCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           where a.IsUpLoad=0 and  a.RebarType='BuildingSteel'
+                           union all
+                           select 'SampleOrder3' as MenuCode,a.ID,a.SampleOrderCode,a.ProcessingStateTime,a.ProjectId,'' as SiteCode,'' as SiteName,a.WorkAreaCode,b.CompanyFullName as WorkAreaName,c.CompanyCode as BranchCode,c.CompanyFullName as BranchName,c.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,a.RebarType as TypeCode,a.InsertUserCode as SiteContacts,'' as SiteContactTel from TbSampleOrder a
+                           left join TbCompany b on a.WorkAreaCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           where a.IsUpLoad=0 and a.RebarType='SectionSteel') TbSo
+                           union all
+                           --等待卸货超时预警
+                           select 'TransportProcess' as MenuCode,a.ID,a.DistributionCode,a.EnterSpaceTime,a.ProjectId,a.SiteCode,b.CompanyFullName as SiteName,c.CompanyCode as WorkAreaCode,c.CompanyFullName as WorkAreaName,d.CompanyCode as BranchCode,d.CompanyFullName as BranchName,d.ParentCompanyCode as ManagerDepartmentCode,e.ProcessFactoryCode,a.TypeCode,o.SiteContacts,o.SiteContactTel from TbTransportCarReport a
+                           left join TbCompany b on a.SiteCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           left join TbCompany d on c.ParentCompanyCode=d.CompanyCode
+                           left join TbDistributionEntOrder o on a.DisEntOrderId=o.ID
+                           left join TbDistributionEnt e on a.DistributionCode=e.DistributionCode
+                           where a.FlowState=2  
+                           union all
+                           --半成品签收超时预警
+                           select 'SemiFinishedSign' as MenuCode,a.ID,a.SigninNuber,a.InsertTime,a.ProjectId,a.SiteCode,b.CompanyFullName as SiteName,c.CompanyCode as WorkAreaCode,c.CompanyFullName as WorkAreaName,d.CompanyCode as BranchCode,d.CompanyFullName as BranchName,d.ParentCompanyCode as ManagerDepartmentCode,a.ProcessFactoryCode,a.TypeCode,'' as SiteContacts,'' as SiteContactTel from TbSemiFinishedSign a
+                           left join TbCompany b on a.SiteCode=b.CompanyCode
+                           left join TbCompany c on b.ParentCompanyCode=c.CompanyCode
+                           left join TbCompany d on c.ParentCompanyCode=d.CompanyCode
+                           where a.OperateState='未签收') TbEarlyMenu on TbEarlySz.MenuCode=TbEarlyMenu.MenuCode and TbEarlySz.ProjectId=TbEarlyMenu.ProjectId) TbEarlyInfo
+                           left join TbFormEarlyWarningNodeInfo TbFormEarlyInfo on TbEarlyInfo.MenuCode=TbFormEarlyInfo.MenuCode 
+                           and TbEarlyInfo.EarlyWarningNewsCode=TbFormEarlyInfo.EarlyWarningCode 
+                           and TbEarlyInfo.EarlyDataId=TbFormEarlyInfo.EWFormDataCode
+                           where TbEarlyInfo.EarlyDataId is not null and GETDATE()>TbEarlyInfo.EarlyBegTiem and TbFormEarlyInfo.ID is null and TbEarlyInfo.EarlyBegTiem>'2020-04-01'	
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:17
+Text:	 SELECT   TOP 1 * FROM [TbNoticeNewsSetUp]  WHERE ([TbNoticeNewsSetUp].[NoticeNewsCode] = @NoticeNewsCode1) AND ([TbNoticeNewsSetUp].[IsStart] = @IsStart2) 	
+Parameters:
+@NoticeNewsCode1[String] = XXTZ0008
+@IsStart2[Int32] = 1
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:33
+Text:	 SELECT   TOP 1 * FROM [TbUser]  WHERE ([TbUser].[UserCode] = @UserCode3) AND ([TbUser].[UserPwd] = @UserPwd4) 	
+Parameters:
+@UserCode3[String] = 102787
+@UserPwd4[String] = 915946745ba49412bed11dc09ca9ac53
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:33
+Text:	SELECT UserClosed FROM TbUser WHERE UserCode=@UserName	
+Parameters:
+@UserName[String] = 102787
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:33
+Text:	select top 1 ur.ProjectId,pro.ProjectName,ur.OrgId,cm.CompanyFullName,cm.ParentCompanyCode,ur.OrgType,ur.UserCode as UserId,u.UserCode,u.UserName from TbUserRole ur 
+left join TbCompany cm on ur.OrgId=cm.CompanyCode
+left join TbProjectInfo pro on ur.ProjectId=pro.ProjectId
+left join TbUser u on ur.UserCode=u.UserId
+where u.UserCode=@UserCode and ur.Flag=0 group by ur.ProjectId,pro.ProjectName,ur.OrgId,cm.CompanyFullName,cm.ParentCompanyCode,ur.OrgType,ur.UserCode,u.UserCode,u.UserName order by OrgId asc	
+Parameters:
+@UserCode[String] = 102787
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:34
+Text:	select distinct ur.RoleCode as RoleId,r.RoleCode,r.RoleName from TbUserRole ur
+left join TbUser u on ur.UserCode=u.UserId
+left join TbRole r on ur.RoleCode=r.RoleId
+where u.UserCode=@UserCode and ProjectId=@ProjectId and OrgId=@OrgId and ur.Flag=0	
+Parameters:
+@UserCode[String] = 102787
+@ProjectId[String] = 6245721945602523136
+@OrgId[String] = 6247574415609954304
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:34
+Text:	 SELECT   TOP 1 [TbCarInfoDetail].[ID] FROM [TbCarInfoDetail]  WHERE [TbCarInfoDetail].[UserCode] = @UserCode5 	
+Parameters:
+@UserCode5[String] = 102787
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:34
+Text:	INSERT INTO [TbSysLog] ([ActionMenu],[ActionType],[HostName],[LogDate],[UserCode],[UserIP]) VALUES (@ActionMenu6,@ActionType7,@HostName8,@LogDate9,@UserCode10,@UserIP11);select scope_identity()	
+Parameters:
+@ActionMenu6[String] = 0
+@ActionType7[String] = 登录系统
+@HostName8[String] = 
+@LogDate9[DateTime] = 2020/5/11 16:42:34
+@UserCode10[String] = 102787
+@UserIP11[String] = 192.168.3.222
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:36
+Text:	 SELECT   [TbDistributionPlanInfo].*,[TbCompany].[ParentCompanyCode],[TbOrderProgress].[FinishProcessingDateTime] FROM [TbDistributionPlanInfo] LEFT OUTER JOIN [TbCompany] ON ([TbDistributionPlanInfo].[SiteCode] = [TbCompany].[CompanyCode]) LEFT OUTER JOIN [TbOrderProgress] ON ([TbDistributionPlanInfo].[OrderCode] = [TbOrderProgress].[OrderCode])  WHERE (([TbDistributionPlanInfo].[Examinestatus] = @Examinestatus12) AND ([TbDistributionPlanInfo].[ProcessFactoryCode] = @ProcessFactoryCode13)) 	
+Parameters:
+@Examinestatus12[String] = 审核完成
+@ProcessFactoryCode13[String] = 6386683214299275264
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:37
+Text:	select isnull(sum(TbCF.Capacity),0) as Capacity,isnull(sum(TbCF.WeightSmallPlan),0) as WeightSmallPlan,isnull(cast(sum(TbCF.WeightSmallPlan)/sum(TbCF.Capacity)*100 as decimal(18,2)),0) as ActualLoadNew from (select cf.Capacity,Tb1.WeightSmallPlan,cf.ProcessFactoryCode from TbCapacityFilling cf  
+left join(
+select SUM(Tb.WeightSmallPlan) as WeightSmallPlan,Tb.ProcessFactoryCode from (
+                            select isnull(SUM(wod.WeightSmallPlan),0) as WeightSmallPlan,wo.ProcessFactoryCode from TbWorkOrder wo
+                            left join TbWorkOrderDetail wod on wo.OrderCode=wod.OrderCode
+                            where (ISNULL(@ProcessFactoryCode,'')='' or wo.ProcessFactoryCode=@ProcessFactoryCode)
+                            and CONVERT(varchar(7), wo.DistributionTime, 120)=@month
+                            and wod.RevokeStart='正常' and wo.ProcessingState!='ConfirmWork' and wo.ProcessingState!='Finishing'  group by wo.ProcessFactoryCode
+                            union all
+                            select isnull(sum(opd.NoCompleted),0) as NoCompleted,op.ProcessFactoryCode from TbOrderProgress op
+                            left join TbOrderProgressDetail opd on op.OrderCode=opd.OrderCode 
+                            where (ISNULL(@ProcessFactoryCode,'')='' or op.ProcessFactoryCode=@ProcessFactoryCode)
+                            and CONVERT(varchar(7), op.DistributionTime, 120)=CONVERT(varchar(4),YEAR(DATEADD(MONTH,-1,@month+'-01')))+'-'+Right(100+Month(DATEADD(MONTH,-1,@month+'-01')),2)
+                            and opd.RevokeStart='正常'  group by op.ProcessFactoryCode)Tb  group by Tb.ProcessFactoryCode
+) Tb1 on cf.ProcessFactoryCode=Tb1.ProcessFactoryCode 
+where cf.CapacityMonth=@month
+and (ISNULL(@ProcessFactoryCode,'')='' or cf.ProcessFactoryCode=@ProcessFactoryCode)) TbCF where (ISNULL(@ProcessFactoryCode,'')='' or TbCF.ProcessFactoryCode=@ProcessFactoryCode)	
+Parameters:
+@ProcessFactoryCode[String] = 6386683214299275264
+@month[String] = 2020-05
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:37
+Text:	 SELECT   TOP 1 [TbStorage].[StorageAdd],[TbStorage].[Tel],[TbUser].[UserName] FROM [TbStorage] LEFT OUTER JOIN [TbUser] ON ([TbStorage].[UserCode] = [TbUser].[UserCode])  WHERE [TbStorage].[ProcessFactoryCode] = @ProcessFactoryCode14 	
+Parameters:
+@ProcessFactoryCode14[String] = 6386683214299275264
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:38
+Text:	 SELECT   [TbDistributionPlanInfo].*,[TbCompany].[ParentCompanyCode],[TbOrderProgress].[FinishProcessingDateTime] FROM [TbDistributionPlanInfo] LEFT OUTER JOIN [TbCompany] ON ([TbDistributionPlanInfo].[SiteCode] = [TbCompany].[CompanyCode]) LEFT OUTER JOIN [TbOrderProgress] ON ([TbDistributionPlanInfo].[OrderCode] = [TbOrderProgress].[OrderCode])  WHERE (([TbDistributionPlanInfo].[Examinestatus] = @Examinestatus15) AND ([TbDistributionPlanInfo].[ProcessFactoryCode] = @ProcessFactoryCode16)) 	
+Parameters:
+@Examinestatus15[String] = 审核完成
+@ProcessFactoryCode16[String] = 6386683729561128960
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:38
+Text:	select isnull(sum(TbCF.Capacity),0) as Capacity,isnull(sum(TbCF.WeightSmallPlan),0) as WeightSmallPlan,isnull(cast(sum(TbCF.WeightSmallPlan)/sum(TbCF.Capacity)*100 as decimal(18,2)),0) as ActualLoadNew from (select cf.Capacity,Tb1.WeightSmallPlan,cf.ProcessFactoryCode from TbCapacityFilling cf  
+left join(
+select SUM(Tb.WeightSmallPlan) as WeightSmallPlan,Tb.ProcessFactoryCode from (
+                            select isnull(SUM(wod.WeightSmallPlan),0) as WeightSmallPlan,wo.ProcessFactoryCode from TbWorkOrder wo
+                            left join TbWorkOrderDetail wod on wo.OrderCode=wod.OrderCode
+                            where (ISNULL(@ProcessFactoryCode,'')='' or wo.ProcessFactoryCode=@ProcessFactoryCode)
+                            and CONVERT(varchar(7), wo.DistributionTime, 120)=@month
+                            and wod.RevokeStart='正常' and wo.ProcessingState!='ConfirmWork' and wo.ProcessingState!='Finishing'  group by wo.ProcessFactoryCode
+                            union all
+                            select isnull(sum(opd.NoCompleted),0) as NoCompleted,op.ProcessFactoryCode from TbOrderProgress op
+                            left join TbOrderProgressDetail opd on op.OrderCode=opd.OrderCode 
+                            where (ISNULL(@ProcessFactoryCode,'')='' or op.ProcessFactoryCode=@ProcessFactoryCode)
+                            and CONVERT(varchar(7), op.DistributionTime, 120)=CONVERT(varchar(4),YEAR(DATEADD(MONTH,-1,@month+'-01')))+'-'+Right(100+Month(DATEADD(MONTH,-1,@month+'-01')),2)
+                            and opd.RevokeStart='正常'  group by op.ProcessFactoryCode)Tb  group by Tb.ProcessFactoryCode
+) Tb1 on cf.ProcessFactoryCode=Tb1.ProcessFactoryCode 
+where cf.CapacityMonth=@month
+and (ISNULL(@ProcessFactoryCode,'')='' or cf.ProcessFactoryCode=@ProcessFactoryCode)) TbCF where (ISNULL(@ProcessFactoryCode,'')='' or TbCF.ProcessFactoryCode=@ProcessFactoryCode)	
+Parameters:
+@ProcessFactoryCode[String] = 6386683729561128960
+@month[String] = 2020-05
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:38
+Text:	 SELECT   TOP 1 [TbStorage].[StorageAdd],[TbStorage].[Tel],[TbUser].[UserName] FROM [TbStorage] LEFT OUTER JOIN [TbUser] ON ([TbStorage].[UserCode] = [TbUser].[UserCode])  WHERE [TbStorage].[ProcessFactoryCode] = @ProcessFactoryCode17 	
+Parameters:
+@ProcessFactoryCode17[String] = 6386683729561128960
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:38
+Text:	 SELECT   [TbDistributionPlanInfo].*,[TbCompany].[ParentCompanyCode],[TbOrderProgress].[FinishProcessingDateTime] FROM [TbDistributionPlanInfo] LEFT OUTER JOIN [TbCompany] ON ([TbDistributionPlanInfo].[SiteCode] = [TbCompany].[CompanyCode]) LEFT OUTER JOIN [TbOrderProgress] ON ([TbDistributionPlanInfo].[OrderCode] = [TbOrderProgress].[OrderCode])  WHERE (([TbDistributionPlanInfo].[Examinestatus] = @Examinestatus18) AND ([TbDistributionPlanInfo].[ProcessFactoryCode] = @ProcessFactoryCode19)) 	
+Parameters:
+@Examinestatus18[String] = 审核完成
+@ProcessFactoryCode19[String] = 6386683947165814784
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:38
+Text:	select isnull(sum(TbCF.Capacity),0) as Capacity,isnull(sum(TbCF.WeightSmallPlan),0) as WeightSmallPlan,isnull(cast(sum(TbCF.WeightSmallPlan)/sum(TbCF.Capacity)*100 as decimal(18,2)),0) as ActualLoadNew from (select cf.Capacity,Tb1.WeightSmallPlan,cf.ProcessFactoryCode from TbCapacityFilling cf  
+left join(
+select SUM(Tb.WeightSmallPlan) as WeightSmallPlan,Tb.ProcessFactoryCode from (
+                            select isnull(SUM(wod.WeightSmallPlan),0) as WeightSmallPlan,wo.ProcessFactoryCode from TbWorkOrder wo
+                            left join TbWorkOrderDetail wod on wo.OrderCode=wod.OrderCode
+                            where (ISNULL(@ProcessFactoryCode,'')='' or wo.ProcessFactoryCode=@ProcessFactoryCode)
+                            and CONVERT(varchar(7), wo.DistributionTime, 120)=@month
+                            and wod.RevokeStart='正常' and wo.ProcessingState!='ConfirmWork' and wo.ProcessingState!='Finishing'  group by wo.ProcessFactoryCode
+                            union all
+                            select isnull(sum(opd.NoCompleted),0) as NoCompleted,op.ProcessFactoryCode from TbOrderProgress op
+                            left join TbOrderProgressDetail opd on op.OrderCode=opd.OrderCode 
+                            where (ISNULL(@ProcessFactoryCode,'')='' or op.ProcessFactoryCode=@ProcessFactoryCode)
+                            and CONVERT(varchar(7), op.DistributionTime, 120)=CONVERT(varchar(4),YEAR(DATEADD(MONTH,-1,@month+'-01')))+'-'+Right(100+Month(DATEADD(MONTH,-1,@month+'-01')),2)
+                            and opd.RevokeStart='正常'  group by op.ProcessFactoryCode)Tb  group by Tb.ProcessFactoryCode
+) Tb1 on cf.ProcessFactoryCode=Tb1.ProcessFactoryCode 
+where cf.CapacityMonth=@month
+and (ISNULL(@ProcessFactoryCode,'')='' or cf.ProcessFactoryCode=@ProcessFactoryCode)) TbCF where (ISNULL(@ProcessFactoryCode,'')='' or TbCF.ProcessFactoryCode=@ProcessFactoryCode)	
+Parameters:
+@ProcessFactoryCode[String] = 6386683947165814784
+@month[String] = 2020-05
+
+
+-----------------------------------------------------------------------------
+2020-05-11 16:42:38
+Text:	 SELECT   TOP 1 [TbStorage].[StorageAdd],[TbStorage].[Tel],[TbUser].[UserName] FROM [TbStorage] LEFT OUTER JOIN [TbUser] ON ([TbStorage].[UserCode] = [TbUser].[UserCode])  WHERE [TbStorage].[ProcessFactoryCode] = @ProcessFactoryCode20 	
+Parameters:
+@ProcessFactoryCode20[String] = 6386683947165814784
+
+
+-----------------------------------------------------------------------------

@@ -1,0 +1,61 @@
+﻿@{
+    ViewBag.Title = "AppointMenuTableDetails";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<link href="~/Content/css/input.css" rel="stylesheet" />
+<script>
+    var keyValue = $.request("keyValue");
+    $(function () {
+        initControl();
+        if (!!keyValue) {
+            $.ajax({
+                url: "/SystemManage/Menu/GetAppointMenuTableFormJson",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    $("#form1").find('.form-control,select,input').attr('disabled', 'disabled');
+                    $("#form1").find('div.ckbox label').attr('for', '');
+                }
+            });
+        }
+    });
+    function initControl() {
+        $("#IsMainTabel").bindSelect();
+        $("#MenuCode").bindSelect({
+            url: "/Menu/GetTreeSelectJson"
+            //id: "MenuCode",
+            //text: "MenuName"
+        });
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">菜单编码</th>
+                    <td class="formValue">
+                        <select id="MenuCode" name="MenuCode" class="form-control required"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">表名</th>
+                    <td class="formValue">
+                        <input id="TableName" name="TableName" type="text" class="form-control required" placeholder="请输入表名" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">是否主表</th>
+                    <td class="formValue">
+                        <select id="IsMainTabel" name="IsMainTabel" class="form-control">
+                            <option value="0">是</option>
+                            <option value="1">否</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>

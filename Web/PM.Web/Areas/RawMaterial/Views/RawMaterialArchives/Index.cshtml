@@ -1,0 +1,220 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/RawMaterial/RawMaterialArchives/Index");
+        $('#layout').layout();
+        var wh = findDimensions();//获取div的宽度
+        var whN = wh.split("/");
+        var Height = 130;
+        if (Number(whN[0]) < whN[1]) {
+            Height = 180;
+        } else {
+            Height = 130;
+        }
+        leftList();
+        gridList(Height);
+    });
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "RebarType" })",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: '钢筋类型编号', name: 'DictionaryCode', hidden: true, key: true },
+                { label: '钢筋类型', name: 'DictionaryText', width: 170, align: 'left' }
+            ],
+            sortname: 'DictionaryCode',
+            onCellSelect: function (id) {//单击
+                clickRebarType(id);
+            }
+        });
+    }
+    //点击左边钢筋类型加载原材料档案信息
+    function clickRebarType(id) {
+        var RebarType = $("#leftgridList").jqGrid('getRowData', id);
+        var param = $(".search").GetSearchCondition();
+        $("#gridList").jqGrid('setGridParam', {
+            postData: { RebarType: RebarType.DictionaryCode },
+            page: 1
+        }).trigger('reloadGrid');
+    }
+    function gridList(Height) {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "RawMaterialArchives")",
+            height: $(window).height() - Height,
+            colModel: [
+                { label: "主键", name: "ID", key: true, hidden: true, frozen: true },
+                { label: '原材料编号', name: 'MaterialCode', width: 130, align: 'left', sortable: false },
+                { label: '原材料名称', name: 'MaterialName', width: 150, align: 'left ' },
+                { label: '规格型号', name: 'SpecificationModel', width: 150, align: 'left' },
+                { label: '钢筋类型', name: 'RebarTypeNew', width: 100, align: 'left', },
+                { label: '单位', name: 'MeasurementUnitNew', width: 80, align: 'left', },
+                { label: '单位重量', name: 'MeasurementUnitZl', width: 80, align: 'left', },
+                { label: '备注', name: 'Remarks', width: 180, align: 'left' }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                $('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            pager: "#gridPager",
+            sortname: 'id',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    }
+    function btn_add() {
+        $.modalOpen({
+            id: "Form",
+            title: "新增原材料档案",
+            url: "/RawMaterial/RawMaterialArchives/Form?type=add",
+            width: "40%",
+            height: "450px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Form",
+                title: "修改原材料档案",
+                url: "/RawMaterial/RawMaterialArchives/Form?keyValue=" + keyValue + "&type=edit",
+                width: "40%",
+                height: "450px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].submitForm();
+                }
+            });
+        } else {
+            $.modalMsg("请选择要修改的原材料档案信息", "warning");
+            return false;
+        }
+    }
+    function btn_delete() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.deleteForm({
+                url: "/RawMaterial/RawMaterialArchives/DeleteForm",
+                param: { keyValue: keyValue },
+                success: function () {
+                    $.currentWindow().$("#gridList").resetSelection();
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            });
+        } else {
+            $.modalMsg("请选择要删除的原材料档案信息", "warning");
+            return false;
+        }
+    }
+    function btn_details() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Details",
+                title: "查看原材料档案",
+                url: "/RawMaterial/RawMaterialArchives/Details?keyValue=" + keyValue,
+                width: "40%",
+                height: "450px",
+                btn: null,
+            });
+        } else {
+            $.modalMsg("请选择要查看的原材料档案信息", "warning");
+            return false;
+        }
+    }
+    //导入
+    function btn_other1() {
+        var url = "@Url.Action("SubmitInput", "RawMaterialArchives")";
+        var name = "原材料档案导入模板";
+        $.modalOpen({
+            id: "InputNew",
+            title: "原材料档案导入模板",
+            url: "@Url.Action("InputNew", "Common", new { area = "" })" + "?submitUrl=" + url + "&exclName=" + name + "&isInput=true",
+            width: "600px",
+            height: "500px",
+            btn: null
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            param.RebarType = id;
+        }
+        var url = "@Url.Action("OutputExcel", "RawMaterialArchives")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div class="topPanel-btn divwidth2" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="MaterialCode">原材料编号</option>
+                                    <option value="MaterialName">原材料名称</option>
+                                </select>
+                                <input id="MaterialCode" name="MaterialCode" type="text" placeholder="原材料编号" class="form-control SearchContent hidSearchContent">
+                                <select id="MaterialNameSelect" name="MaterialName" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                </select>
+                                <input type="hidden" id="MaterialName" name="MaterialName" />
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

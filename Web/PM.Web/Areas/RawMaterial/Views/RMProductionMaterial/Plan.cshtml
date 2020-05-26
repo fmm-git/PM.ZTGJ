@@ -1,0 +1,1146 @@
+﻿@{
+    ViewBag.Title = "原材料领料推荐方案列表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+
+    var ItemUseNum = ViewContext.HttpContext.Request["ItemUseNum"];
+    var MeasurementUnitZl = ViewContext.HttpContext.Request["MeasurementUnitZl"];
+    var Number = ViewContext.HttpContext.Request["Number"];
+    var Textstr = ViewContext.HttpContext.Request["Text"];
+    var with = "100%";
+    var yllable = "余料优先";
+    if (Textstr == yllable)
+    {
+        with = "50%";
+    }
+}
+<style type="text/css">
+    .labecss {
+        width: 15%;
+        height: 20px;
+        float: left;
+        margin-top: 10px;
+        margin-left: 10px;
+        margin-right: 40px;
+        font-size: 16px;
+    }
+
+    .divtab {
+        float: left;
+    }
+
+    .ui-jqgrid .table-bordered th {
+        border-left: 0px none !important;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        font-weight: normal;
+        background: #eee;
+        border: 1px solid #ddd;
+        vertical-align: middle;
+    }
+
+    .redBG {
+        background-color: #F0FFF0 !important;
+        color: black !important;
+    }
+
+    .greenBG {
+        background-color: #1ABC9C !important;
+        color: white !important;
+    }
+</style>
+<div class="ui-layout-center">
+    <div class="tabs-container" style="margin-top:10px;">
+        <div class="tabs-header-div">
+            <ul class="nav nav-tabs tabs-fa">
+                <li class="active" tb="tj" onclick="selectTab($(this))"><a data-toggle="tab" href="#tab-1" aria-expanded="true">推 荐 方 案</a></li>
+                <li class="" tb="zx" onclick="selectTab($(this))"><a data-toggle="tab" href="#tab-2" aria-expanded="false">自 选 方 案</a></li>
+            </ul>
+        </div>
+        <div style="width:100%;">
+            <div class="alert alert-info labecss">
+                单件用量：<strong>@ItemUseNum</strong>
+            </div>
+            <div class="alert alert-info labecss">
+                件数：<strong id="needNum">@Number</strong>
+            </div>
+            <div class="alert alert-info labecss">
+                总领料件数：<strong><label id="total">0</label></strong>
+            </div>
+            <div class="alert alert-info labecss">
+                差额：<strong><label id="difference">@Number</label></strong>
+            </div>
+            <input id="MeasurementUnitZl" type="hidden" value="@MeasurementUnitZl" />
+            <input id="ItemUseNum" type="hidden" value="@ItemUseNum" />
+            <input id="totalH" type="hidden" value="0" />
+        </div>
+        <div style="padding-left: 10px; padding-bottom:10px; width: 100%; float: left; ">
+            <strong>注意：</strong><label id="zymsg" style="color:red;"></label>
+        </div>
+        <div class="tab-content">
+            <!------------推荐方案---------->
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    <div class="row">
+                        @{
+                            if (Textstr == yllable)
+                            {
+                               <!------------剪切---------->
+                        <div class="divtab" style="width:100%">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold">
+                                    剪切
+                                </header>
+                                <div class="panel-body">
+                                    <div class="gridPanel">
+                                        <table id="gridListYL"></table>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                            }
+                            else
+                            {
+                                <!------------原材料---------->
+                        <div class="divtab" style="width:100%">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold">
+                                    原材料库
+                                </header>
+                                <div class="panel-body">
+                                    <div class="gridPanel">
+                                        <table id="gridListYCL"></table>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                            }
+                        }
+                    </div>
+                    @{
+                        if (Textstr == yllable)
+                        {
+                    <div class="row">
+                        <!------------拼接---------->
+                        <div class="divtab" style="width:100%">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold">
+                                    拼接
+                                </header>
+                                <div class="panel-body">
+                                    <div class="tabs-container">
+                                        <div class="tabs-header-div">
+                                            <ul class="nav nav-tabs tabs-pj">
+                                                <li class="active" tb="gridListtcc" onclick="selectpjTab($(this))"><a data-toggle="tab" href="#tab-pj1" aria-expanded="true">同尺寸</a></li>
+                                                <li class="" tb="gridListbtcc" onclick="selectpjTab($(this))"><a data-toggle="tab" href="#tab-pj2" aria-expanded="false">不同尺寸</a></li>
+                                                <li class="" tb="gridListycl" onclick="selectpjTab($(this))"><a data-toggle="tab" href="#tab-pj3" aria-expanded="false">拼接原材料</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="tab-content">
+                                            <!------------同尺寸---------->
+                                            <div id="tab-pj1" class="pjdiv tab-pane active">
+                                                <div class="gridPanel">
+                                                    <table id="gridListtcc"></table>
+                                                </div>
+                                            </div>
+                                            <!------------不同尺寸---------->
+                                            <div id="tab-pj2" class="pjdiv tab-pane">
+                                                <div class="gridPanel">
+                                                    <table id="gridListbtcc"></table>
+                                                </div>
+                                            </div>
+                                            <!------------拼接原材料---------->
+                                            <div id="tab-pj3" class="pjdiv tab-pane">
+                                                <div class="gridPanel">
+                                                    <table id="gridListycl"></table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                        }
+                    }
+                </div>
+            </div>
+            <!------------自选方案---------->
+            <div id="tab-2" class="tab-pane ">
+                <div class="panel-body">
+                    <div class="row">
+                        @{
+                            if (Textstr == yllable)
+                            {
+                        <!------------余料---------->
+                        <div class="divtab" style="width: @with;">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold">
+                                    余料库
+                                </header>
+                                <div class="panel-body">
+                                    <div class="gridPanel">
+                                        <table id="gridListYLZX"></table>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                            }
+                        }
+                        <!------------原材料---------->
+                        <div class="divtab" style="width: @with;">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold">
+                                    原材料库
+                                </header>
+                                <div class="panel-body">
+                                    <div class="gridPanel">
+                                        <table id="gridListYCLZX"></table>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--***************************推荐方案******************************-->
+<script type="text/javascript">
+    var obj = {};
+    obj.ItemUseNum = $.request("ItemUseNum");
+    obj.Number = $.request("Number");
+    obj.WeightSmallPlan = $.request("WeightSmallPlan");
+    obj.WorkOrderItemId = $.request("WorkOrderItemId");
+    obj.MaterialCode = $.request("MaterialCode");
+    obj.MaterialName = $.request("MaterialName");
+    obj.CollarCode = $.request("CollarCode");
+    obj.WorkAreaCode = $.request("WorkAreaCode");
+    obj.SpecificationModel = $.request("SpecificationModel");
+    obj.MeasurementUnitZl = $.request("MeasurementUnitZl");
+    obj.ProjectId = $.request("ProjectId");
+    var DetailsDatas = top.frames["Form"].getPlanDetailsData();
+    obj.DetailsDatasStr = DetailsDatas;
+    $(function () {
+        var screenHeight = $("body").height();
+        $(".pjdiv").each(function () {
+            $(this).height(screenHeight * 0.9);
+        });
+        if ('@Textstr' == '@yllable') {
+            //余料方案列表(剪切)
+            obj.Type = 1;
+            obj.PlanIndex = 1;
+            gridList("#gridListYL", "@Url.Action("GetPlanYLGridJson", "CloutStock")");
+
+            obj.Type = 2;
+            //余料方案列表(同尺寸)
+            setTimeout(function () {
+                obj.PlanIndex = 2;
+                obj.IsZX = false;
+                gridList("#gridListtcc", "@Url.Action("GetPlanYLGridJson", "CloutStock")");
+            }, 500);
+
+            //余料方案列表(不同尺寸)
+            setTimeout(function () {
+                obj.PlanIndex = 3;
+                obj.IsZX = false;
+                gridList("#gridListbtcc", "@Url.Action("GetPlanYLGridJson", "CloutStock")", true);
+            }, 1000);
+
+            //余料方案列表(拼接原材料)
+            setTimeout(function () {
+                obj.PlanIndex = 4;
+                obj.IsZX = false;
+                gridListycl("#gridListycl", "@Url.Action("GetPlanYLGridJson", "CloutStock")");
+            }, 1500);
+        } else {
+            //原材料列表(推荐)
+            obj.PlanIndex = 7;
+            gridList("#gridListYCL", "@Url.Action("GetPlanYCLGridJson", "CloutStock")");
+        }
+    });
+    //剪切，同尺寸,不同尺寸
+    function gridList(id, url, bt) {
+        var divId = id;
+        var wi = 80;
+        var iskey = true;
+        var iskeystr = false;
+        if (bt) {
+            wi = 620;
+            iskey = false;
+            iskeystr = true;
+        }
+        var height = $(window).height() * 0.5;
+        if ('@Textstr' == '@yllable') {
+            height = $(window).height() * 0.2
+            if (id != "#gridListYL") {
+                height = $(".pjdiv").height() * 0.8
+            }
+        }
+        $(id).dataGrid({
+            url: url,
+            postData: obj,
+            height: height,
+            multiselect: true,
+            mtype:'POST',
+            colModel: [
+                { label: "尺寸", name: "SizeSelection", width: 80, align: 'left', sortable: false },
+                { label: "可用根数", name: "UseNumber", width: 80, align: 'left', sortable: false },
+                { label: "领用根数", name: "RootNumber", width: 80, align: 'left', sortable: false },
+                { label: "领料件数", name: "NumberH", width: 80, align: 'left', sortable: false },
+                { label: " ", name: "zwc", width: wi, align: 'left', sortable: false },
+                { label: "", name: "LableStr", hidden: true },
+                { label: "原材料编号", name: "MaterialCode", hidden: true },
+                { label: "单位重量", name: "MeasurementUnitZl", hidden: true },
+                { label: "单件用量", name: "ItemUseNum", hidden: true },
+                { label: "重量小计", name: "WeightSmallPlan", hidden: true },
+                { label: "使用材料类型", name: "RMTypeName", hidden: true },
+                { label: "领料重量小计", name: "WeightSmallPlanN", hidden: true },
+                { label: "加工订单明细Id", name: "WorkOrderItemId", hidden: true },
+                { label: "库存Id", name: "StockID", hidden: true, key: iskey },
+                { label: "库存Id", name: "StockIDstr", hidden: true, key: iskeystr },
+                { label: "件数", name: "Number", hidden: true },
+                { label: "件数", name: "NumberHH", hidden: true },
+                { label: "领料单号", name: "CollarCode", hidden: true },
+                { label: "方法类型", name: "PlanIndex", hidden: true },
+                { label: "规格", name: "SpecificationModel", hidden: true },
+                { label: "厂家", name: "Factory", hidden: true },
+                { label: "炉批号", name: "BatchNumber", hidden: true },
+                { label: "检测报告编号", name: "TestReportNo", hidden: true },
+            ],
+            gridComplete: function () {
+                $(id + ">tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+                if (id == "#gridListbtcc") {
+                    var str = 1;
+                    $("#gridListbtcc .ui-row-ltr").each(function (index, item) {
+                        if (index == 2 || index == 4) {
+                            str = parseInt(str) + 1;
+                        }
+                        $(item).find("td").each(function (i, x) {
+                            //添加背景颜色
+                            if (index == 2 || index == 3) {
+                                $(x).addClass("redBG");
+                            } else {
+                                $(x).addClass("greenBG");
+                            }
+                            //重写编号、去除复选框
+                            if ((i == 1 || i == 0) && (index == 1 || index == 3 || index == 5)) {
+                                $(x).html("");
+                            } else {
+                                if (i == 0) {
+                                    $(x).html(str);
+                                }
+                            }
+                        });
+                    });
+                }
+            },
+            beforeSelectRow: function (rowid, e) {
+                if (divId == "#gridListYL" || divId == "#gridListYCL") {
+                    total(rowid);
+                } else {
+                    total(0, "", rowid);
+                }
+            },
+            onSelectAll: function (rowid, e) {
+                total(0);
+            },
+            shrinkToFit: false,
+            rownumbers: true,
+        });
+    }
+    //原材料拼接
+    function gridListycl(id, url) {
+        var wi = 115;
+        $(id).dataGrid({
+            url: url,
+            postData: obj,
+            mtype: 'POST',
+            height: $(".pjdiv").height() * 0.6,
+            multiselect: true,
+            colModel: [
+                { label: "尺寸", name: "SizeSelection", width: wi, align: 'left', sortable: false },
+                { label: "可用根数", name: "UseNumber", width: wi, align: 'left', sortable: false },
+                { label: "领用根数", name: "RootNumber", width: wi, align: 'left', sortable: false },
+                { label: "领料件数", name: "NumberHyl", width: wi, align: 'left', sortable: false },
+                { label: "尺寸", name: "SizeSelectionycl", width: wi, align: 'left', sortable: false },
+                { label: "可用根数", name: "UseNumberycl", width: wi, align: 'left', sortable: false },
+                { label: "领用根数", name: "RootNumberycl", width: wi, align: 'left', sortable: false },
+                { label: "领料件数", name: "NumberHycl", width: wi, align: 'left', sortable: false },
+                { label: "领料件数", name: "NumberH", hidden: true },
+                { label: "件数", name: "NumberHH", hidden: true },
+                { label: "原材料编号", name: "MaterialCode", hidden: true },
+                { label: "单位重量", name: "MeasurementUnitZl", hidden: true },
+                { label: "单件用量", name: "ItemUseNum", hidden: true },
+                { label: "重量小计", name: "WeightSmallPlan", hidden: true },
+                { label: "使用材料类型", name: "RMTypeName", hidden: true },
+                { label: "使用材料类型", name: "RMTypeNameycl", hidden: true },
+                { label: "领料重量小计", name: "WeightSmallPlanN", hidden: true },
+                { label: "加工订单明细Id", name: "WorkOrderItemId", hidden: true },
+                { label: "库存Id", name: "StockID", hidden: true, key: true },
+                { label: "件数", name: "Number", hidden: true },
+                { label: "领料单号", name: "CollarCode", hidden: true },
+                { label: "方法类型", name: "PlanIndex", hidden: true },
+                { label: "规格", name: "SpecificationModel", hidden: true },
+                { label: "厂家", name: "Factory", hidden: true },
+                { label: "炉批号", name: "BatchNumber", hidden: true },
+                { label: "检测报告编号", name: "TestReportNo", hidden: true },
+            ],
+            gridComplete: function () {
+                $(id + ">tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+            },
+            beforeSelectRow: function (rowid, e) {
+                total(0, "", rowid);
+            },
+            onSelectAll: function (rowid, e) {
+                total(0);
+            },
+            shrinkToFit: false,
+            rownumbers: true,
+        });
+        $(id).jqGrid('setGroupHeaders', {
+            useColSpanStyle: true,
+            groupHeaders: [
+            { startColumnName: 'SizeSelection', numberOfColumns: 4, titleText: '余料' },
+            { startColumnName: 'SizeSelectionycl', numberOfColumns: 4, titleText: '原材料' }
+            ]
+        });
+    }
+
+    function selectpjTab(e) {
+        var tb = e.attr('tb');
+        total(0, "", 0, tb);
+    }
+</script>
+
+<!--***************************自选方案******************************-->
+<script type="text/javascript">
+    var obj = {};
+    obj.ItemUseNum = $.request("ItemUseNum");
+    obj.Number = $.request("Number");
+    obj.WeightSmallPlan = $.request("WeightSmallPlan");
+    obj.WorkOrderItemId = $.request("WorkOrderItemId");
+    obj.MaterialCode = $.request("MaterialCode");
+    obj.MaterialName = $.request("MaterialName");
+    obj.CollarCode = $.request("CollarCode");
+    obj.WorkAreaCode = $.request("WorkAreaCode");
+    obj.SpecificationModel = $.request("SpecificationModel");
+    obj.MeasurementUnitZl = $.request("MeasurementUnitZl");
+    obj.ProjectId = $.request("ProjectId");
+    var DetailsDatas = top.frames["Form"].getPlanDetailsData();
+    obj.DetailsDatasStr = DetailsDatas;
+    var lastsel;
+    var lastselYCL;
+    var lastselYL;
+    var wi = 200;
+    var wi2 = 280;
+    var isfirst = true;
+    $(function () {
+        //自选
+        setTimeout(function () {
+            if ('@Textstr' == '@yllable') {
+                wi = 80;
+                wi2 = 120;
+                //余料列表(自选)
+                obj.PlanIndex = 5;
+                gridListZX("#gridListYLZX", "@Url.Action("GetPlanYLGridJson", "CloutStock")");
+            }
+            //原材料列表(自选)
+            obj.PlanIndex = 6;
+            gridListZX("#gridListYCLZX", "@Url.Action("GetPlanYCLGridJson", "CloutStock")");
+        }, 2000);
+    });
+    function gridListZX(iddiv, url) {
+        var gridDiv = iddiv;
+        var $gridList = $(iddiv);
+        obj.IsZX = true;
+        obj.Type = 0;
+        $gridList.dataGrid({
+            url: url,
+            postData: obj,
+            mtype: 'POST',
+            height: $(window).height() * 0.5,
+            colModel: [
+                { label: "尺寸", name: "SizeSelection", width: wi, align: 'left', sortable: false },
+                { label: "可用根数", name: "UseNumber", width: wi, align: 'left', sortable: false },
+                { label: "领用根数", name: "RootNumber", width: wi2, align: 'left', sortable: false, editable: true },
+                { label: "领料件数", name: "NumberH", width: wi2, align: 'left', sortable: false },
+                { label: "原材料编号", name: "MaterialCode", hidden: true },
+                { label: "单位重量", name: "MeasurementUnitZl", hidden: true },
+                { label: "单件用量", name: "ItemUseNum", hidden: true },
+                { label: "重量小计", name: "WeightSmallPlan", hidden: true },
+                { label: "使用材料类型", name: "RMTypeName", hidden: true },
+                { label: "领料重量小计", name: "WeightSmallPlanN", hidden: true },
+                { label: "加工订单明细Id", name: "WorkOrderItemId", hidden: true },
+                { label: "库存Id", name: "StockID", hidden: true, key: true },
+                { label: "件数", name: "Number", hidden: true },
+                { label: "领料单号", name: "CollarCode", hidden: true },
+                { label: "原材料名称", name: "MaterialName", hidden: true },
+                { label: "方法类型", name: "PlanIndex", hidden: true },
+                { label: "规格", name: "SpecificationModel", hidden: true },
+                { label: "厂家", name: "Factory", hidden: true },
+                { label: "炉批号", name: "BatchNumber", hidden: true },
+                { label: "检测报告编号", name: "TestReportNo", hidden: true },
+                { label: "", name: "NumberHH", hidden: true },
+            ],
+            gridComplete: function (id) {
+                $gridList.find("tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                $($gridList.find("tr")).each(function (index, item) {
+                    if (index != 0) {
+                        $(this).removeClass("success");
+                    }
+                });
+                if ($gridList.attr("id") == "gridListYLZX") {
+                    lastsel = lastselYL;
+                }
+                else {
+                    lastsel = lastselYCL;
+                }
+                if (rowid) {
+                    isfirst = false;
+                    editRow(gridDiv, rowid);
+                }
+                if (iCol == 1) {
+                    var strck = "#jqg_" + (gridDiv.replace("#", "")) + "_" + rowid;
+                    var isselect = $($gridList.find("tr[id=" + rowid + "]")).attr("aria-selected");
+                    if (isselect) {
+                        $($gridList.find("tr[id=" + rowid + "]")).removeAttr("aria-selected");
+                        $(strck).removeAttr("checked");
+                    }
+                    else {
+                        $($gridList.find("tr[id=" + rowid + "]")).addClass("success");
+                        $($gridList.find("tr[id=" + rowid + "]")).attr("aria-selected", true);
+                        $(strck).prop("checked", 'checked');
+                    }
+                    total();
+                }
+            },
+            beforeSelectRow: function (rowid, e) {
+                return false;
+            },
+            onSelectAll: function (rowid, e) {
+                total();
+            },
+            multiselect: true,
+            shrinkToFit: false,
+            rownumbers: true,
+            rowNum:-1,
+        });
+    }
+
+    //编辑行
+    function editRow(divId, rowId) {
+        $(divId).jqGrid('saveRow', lastsel);
+        $(divId).jqGrid('editRow', rowId, true);
+        if (divId == "#gridListYLZX") {
+            lastselYL = rowId;
+        }
+        else {
+            lastselYCL = rowId;
+        }
+        lastsel = rowId;
+        $(divId + ">tbody").find("input:text").each(function () {
+            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+            $(this).css("height", "20px").css("width", width + "px");
+        });
+        valid(rowId);
+    }
+    //保存行
+    function saveRow() {
+        if ('@Textstr' == '@yllable') {
+            if (lastselYL) {
+                $("#gridListYLZX").jqGrid('saveRow', lastselYL);
+            }
+        } if (lastselYCL) {
+            $("#gridListYCLZX").jqGrid('saveRow', lastselYCL);
+        }
+    }
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        $("#" + rowid + "_RootNumber")
+               .keyup(function () { regTextBox(this, false); })
+               .bind("paste", function () { regTextBox(this, false); })
+               .blur(function () { Compute($(this).parent().parent(), rowid) }).css("ime-mode", "disabled");
+    }
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    function Compute(obj, rowid) {
+        var UseNumber = $(obj.children()[3]).html();//可用根数
+        var RootNumber = $($(obj.children()[4]).children()).val();//领用根数
+        var RMTypeName = $(obj.children()[10]).html();//材料类型
+        if (RMTypeName == "余料") {
+            if (parseInt(RootNumber) > parseInt(UseNumber)) {
+                $.modalMsg("领用根数不能超过可用根数", "warning");
+                $($(obj.children()[4]).children()).val("0");
+                $($(obj).children()[5]).html("0");
+                $($(obj).children()[22]).html("0");
+                total();
+                return false;
+            }
+        }
+        var MeasurementUnitZl = $(obj.children()[7]);//单位重量
+        var SizeSelection = $($(obj.children()[2]));//尺寸
+        var ItemUseNum = $($(obj.children()[8]));//单件用量
+        var WeightSmallPlanN = $(obj.children()[11]);//领料重量小计
+        var totalc = (parseFloat($(MeasurementUnitZl).html()) * parseFloat($(SizeSelection).html()) * parseFloat(RootNumber)).toFixed(5);
+        if (!isNaN(totalc)) {
+            $(WeightSmallPlanN).html(totalc);
+            var div = $($(obj).parent().parent()).attr("id");
+            var num = regNum("#" + div, rowid);
+            if (num > 0) {
+                $($(obj).children()[5]).html(num);
+                $($(obj).children()[22]).html(num);
+            } else {
+                $($(obj).children()[5]).html("0");
+                $($(obj).children()[22]).html("0");
+            }
+            //var wn = (parseFloat($(MeasurementUnitZl).html()) * parseFloat($(ItemUseNum).html()) * num).toFixed(5);
+            //$(WeightSmallPlanN).html(wn);
+            if (!isfirst) {
+                total();
+            }
+        }
+        else {
+            $(WeightSmallPlanN).html("");
+            $($(obj).children()[5]).html("0");
+            $($(obj).children()[22]).html("0");
+            if (!isfirst) {
+                total();
+            }
+        }
+    }
+    function selectTab(e) {
+        var tb = e.attr('tb');
+        if (!isfirst) {
+            total(0, tb);
+        } else {
+            if (tb == 'tj') {
+                total(0, tb);
+            } else {
+                //获取表格第一行Id
+                if ('@Textstr' == '@yllable') {
+                    var selectedRowIds = $("#gridListYLZX").jqGrid("getDataIDs");
+                    var rowId = selectedRowIds[0];
+                    editRow("#gridListYLZX", rowId);
+                }
+                var selectedRowIds = $("#gridListYCLZX").jqGrid("getDataIDs");
+                var rowId = selectedRowIds[0];
+                editRow("#gridListYCLZX", rowId);
+                $("#total").html("0");
+                $("#totalH").val("0");
+                $("#difference").html($("#needNum").html());
+            }
+        }
+    }
+
+    //计算件数
+    var rubbish = 0.5;//废料标准
+    function regNum(div, rowid) {
+        var rowData = $(div).jqGrid("getRowData", rowid);
+        var itemUseNum = parseFloat(rowData.ItemUseNum);
+        var useNumber = parseFloat(rowData.UseNumber);
+        var number = parseFloat(rowData.Number);
+        var length = parseFloat(rowData.SizeSelection);
+        var RMTypeName = rowData.RMTypeName;
+        var specificationModel = rowData.SpecificationModel;
+        var rootNumber = parseFloat($($($(div).find("tr[id=" + rowid + "]").children()[4]).children()).val());//领用根
+        //计算根数
+        var numberH = 0;
+        if (obj.MaterialName == "圆钢" && RMTypeName=="余料") {
+            var num = Math.floor(length / itemUseNum);
+            numberH = rootNumber * num;
+        } else {
+            //判断是剪切还是拼接
+            if (itemUseNum >= length) {
+                //拼接
+                //判断一个构件需要多少原材料
+                var num = Math.ceil(itemUseNum / length);
+                var numf = num - 1;
+                //判断余下的材料是否可再次拼接
+                var lg = num * length - itemUseNum;
+                if ((lg + length * numf) >= itemUseNum && lg >= rubbish) {
+                    numberH = chk(itemUseNum, length, numf, rootNumber, true);
+                }
+                else {
+                    //不可拼接
+                    numberH = Math.floor(rootNumber / num);
+                }
+            }
+            else {
+                //剪切
+                //判断一个原材料可以生成多少构件
+                var num = Math.floor(length / itemUseNum);
+                //判断余下的材料是否可再次拼接
+                var lg = length - parseFloat(num * itemUseNum);
+                var isok = ispjok(specificationModel, itemUseNum);
+                if (Math.floor((lg + length) / itemUseNum) > num && lg >= rubbish && isok) {
+                    numberH = chk(itemUseNum, length, 0, rootNumber, false);
+                }
+                else {
+                    //不可拼接
+                    numberH = rootNumber * num;
+                }
+            }
+        }
+        return numberH;
+    }
+
+    //获取件数
+    function chk(itemUseNum, size, countpj, num, ispj) {
+        if (num == 0) {
+            return 0;
+        }
+        //计算拼接次数
+        var retList = [];
+        if (ispj) {
+            pjcs(itemUseNum, size, size, countpj, 1, retList);
+            var arr = $.grep(retList, function (n, i) {
+                return (n.IsLast == true);
+            });
+            var ret = arr[0];
+            var a = Math.floor(num / ret.CountIndex);
+            if (a > 0 && num % ret.CountIndex == 0) {
+                a = a - 1;
+            }
+            var b = num - (a * ret.CountIndex);
+            if (b < (countpj + 1)) {
+                return (a * ret.Count);
+            }
+            else {
+                var c = Math.floor((b - (countpj + 1)) / countpj);
+                return (a * ret.Count) + c + 1;
+            }
+        } else {
+            jqcs(itemUseNum, size, 0, 0, 1, retList);
+            //最后一个
+            var arr = $.grep(retList, function (n, i) {
+                return (n.IsLast == true);
+            });
+            var ret = arr[0];
+            var yljs = ret.CountIndex;
+            //计算件数所需要的根数
+            if (yljs > num) {
+                var yldataList = $.grep(retList, function (n, i) {
+                    return (n.CountIndex == num);
+                });
+                var yldata = yldataList[0];
+                return yldata.Count;
+
+            }
+            else if (yljs == num) {
+                return ret.Count;
+            }
+            else {
+                var a = Math.floor(num / yljs);
+                var b = num - (a * yljs);
+                if (b == 0) {
+                    return ret.Count * a;
+                }
+                var yldataList = $.grep(retList, function (n, i) {
+                    return (n.CountIndex == b);
+                });
+                var yldata = yldataList[0];
+                yldata.Count = a * ret.Count + yldata.Count;
+                yldata.CountIndex = num;
+                return yldata.Count;
+            }
+        }
+    }
+    //计算次数(拼接)
+    function pjcs(itemUseNum, size, pjsize, countpj, count, retList) {
+        var ret = { Count: "", CountIndex: "", IsLast: false };
+        ret.Count = count;
+        ret.CountIndex = countpj * count + 1;
+        var a = size * countpj + pjsize - itemUseNum;
+        if ((a + size * countpj > itemUseNum) && a >= rubbish) {
+            retList.push(ret);
+            count++;
+            pjcs(itemUseNum, size, a, countpj, count, retList);
+        }
+        else if ((a + size * countpj == itemUseNum) && a >= rubbish) {
+            if (count == 2) {
+                retList.push(ret);
+            }
+            count++;
+            var retNew = { Count: "", CountIndex: "", IsLast: true };
+            retNew.Count = count;
+            retNew.CountIndex = countpj * count + 1;
+            retList.push(retNew);
+            return retList;
+        }
+        else {
+            ret.IsLast = true;
+            retList.push(ret);
+            return retList;
+        }
+    }
+
+    //计算次数(剪切)
+    function jqcs(itemUseNum, size, pjsize, js, gs, retList) {
+        var length = size + pjsize;
+        var count = Math.floor(length / itemUseNum);//生成件数
+        js += count;
+        var a = length - (count * itemUseNum);//剩余尺寸
+        var ret = { Count: "", CountIndex: "", IsLast: false };
+        ret.Count = js;
+        ret.CountIndex = gs;
+        //判断剩余尺寸能否再拼接
+        if ((Math.floor((size + a) / itemUseNum) > Math.floor(size / itemUseNum)) && a >= rubbish) {
+            retList.push(ret);
+            gs++;
+            jqcs(itemUseNum, size, a, js, gs, retList);
+        }
+        else {
+            ret.IsLast = true;
+            retList.push(ret);
+            return retList;
+        }
+    }
+
+    //单件用量>=型号*0.07  才能拼接
+    function ispjok(specificationModel, itemUseNum) {
+        var flag = false;
+        var a = specificationModel.split(" ");
+        if (a.length > 1) {
+            var b = parseFloat(a[1].replace("mm", ""));
+            if (b > 0 && itemUseNum >= b * 0.07) {
+                flag = true;
+            }
+        }
+        return flag;
+    }
+</script>
+
+<!--***************************提交数据******************************-->
+<script type="text/javascript">
+
+    var RecdDataList = [];
+    //总件数
+    function total(rowId, tap, pjid, tappj) {
+        var allRowData = [];
+        if (tap == undefined || tap == "") {
+            tap = $(".tabs-fa").find(".active").attr("tb");
+        }
+        if (tap == "tj") {
+            if ('@Textstr' == '@yllable') {
+                getNumber("#gridListYL", rowId, tap, allRowData);
+                if (tappj == undefined || tappj == "") {
+                    tappj = $(".tabs-pj").find(".active").attr("tb");
+                }
+                getNumber("#" + tappj, pjid, tap, allRowData);
+            } else {
+                getNumber("#gridListYCL", rowId, tap, allRowData);
+            }
+            var RecdDataListTo = $.grep(RecdDataList, function (n, i) {
+                if ((n.Tab1 == tap && n.Div == "#" + tappj) || n.Tab1 == tap && (n.Div == "#gridListYL" || n.Div == "#gridListYCL")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+            showGridData(RecdDataListTo);
+
+        }
+        else {
+            if ('@Textstr' == '@yllable') {
+                getNumber("#gridListYLZX", 0, tap, allRowData);
+            }
+            getNumber("#gridListYCLZX", 0, tap, allRowData);
+
+            var RecdDataListTo = $.grep(RecdDataList, function (n, i) {
+                if (n.Tab1 == tap) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+            showGridData(RecdDataListTo);
+        }
+
+        var useNumber = getTotal(tap, tappj);
+        $("#total").html(useNumber.num);
+        $("#totalH").val(useNumber.numH);
+        var difference = parseInt($("#needNum").html()) - useNumber.num;
+        $("#difference").html(difference);//差额
+        if (parseInt(useNumber.numH) - 10 > parseInt('@Number')) {
+            $("#zymsg").html("领料根数超出过多，将产生过大损耗");
+        } else {
+            $("#zymsg").html("");
+        }
+    }
+
+    function showGridData(RecdDataListTo) {
+        var tt = 0;
+        $(RecdDataListTo).each(function (index, item) {
+            //查找表格的根数，领料件数
+            var rowData = $(item.Div).jqGrid("getRowData", item.Rowid);
+            tt += parseInt(rowData.NumberHH);
+            var ce = parseInt($("#needNum").html()) - tt;
+            if (ce <= 0) {
+                var r = $(item.Div).find("[id=" + item.Rowid + "]");
+                var a = parseInt(rowData.NumberHH) + ce;
+                if (a < 0) {
+                    a = 0;
+                }
+                item.NumberH = a;
+                $(r).find("[aria-describedby=" + item.Div.replace("#", "") + "_NumberH]").html(item.NumberH);//件数
+
+                if (item.Div == "#gridListbtcc") {
+                    var rn = $(item.Div).find("[id=" + parseInt(parseInt(item.Rowid) + 1) + "]");
+                    $(rn).find("[aria-describedby=" + item.Div.replace("#", "") + "_NumberH]").html(item.NumberH);
+                }
+            }
+        });
+    }
+
+    //获取领料件数
+    function getNumber(id, rowId, tb, allRowData) {
+        var idf = null;
+        if (rowId > 0) {
+            var isselect = $(id).find("tr[id=" + rowId + "]").hasClass("success");
+            if (isselect) {//取消当前行选择
+                idf = rowId;
+            }
+            if (idf == null) {
+                var rowData = $(id).jqGrid("getRowData", rowId);
+                allRowData.push(rowData);
+                addRecdData(id, rowId, rowData.NumberHH, rowData.NumberH, tb);
+            }
+        }
+        saveRow();
+        var ids = $(id).jqGrid('getGridParam', 'selarrrow');
+        if (ids.length > 0) {
+            $(ids).each(function (index, item) {
+                var rowData = $(id).jqGrid("getRowData", item);
+                if (idf == null) {
+                    if (id == "#gridListbtcc") {
+                        if (item == "1" || item == "3" || item == "5") {
+                            allRowData.push(rowData);
+                            addRecdData(id, item, rowData.NumberHH, rowData.NumberH, tb);
+                        }
+                    } else {
+                        allRowData.push(rowData);
+                        addRecdData(id, item, rowData.NumberHH, rowData.NumberH, tb);
+                    }
+                }
+                else {
+                    if (idf != item) {
+                        allRowData.push(rowData);
+                        addRecdData(id, item, rowData.NumberHH, rowData.NumberH, tb);
+                    }
+                }
+            });
+        }
+        else {
+            if (tb == 'zx') {
+                //选中的
+                var tr = $(id).find("[aria-selected=true]");
+                var tt = 0;
+                $(tr).each(function (index, item) {
+                    var rowData = $(id).jqGrid("getRowData", $(item).attr("id"));
+                    allRowData.push(rowData);
+                    addRecdData(id, $(item).attr("id"), rowData.NumberHH, rowData.NumberH, tb);
+                });
+            }
+        }
+
+        //没选中的
+        var trAll = $(id).find("tr");
+        $.each(trAll, function (index, i) {
+            var idtr = $(i).attr("id");
+            if (idtr != undefined) {
+                var rowData = $(id).jqGrid("getRowData", idtr);
+                var flag = true;
+                $.each(allRowData, function (index, item) {
+                    if (item.StockID == rowData.StockID) {
+                        flag = false;
+                    }
+                    if (id == "#gridListbtcc") {
+                        if (parseInt(item.StockIDstr) + 1 == parseInt(rowData.StockIDstr)) {
+                            flag = false;
+                        }
+                    }
+                });
+                if (flag) {
+                    $(i).find("[aria-describedby=" + id.replace("#", "") + "_NumberH]").html(rowData.NumberHH);
+                    delRecdData(id, idtr);
+                }
+            }
+        });
+        return allRowData;
+    }
+
+    //记录勾选数据先后顺序
+    function addRecdData(div, rowid, numberHH, numberH, tab1) {
+        var arr = $.grep(RecdDataList, function (n, i) {
+            if (n.Div == div && n.Rowid == rowid) {
+                return true;
+            } else {
+                return false;
+            }
+        });
+        if (arr.length < 1) {
+            var RecdData = { Div: div, Rowid: rowid, NumberHH: numberHH, NumberH: numberH, Tab1: tab1 };
+            RecdDataList.push(RecdData);
+        }
+    }
+    function delRecdData(div, rowid) {
+        var arr = $.grep(RecdDataList, function (n, i) {
+            if (n.Div != div) {
+                return true;
+            } else {
+                if (n.Rowid != rowid) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        });
+        RecdDataList = arr;
+    }
+
+    function getTableData(id, tbl, rowDataArry) {
+        var ids = $(id).jqGrid('getGridParam', 'selarrrow');
+        if (ids.length > 0) {
+            $(ids).each(function (index, item) {
+                var row = $(id).jqGrid("getRowData", item);
+                if (row.NumberH > 0) {
+                    rowDataArry.push(row);
+                    if (id == "#gridListbtcc") {
+                        var rowData = $(id).jqGrid("getRowData", parseInt(item) + 1);
+                        rowDataArry.push(rowData);
+                    }
+                    if (id == "#gridListycl") {
+                        var rowData = $(id).jqGrid("getRowData", item);
+                        var a = rowData;
+                        a.SizeSelection = rowData.SizeSelectionycl;
+                        a.UseNumber = rowData.UseNumberycl;
+                        a.RootNumber = rowData.SizeSelectionycl;
+                        a.RMTypeName = rowData.RMTypeNameycl;
+                        a.WeightSmallPlanN = rowData.WeightSmallPlanNycl;
+                        a.NumberH = 0;
+                        rowDataArry.push(a);
+                    }
+                }
+            });
+        } else {
+            if (tbl == 'zx') {
+                var tr = $(id).find("[aria-selected=true]");
+                $(tr).each(function (index, item) {
+                    var row = $(id).jqGrid("getRowData", $(item).attr("id"));
+                    if (row.NumberH > 0) {
+                        rowDataArry.push(row);
+                    }
+                });
+            }
+        }
+        return rowDataArry;
+    }
+
+    function getTotal(tap, tappj) {
+        var dataObj = {}
+        var numberH = 0;
+        var numberHH = 0;
+        var RecdDataListTo = null;
+        if (tap == "tj") {
+            RecdDataListTo = $.grep(RecdDataList, function (n, i) {
+                if ((n.Tab1 == tap && n.Div == "#" + tappj) || n.Tab1 == tap && (n.Div == "#gridListYL" || n.Div == "#gridListYCL")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+        } else {
+            RecdDataListTo = $.grep(RecdDataList, function (n, i) {
+                if (n.Tab1 == tap) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+        }
+        $(RecdDataListTo).each(function (index, item) {
+            //查找表格的根数，领料件数
+            var rowData = $(item.Div).jqGrid("getRowData", item.Rowid);
+            numberH += parseFloat(rowData.NumberH);
+            if (parseFloat(rowData.NumberH) > 0) {
+                numberHH += parseFloat(rowData.NumberHH);
+            }
+        });
+        dataObj.num = numberH;
+        dataObj.numH = numberHH;
+
+        return dataObj;
+    }
+    //提交数据
+    function BackData(options) {
+        var total = parseInt($("#total").html());
+        if (total == 0) {
+            $.modalMsg("总领料件数不能为0", "warning");
+            return false;
+        }
+        if (total < parseInt('@Number')) {
+            $.modalMsg("总领料件数不足", "warning");
+            return false;
+        }
+        var totalH = $("#totalH").val();
+        if (parseInt(totalH) - 10 > parseInt('@Number')) {
+            top.layer.confirm("领料根数超出过多，将产生过大损耗，是否确定保存？", {
+                icon: "fa-exclamation-circle",
+                title: "系统提示",
+                btn: ['确认', '取消'],
+                btnclass: ['btn btn-primary', 'btn btn-danger'],
+            }, function (index) {
+                top.layer.close(index);
+                options.success(getretDate(total));
+            }, function () {
+            });
+        } else {
+            options.success(getretDate(total));
+        }
+    }
+
+    function getretDate(tol) {
+        var rowData = [];
+        var tap = $(".tabs-fa").find(".active").attr("tb");
+        if (tap == "tj") {
+            if ('@Textstr' == '@yllable') {
+                //余料
+                getTableData("#gridListYL", " ", rowData);
+                var tappj = $(".tabs-pj").find(".active").attr("tb");
+                getTableData("#" + tappj, "", rowData);
+            } else {
+                //原材料
+                getTableData("#gridListYCL", " ", rowData);
+            }
+        }
+        else {
+            if ('@Textstr' == '@yllable') {
+                //余料
+                getTableData("#gridListYLZX", "zx", rowData);
+            }
+            //原材料
+            getTableData("#gridListYCLZX", "zx", rowData);
+        }
+        var backdata = {};
+        backdata.numberH = tol;
+        backdata.rowData = rowData;
+        return backdata;
+    }
+</script>

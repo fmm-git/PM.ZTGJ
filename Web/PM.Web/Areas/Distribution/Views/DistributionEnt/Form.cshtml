@@ -1,0 +1,1590 @@
+﻿@{
+    /*
+     * 新增/编辑页
+     * 配送装车
+     */
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var keyValue1 = $.request("keyValue1");
+    var type = $.request("type");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        gridListOrder();//加载配送装车订单信息
+        gridList();//加载配送装车订单明细信息
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "DistributionEnt")",
+                data: { keyValue: keyValue, keyValue1: keyValue1 },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeOrderList(data.Item2);//加载该站点下订单明细信息
+                    lodeOrderItemList(data.Item3);//加载明细信息
+                    lodeOrderListAll(data.Item4);//加载该配送装车单号下所有订单明细信息
+                }
+            });
+        }
+    });
+
+    //站点联系人选择
+    function selectUser() {
+        if ($("#SiteCode").val() == "" || $("#SiteCode").val() == undefined && $("#SiteCode").val() == null) {
+            $.modalMsg("请选择计划信息", "warning");
+        } else {
+            var url = "/Distribution/DistributionEnt/GetWorkAreaUser&keyValue=CompanyCode/" + $("#SiteCode").val();
+            var str = "Contacts=UserCode,ContactsName=UserName";
+            var ret = selectClick('win_WorkAreaUser', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+                $.ajax({
+                    url: "/RawMaterial/FactoryBatchNeedPlan/GetUserPhone?uid=" + row[0].UserId,
+                    dataType: "json",
+                    async: false,
+                    success: function (data) {
+                        $("#ContactWay").val("");
+                        var dt = JSON.parse(data);
+                        if (dt.data.length > 0) {
+                            $("#ContactWay").val(dt.data[0].MobilePhone);
+                        }
+                    }
+                });
+            });
+        }
+
+    }
+    //车牌号选择
+    function selectCar() {
+        if (!$("#ProcessFactoryCode").val()) {
+            $.modalMsg("请选择加工厂信息", "warning");
+            return false;
+        }
+        var url = "/RawMaterial/CarInfo/GetGridJson&keyValue=ProcessFactoryCode/" + $("#ProcessFactoryCode").val();
+        var str = "VehicleCode=CarCode";
+        var ret = selectClick('win_CarInfo', url, 'Grid', '', '', str, '550px', '450px', function () {
+            $("#Driver").val("");
+            $("#CarUser").val("");
+        });
+    }
+    //驾驶员选择
+    function selectCarUser() {
+        var code = $("#VehicleCode").val();
+        if (code == "") {
+            $.modalMsg("请选择车牌号", "warning");
+            return false;
+        }
+        var url = "/RawMaterial/CarInfo/GetItemGridJson&keyValue=CarCode/" + code;
+        var str = "Driver=CarUserCode,CarUser=CarUserName";
+        var ret = selectClick('win_CarInfoUser', url, 'Grid', '', '', str, '550px', '450px')
+    }
+
+    //加工厂选择
+    function selectProcessFactory(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableOrderData = GetGridRowOrderData();//配送装车订单信息
+        if (tableOrderData.length < 1) {
+            return false;
+        }
+        var tableOrderItemData = GetGridRowOrderItemData();//配送装车订单明细信息
+        if (tableOrderItemData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        formData.ProjectId = $("#ProjectId").val();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "DistributionEnt")" + "?type=" + type,
+            param: { model: JSON.stringify(formData), orderModel: JSON.stringify(tableOrderData), itemModel: JSON.stringify(tableOrderItemData),keyValue1: keyValue1 },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "DistributionEnt");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "DistributionEnt");
+    }
+</script>
+
+<!--------装车订单明细信息------->
+<script type="text/javascript">
+    var OrderCodeAll = [];//定义一个数组存在已经选择了的订单
+    var SiteCodeAll = [];//定义一个数组存在已经选择了的站点
+    var index1 = 1;
+    var lastsel1;
+    var mydata = [
+                  {
+                      id: index1,
+                      OrderCode: "",
+                      TypeCode: "",
+                      TypeName: "",
+                      PlanDistributionTime: "",
+                      UsePart: "",
+                      DistributionAddress: "",
+                      SiteCode: "",
+                      SiteName: "",
+                      SiteContacts: "",
+                      SiteContactsName: "",
+                      SiteContactTel: "",
+                      SiteWeightTotal: "",
+                      DisEntOrderIdentity: "",
+                  }
+    ];
+    function gridListOrder() {
+        var $gridList = $("#gridListOrder");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },//1
+                    { label: '订单编号<span class="required1">*</span>', name: 'OrderCode', width: 140, height: 10, align: "left", sortable: false, editable: true },//2
+                    { label: '类型编号', name: 'TypeCode', width: 140, height: 10, align: "left", sortable: false },//3
+                    { label: '类型名称', name: 'TypeName', width: 140, height: 10, align: "left", sortable: false },//4
+                    { label: '计划配送时间', name: 'PlanDistributionTime', width: 140, height: 10, align: "left", sortable: false },//5
+                    { label: '使用部位', name: 'UsePart', width: 140, height: 10, align: "left", sortable: false },//6
+                    { label: '配送地址', name: 'DistributionAddress', width: 140, height: 10, align: "left", sortable: false },//7
+                    { label: '站点编号', name: 'SiteCode', hidden: true },//8
+                    { label: '站点名称', name: 'SiteName', width: 80, height: 10, align: "left", sortable: false },//9
+                    { label: '站点联系人', name: 'SiteContacts', hidden: true },
+                    { label: '站点联系人<span class="required1">*</span>', name: 'SiteContactsName', width: 80, height: 10, align: "left", sortable: false, editable: true },
+                    { label: '站点联系人电话', name: 'SiteContactTel', width: 100, height: 10, align: "left", sortable: false },
+                    { label: '重量合计', name: 'SiteWeightTotal', hidden: true },
+                    { label: '配送装车订单标识列', name: 'DisEntOrderIdentity', hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel1 || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel1);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel1 = rowid;
+                    $("#gridListOrder>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                validOrder(rowid);
+            },
+        });
+    }
+
+    /*JQuery 弹框选择*/
+    function validOrder(rowid) {
+        $("#" + rowid + "_OrderCode").focus(function () {
+            $(this).removeAttr("readonly");
+            selecteSiteOrder(this, rowid);//加工订单选择弹出框选择
+            $(this).attr("readonly", "readonly");
+        });
+        $("#" + rowid + "_SiteContactsName").focus(function () {
+            $(this).removeAttr("readonly");
+            selecteSiteContacts(this, rowid);//站点联系人选择弹出框选择
+            $(this).attr("readonly", "readonly");
+        });
+    }
+    //选择加工订单
+    function selecteSiteOrder(obj, rowid) {
+        //1、先判断是否选择了订单信息
+        var OrderCodeAll1 = [];
+        var DisEntOrderCoder = "";
+        if (OrderCodeAll.length > 0) {
+            for (var i = 0; i < OrderCodeAll.length; i++) {
+                if (i < OrderCodeAll.length - 1) {
+                    DisEntOrderCoder += "'" + OrderCodeAll[i] + "'" + ",";
+                } else {
+                    DisEntOrderCoder += "'" + OrderCodeAll[i] + "'";
+                }
+            }
+        }
+        var url = '/Distribution/DistributionEnt/GetJgcPsOrder&keyValue=ProcessFactoryCode/' + $("#ProcessFactoryCode").val() + "|DisEntOrderCoder/" + DisEntOrderCoder
+        var ret = selectClick('win_ZCPlan', url, 'Grid', '', '', '', '550px', '450px', function (data) {
+            if (data) {
+                var ordercode = "";
+                var typecode = "";
+                var typename = "";
+                var usepart = "";
+                var distime = "";
+                var disaddress = "";
+                var sitecode = "";
+                var sitename = "";
+                for (var i = 0; i < data.length; i++) {
+                    if (i < data.length - 1) {
+                        ordercode += data[i].OrderCode + ",";
+                        typecode += data[i].TypeCode + ",";
+                        typename += data[i].TypeName + ",";
+                        usepart += data[i].UsePart + ",";
+                        distime += data[i].DistributionTime + ",";
+                        disaddress += data[i].DistributionAdd + ",";
+
+                    } else {
+                        ordercode += data[i].OrderCode;
+                        typecode += data[i].TypeCode;
+                        typename += data[i].TypeName;
+                        usepart += data[i].UsePart;
+                        distime += data[i].DistributionTime;
+                        disaddress += data[i].DistributionAdd;
+                        sitecode += data[i].SiteCode;
+                        sitename += data[i].SiteName;
+                    }
+                    OrderCodeAll1.push(data[i].OrderCode);
+                }
+                if (SiteCodeAll.indexOf(sitecode) > -1) {
+                    $.modalMsg("一个站点只能在装车订单信息中存在一条数据", "warning");
+                    return false;
+                } else {
+                    SiteCodeAll.push(sitecode);
+                    if (OrderCodeAll1.length > 0) {
+                        for (var i = 0; i < OrderCodeAll1.length; i++) {
+                            OrderCodeAll.push(OrderCodeAll1[i]);
+                        }
+                    }
+
+                }
+
+                $(obj).val(ordercode);
+                $($(obj).parent().nextAll()[0]).html(typecode);
+                $($(obj).parent().nextAll()[1]).html(typename);
+                $($(obj).parent().nextAll()[2]).html(distime);
+                $($(obj).parent().nextAll()[3]).html(usepart);
+                $($(obj).parent().nextAll()[4]).html(disaddress);
+                $($(obj).parent().nextAll()[5]).html(sitecode);
+                $($(obj).parent().nextAll()[6]).html(sitename);
+            }
+        }, true, '订单编号/类型编码、名称/站点名称');
+    }
+
+    //选择站点联系人
+    function selecteSiteContacts(obj, rowid) {
+        var sitecode = $($(obj).parent().prevAll()[2]).html();
+        //先判断站点是否有值
+        if (sitecode && sitecode != "&nbsp;") {
+            var url = "/Distribution/DistributionEnt/GetWorkAreaUser&keyValue=CompanyCode/" + sitecode;
+            var str = "Contacts=UserCode,ContactsName=UserName";
+            var ret = selectClick('win_WorkAreaUser', url, 'Grid', '', '', '', '550px', '450px', function (row) {
+                if (row) {
+                    $(obj).val(row[0].UserName);
+                    $($(obj).parent().prevAll()[0]).html(row[0].UserCode);
+                    $.ajax({
+                        url: "/RawMaterial/FactoryBatchNeedPlan/GetUserPhone?uid=" + row[0].UserId,
+                        dataType: "json",
+                        async: false,
+                        success: function (data) {
+                            var dt = JSON.parse(data);
+                            if (dt.data.length > 0) {
+                                $($(obj).parent().nextAll()[0]).html(dt.data[0].MobilePhone);
+                            }
+                        }
+                    });
+                }
+
+            });
+        } else {
+            $.modalMsg("请先选择加工订单", "warning");
+            return false;
+        }
+    }
+
+    //添加加工订单
+    function btn_addOrder() {
+        index1++;
+        var data = {
+            id: index1,
+            OrderCode: "",
+            PlanDistributionTime: "",
+            TypeCode: "",
+            TypeName: "",
+            UsePart: "",
+            DistributionAddress: "",
+            SiteCode: "",
+            SiteName: "",
+            SiteContacts: "",
+            SiteContactsName: "",
+            SiteContactTel: "",
+            SiteWeightTotal: "",
+            DisEntOrderIdentity: $("#DistributionCode").val() + "-" + index1
+        }
+        $("#gridListOrder").jqGrid('saveRow', lastsel1);
+        $("#gridListOrder").jqGrid('addRowData', index1, data);
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridListOrder").jqGrid('saveRow', lastsel1);
+        var ids = $("#gridListOrder").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridListOrder").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.OrderCode); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.OrderCode, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //删除加工订单
+    function btn_deleteOrder() {
+        var rowId = $("#gridListOrder").jqGrid('getGridParam', 'selrow');
+        $("#gridListOrder").jqGrid('saveRow', lastsel1);
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        } else {
+            var rowData = $("#gridListOrder").jqGrid('getRowData', rowId);
+            if (rowData) {
+                //订单编号
+                var OrderCode = rowData.OrderCode;
+                var OrderCode1 = OrderCode.split(',');
+                for (var i = 0; i < OrderCode1.length; i++) {
+                    //移除订单编号
+                    var orderIndex = OrderCodeAll.indexOf(OrderCode1[i])
+                    OrderCodeAll.splice(orderIndex, 1)
+                }
+                //移除站点编号
+                var siteIndex = SiteCodeAll.indexOf(rowData.SiteCode)
+                SiteCodeAll.splice(siteIndex, 1);
+                $("#gridListOrder").jqGrid('delRowData', rowId);
+            }
+        }
+    }
+
+
+    //配送装车订单信息
+    function GetGridRowOrderData() {
+        $("#gridListOrder").jqGrid('saveRow', lastsel);
+        var ids = $("#gridListOrder").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var DistributionCode = $("#DistributionCode").val();
+        var columnData = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridListOrder").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.DistributionCode = DistributionCode;
+            if (!rowData.OrderCode) {
+                $.modalMsg("请选择配送装车的订单信息", "warning");
+                columnData = [];
+                return false;
+            }
+            if (!rowData.SiteContacts) {
+                $.modalMsg("请选择配送装车的订单的站点联系人信息", "warning");
+                columnData = [];
+                return false;
+            }
+            var dataItem = GetGridRowOrderItemData();
+            var weight = 0;
+            for (var i = 0; i < dataItem.length; i++) {
+                if (dataItem[i].DisEntOrderIdentity == rowData.DisEntOrderIdentity) {
+                    weight += parseFloat(dataItem[i].UnitWeight * dataItem[i].SingletonWeight * dataItem[i].Number);
+                }
+            }
+            rowData.SiteWeightTotal = weight.toFixed(5);
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+
+    //加载该站点下订单明细信息
+    function lodeOrderList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridListOrder").jqGrid('clearGridData');
+        $.each(data, function (i, item) {
+            index1++;
+            item.id = index1;
+            //var Order1 = item.OrderCode.split(',');
+            //if (Order1.length > 0) {
+            //    for (var i = 0; i < Order1.length; i++) {
+            //        OrderCodeAll.push(Order1[i]);
+            //    }
+            //}
+            //SiteCodeAll.push(item.SiteCode);
+            $("#gridListOrder").jqGrid('addRowData', index1, item);
+        });
+    }
+
+    //加载该配送装车单号下所有订单明细信息
+    function lodeOrderListAll(data) {
+        $.each(data, function (i, item) {
+            var Order1 = item.OrderCode.split(',');
+            if (Order1.length > 0) {
+                for (var i = 0; i < Order1.length; i++) {
+                    OrderCodeAll.push(Order1[i]);
+                }
+            }
+            SiteCodeAll.push(item.SiteCode);
+        });
+    }
+</script>
+
+<!--------装车订单明细信息------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },//1
+                    { label: "配送装车订单标识列", name: "DisEntOrderIdentity", hidden: true },//2
+                    { label: "订单编号", name: "OrderCode", width: 120, height: 10, align: "left", sortable: false },//3
+                    { label: "站点名称", name: "SiteName", width: 120, height: 10, align: "left", sortable: false },//4
+                    { label: "类型编号", name: "TypeCode", width: 120, height: 10, align: "left", sortable: false },//5
+                    { label: "类型名称", name: "TypeName", width: 120, height: 10, align: "left", sortable: false },//6
+                    { label: "订单明细id", name: "WorkorderdetailId", hidden: true },//7
+                    { label: '构件名称', name: 'ComponentName', width: 120, height: 10, align: "left", sortable: false },//8
+                    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },//9
+                    { label: '原材料名称', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },//10
+                    { label: '规格', name: 'Standard', width: 120, height: 10, align: "left", sortable: false },//11
+                    { label: '计量单位', name: 'MeteringUnit', hidden: true },//12
+                    { label: '计量单位', name: 'MeasurementUnitName', width: 120, height: 10, align: "left", sortable: false },//13
+                    { label: '单位重量(kg/m,kg/㎡)', name: 'UnitWeight', width: 120, height: 10, align: "left", sortable: false },//14
+                    { label: '单件用量(m,㎡)', name: 'SingletonWeight', width: 120, height: 10, align: "left", sortable: false },//15
+                    { label: '件数', name: 'GjNumber', width: 120, height: 10, align: "left", sortable: false },//16
+                    { label: '重量小计(kg)', name: 'WeightGauge', width: 120, height: 10, align: "left", sortable: false },//17
+                    { label: '打包件数', name: 'PackNumber', width: 120, height: 10, align: "left", sortable: false },//18
+                    { label: '打包包数', name: 'PackagesNumber', width: 120, height: 10, align: "left", sortable: false },//19
+                    { label: '可装车包数', name: 'CanLoadingPackCount', width: 120, height: 10, align: "left", sortable: false },//20
+                    { label: '本次装车包数<span class="required1">*</span>', name: 'ThisTimePackCount', width: 120, height: 10, align: "left", sortable: false, editable: true },//21
+                    { label: '本次装车件数', name: 'Number', width: 100, align: "left", sortable: false },//22
+                    { label: '加工工艺', name: 'ProcessingTechnology', hidden: true },//23
+                    { label: '加工工艺', name: 'ProcessingTechnologyName', width: 120, height: 10, align: "left", sortable: false },//24
+                    { label: '厂家', name: 'Manufactor', width: 120, align: "left", sortable: false },//25
+                    { label: '炉批号', name: 'HeatNo', width: 70, align: "left", sortable: false },//26
+                    { label: '检测报告编号', name: 'TestReport', width: 100, align: "left", sortable: false },//27
+                    { label: '可装车件数', name: 'CanLoadingJs', hidden: true },//28
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                valid(rowid);
+            },
+        });
+    }
+
+    /*JQuery 限制文本框只能输入数字和小数点 || 日期控件 || 弹框选择*/
+    function valid(rowid) {
+        //打包件数
+        $("#" + rowid + "_ThisTimePackCount")
+               .keyup(function () { regTextBox(this, 5); })
+               .bind("paste", function () { regTextBox(this, 5); }).blur(function () { Calculation($(this).parent().parent()); });
+    }
+
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+
+    //判断本次装车包数是否大于了可装车包数
+    function Calculation(obj) {
+        var num = $(obj.children()[18]).html();//打包数量
+        var kzcbs = $(obj.children()[20]).html();//可装车包数
+        var bczcbs = $(obj.children()[21]).children().val();//本次装车包数
+        var kzcjs = $(obj.children()[28]).html();//可装车件数
+        if (!isNaN(kzcbs) && !isNaN(bczcbs)) {
+            if (parseFloat(bczcbs) > parseFloat(kzcbs)) {
+                $.modalMsg("本次装车包数超过了可装车包数", "warning");
+                $(obj.children()[21]).children().val(kzcbs);
+                var bczcjs = Number(kzcbs) * Number(num);
+                if (Number(bczcjs) > Number(kzcjs)) {
+                    $(obj.children()[22]).html(kzcjs);//本次装车件数
+                } else {
+                    $(obj.children()[22]).html(Number(kzcbs) * Number(num));//本次装车件数
+                }
+            } else {
+                var bczcjs = Number(bczcbs) * Number(num);
+                if (Number(bczcjs) > Number(kzcjs)) {
+                    $(obj.children()[22]).html(kzcjs);//本次装车件数
+                } else {
+                    $(obj.children()[22]).html(Number(bczcbs) * Number(num));//本次装车件数
+                }
+
+            }
+        }
+    }
+
+    //批量装车订单明细添加
+    function btn_add() {
+        //先判断配送装车订单信息是否添加了数据
+        $("#gridListOrder").jqGrid('saveRow', lastsel1);
+        var ids = $("#gridListOrder").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length <= 0) {
+            $.modalMsg("请先添加装车订单信息", "warning");
+            return false;
+        }
+        var DisEorderCode = new Array();
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridListOrder").jqGrid("getRowData", yu);
+            var orderCode = rowData.OrderCode.split(',');
+            if (orderCode.length > 0) {
+                for (var i = 0; i < orderCode.length; i++) {
+                    DisEorderCode.push(orderCode[i]);
+                }
+            }
+        });
+        var url = "/Distribution/DistributionEnt/GetPsOrderItem&keyValue=OrderCode/" + DisEorderCode;
+        var str = "";
+        var ret = selectClick('win_ZCPlanItem', url, 'Grid', '', '', str, '50%', '500px', function (row) {
+            AllMyBack(row);
+        }, true, '订单编号/类型编码、名称/站点名称');
+    }
+
+    //批量添加回调函数
+    function AllMyBack(row) {
+        var rowData = [];
+        if (row && row.length > 0) {
+            for (var i = 0; i < row.length; i++) {
+                //1、判断当前选择的订单明细是所有配送装车订单里面的那一条数据
+                var DisEntOrderIdentity = "";
+                var orderids = $("#gridListOrder").jqGrid('getDataIDs');//获取多行的id
+                $(orderids).each(function (index, yu) {
+                    var roworderData = $("#gridListOrder").jqGrid("getRowData", yu);
+                    if (roworderData.OrderCode.includes(row[i].OrderCode)) {
+                        DisEntOrderIdentity = roworderData.DisEntOrderIdentity;
+                        return;
+                    }
+                });
+                var mydata = {
+                    ID: 0,
+                    DisEntOrderIdentity: DisEntOrderIdentity,
+                    OrderCode: row[i].OrderCode,
+                    SiteName: row[i].SiteName,
+                    TypeCode: row[i].TypeCode,
+                    TypeName: row[i].TypeName,
+                    WorkorderdetailId: row[i].WorkorderdetailId,
+                    ComponentName: row[i].ComponentName,
+                    MaterialCode: row[i].MaterialCode,
+                    MaterialName: row[i].MaterialName,
+                    Standard: row[i].SpecificationModel,
+                    MeteringUnit: row[i].MeasurementUnit,
+                    MeasurementUnitName: row[i].MeasurementUnitName,
+                    UnitWeight: row[i].MeasurementUnitZl,//单位重量
+                    SingletonWeight: row[i].ItemUseNum,//单件用量
+                    GjNumber: row[i].Number,//件数
+                    WeightGauge: row[i].WeightSmallPlan,//重量小计
+                    PackNumber: row[i].PackNumber,//打包件数
+                    PackagesNumber: row[i].PackagesNumber,//打包包数
+                    CanLoadingPackCount: row[i].CanLoadingPackCount,//可装车包数
+                    ThisTimePackCount: row[i].CanLoadingPackCount,//本次装车包数
+                    Number: row[i].CanLoadingJs,//本次装车件数
+                    ProcessingTechnology: row[i].ProcessingTechnology,
+                    ProcessingTechnologyName: row[i].ProcessingTechnologyValue,
+                    Manufactor: row[i].Manufactor,
+                    HeatNo: row[i].HeatNo,
+                    TestReport: row[i].TestReportNo,
+                    CanLoadingJs: row[i].CanLoadingJs,
+                };
+                rowData.push(mydata);
+            }
+        }
+        lodeOrderItemList(rowData);
+    }
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.WorkorderdetailId); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.WorkorderdetailId, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+
+    //配送装车订单明细信息
+    function GetGridRowOrderItemData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var DistributionCode = $("#DistributionCode").val();
+        var columnData = [];
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.DataType = 1;
+            rowData.DistributionCode = DistributionCode;
+            var DemandNum = parseFloat(rowData.ThisTimePackCount);
+            if (isNaN(DemandNum)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            } else if (DemandNum <= 0) {
+                $.modalMsg("明细数据有误，本次装车包数不能小于0", "warning");
+                columnData = [];
+                return false;
+            }
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+
+    //加载列表数据
+    function lodeOrderItemList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        //$("#gridList").jqGrid('clearGridData');
+        $.each(data, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">装车订单信息</a></li>
+        <li id="OrderMXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">装车订单明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <!---------标识ID------->
+            <input id="ID" name="ID" type="hidden" />
+            <!---------审批状态------->
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <!---------附件------->
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <!------卸货状态------>
+            <input id="UnloadingState" name="UnloadingState" type="hidden">
+            <!------签收状态------>
+            <input id="SignState" name="SignState" type="hidden">
+            <!------项目id------>
+            <input id="ProjectId" name="ProjectId" type="hidden">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">配送装车编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DistributionCode" name="DistributionCode" type="text" disabled="disabled" value="@ViewBag.DistributionCode" class="form-control required" />
+                    </td>
+                    <th class="formTitle">装车完成日期<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="LoadCompleteTime" name="LoadCompleteTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" class="form-control required input-wdatepicker" onfocus="WdatePicker({ isShowClear: false, readOnly: false, dateFmt: 'yyyy-MM-dd HH:mm:ss' })" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">车牌号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="VehicleCode" name="VehicleCode" type="hidden" />
+                            <input id="CarCph" name="CarCph" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectCar()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">驾驶员<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Driver" name="Driver" type="hidden" class="form-control required" />
+                        <div class="input-group input-group-with">
+                            <input id="CarUser" name="CarUser" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectCarUser()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    @*<th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" value="@ViewBag.ProcessFactoryName" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectProcessFactory('1')">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>*@
+                    <th class="formTitle">附件</th>
+                    <td class="formValue">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                    <td><input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" /></td>
+                    <td></td>
+                </tr>
+                
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserCode" name="InsertUserCode" type="hidden" value="@ViewBag.UserCode" class="form-control" />
+                        <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_addOrder()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_deleteOrder()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridListOrder"></table>
+        </div>
+    </div>
+    <div id="OrderMXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+@*@{
+        /*
+         * 新增/编辑页
+         * 配送装车
+         */
+        ViewBag.Title = "Form";
+        Layout = "~/Views/Shared/_Form.cshtml";
+    }
+    <script src="~/Content/js/Comm.js"></script>
+    <script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+    <link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+    <script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+    <script src="~/Content/js/uploadFile.js"></script>
+    <style>
+        .select2-container {
+            box-sizing: border-box;
+            display: inline-block;
+            margin: 0;
+            position: relative;
+            vertical-align: middle;
+            width: 102% !important;
+        }
+    </style>
+    <!---------基本信息------->
+    <script type="text/javascript">
+        var keyValue = $.request("keyValue");
+        var type = $.request("type");
+        $(function () {
+            //选择框样式调整
+            $(".input-group-btn").each(function () {
+                $(this).parent().parent().css("padding-right", "0px");
+                $(this).css("padding-left", "8px");
+                $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+            });
+            gridList();//加载明细信息
+            if (!!keyValue) {
+                $.ajax({
+                    url: "@Url.Action("GetFormJson", "DistributionEnt")",
+                    data: { keyValue: keyValue },
+                    dataType: "json",
+                    async: false,
+                    success: function (data) {
+                        $("#form1").formSerialize(data.Item1[0]);
+                        if ($("#Enclosure").val()) {
+                            $("#uplaodFileTitle").html("已上传");
+                            $("#uplaodFilelook").show();
+                        }
+                        lodeList(data.Item2);//加载明细信息
+                    }
+                });
+            }
+        });
+
+        //选择计划单
+        function selectPlan() {
+            var url = "/Distribution/DistributionEnt/GetPSJHGridJson";
+            var str = "DistributionPlanCode,TypeCode,TypeName,PlanDistributionTime=DistributionTime,DistributionAddress=DistributionAdd,SiteCode,SiteName,UsePart,ProcessFactoryCode,ProcessFactoryName,OrderCode,ProjectId";
+            var ret = selectClickPlan('win_ZCPlan', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+                if (row.length > 0) {
+                    for (var i = 0; i < row.length; i++) {
+                        if (i != 0) {
+                            if (row[0].SiteCode != row[i].SiteCode || row[0].ProcessFactoryCode != row[i].ProcessFactoryCode) {
+                                $.modalMsg("请选择统一站点、加工厂的数据！", "warning");
+                                $("#DistributionPlanCode").val("");
+                                $("#TypeCode").val("");
+                                $("#TypeName").val("");
+                                $("#PlanDistributionTime").val("");
+                                $("#DistributionAddress").val("");
+                                $("#SiteCode").val("");
+                                $("#SiteName").val("");
+                                $("#UsePart").val("");
+                                $("#ProcessFactoryCode").val("");
+                                $("#ProcessFactoryName").val("");
+                                $("#OrderCode").val("");
+                                return false;
+                            }
+                        }
+                    }
+                    MultipleData(row);
+                }
+            }, true);
+        }
+
+        function MultipleData(row) {
+            var plnum = "";
+            var tnum = "";
+            var tname = "";
+            var dtime = "";
+            var dadd = "";
+            var up = "";
+            var onum = "";
+            if (row && row.length > 0) {
+                for (var i = 0; i < row.length; i++) {
+                    if (i == 0) {
+                        plnum += row[i].DistributionPlanCode;
+                        tnum += row[i].TypeCode;
+                        tname += row[i].TypeName;
+                        dtime += row[i].DistributionTime;
+                        dadd += row[i].DistributionAdd;
+                        up += row[i].UsePart;
+                        onum += row[i].OrderCode;
+                    } else {
+                        plnum += "，" + row[i].DistributionPlanCode;
+                        tnum += "，" + row[i].TypeCode;
+                        tname += "，" + row[i].TypeName;
+                        dtime += "，" + row[i].DistributionTime;
+                        dadd += "，" + row[i].DistributionAdd;
+                        up += "，" + row[i].UsePart;
+                        onum += "," + row[i].OrderCode;
+                    }
+                }
+            }
+            $("#DistributionPlanCode").val(plnum);
+            $("#TypeCode").val(tnum);
+            $("#TypeName").val(tname);
+            $("#PlanDistributionTime").val(dtime);
+            $("#DistributionAddress").val(dadd);
+            $("#SiteCode").val(row[0].SiteCode);
+            $("#SiteName").val(row[0].SiteName);
+            $("#UsePart").val(up);
+            $("#ProcessFactoryCode").val(row[0].ProcessFactoryCode);
+            $("#ProcessFactoryName").val(row[0].ProcessFactoryName);
+            $("#OrderCode").val(onum);
+            $("#ProjectId").val(row[0].ProjectId);
+        }
+
+        //联系人选择
+        function selectUser() {
+            if ($("#SiteCode").val() == "" || $("#SiteCode").val() == undefined && $("#SiteCode").val() == null) {
+                $.modalMsg("请选择计划信息", "warning");
+            } else {
+                var url = "/Distribution/DistributionEnt/GetWorkAreaUser&keyValue=CompanyCode/" + $("#SiteCode").val();
+                var str = "Contacts=UserCode,ContactsName=UserName";
+                var ret = selectClick('win_WorkAreaUser', url, 'Grid', '', '', str, '550px', '450px', function (row) {
+                    $.ajax({
+                        url: "/RawMaterial/FactoryBatchNeedPlan/GetUserPhone?uid=" + row[0].UserId,
+                        dataType: "json",
+                        async: false,
+                        success: function (data) {
+                            $("#ContactWay").val("");
+                            var dt = JSON.parse(data);
+                            if (dt.data.length > 0) {
+                                $("#ContactWay").val(dt.data[0].MobilePhone);
+                            }
+                        }
+                    });
+                });
+            }
+
+        }
+        //车牌号选择
+        function selectCar() {
+            if ($("#ProcessFactoryCode").val() == "" || $("#ProcessFactoryCode").val() == undefined && $("#ProcessFactoryCode").val() == null) {
+                $.modalMsg("请选择计划信息", "warning");
+            } else {
+                var url = "/RawMaterial/CarInfo/GetGridJson&keyValue=ProcessFactoryCode/" + $("#ProcessFactoryCode").val();
+                var str = "VehicleCode=CarCode";
+                var ret = selectClick('win_CarInfo', url, 'Grid', '', '', str, '550px', '450px', function () {
+                    $("#Driver").val("");
+                    $("#CarUser").val("");
+                });
+            }
+        }
+        //驾驶员选择
+        function selectCarUser() {
+            var code = $("#VehicleCode").val();
+            if (code == "") {
+                $.modalMsg("请选择车牌号", "warning");
+                return false;
+            }
+            var url = "/RawMaterial/CarInfo/GetItemGridJson&keyValue=CarCode/" + code;
+            var str = "Driver=CarUserCode,CarUser=CarUserName";
+            var ret = selectClick('win_CarInfoUser', url, 'Grid', '', '', str, '550px', '450px')
+        }
+
+        //提交数据
+        function submitForm() {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+            var tableData = GetGridRowData();//明细信息
+            if (tableData.length < 1) {
+                return false;
+            }
+            totalDemandNum();
+            var formData = $("#form1").formSerialize();
+            formData.ProjectId = $("#ProjectId").val();
+            if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+                formData.ID = 0;
+            }
+            $.submitForm({
+                url: "@Url.Action("SubmitForm", "DistributionEnt")" + "?type=" + type,
+                param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+                success: function () {
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            })
+        }
+        //获取表格数据
+        function GetGridRowData() {
+            $("#gridList").jqGrid('saveRow', lastsel);
+            var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+            if (ids.length < 1) {
+                $.modalMsg("明细数据不完整", "warning");
+                return null;
+            }
+            var DistributionCode = $("#DistributionCode").val();
+            var columnData = [];
+            $(ids).each(function (index, yu) {
+                var rowData = $("#gridList").jqGrid("getRowData", yu);
+                rowData.ID = 0;
+                rowData.DataType = 1;
+                rowData.DistributionCode = DistributionCode;
+                var DemandNum = parseFloat(rowData.WeightGauge);
+                if (isNaN(DemandNum)) {
+                    $.modalMsg("明细数据不完整", "warning");
+                    columnData = [];
+                    return false;
+                } else if (DemandNum <= 0) {
+                    $.modalMsg("明细数据有误，件数不能大于计划件数", "warning");
+                    columnData = [];
+                    return false;
+                }
+                columnData.push(rowData);
+            });
+            return columnData;
+        }
+
+        //汇总明细需求数量
+        function totalDemandNum() {
+            var data = GetGridRowData();
+            if (data && data.length > 0) {
+                var total = 0;
+                for (var i = 0; i < data.length; i++) {
+                    total += parseFloat(data[i].WeightGauge);
+                }
+                $("#TotalAggregate").val(total.toFixed(5));
+            }
+            else {
+                $("#TotalAggregate").val("0.00000");
+            }
+        }
+
+        //选项卡
+        function selectTab(v) {
+            var id = v.attr('id');
+            if (id != "JBXX") {
+                if (!$('#form1').formValid()) {
+                    return false;
+                }
+            } else {
+                totalDemandNum();
+            }
+            $("#" + id + "").addClass("active").siblings().removeClass("active");
+            $("#" + id + "Info").show();
+            $("#" + id + "Info").siblings('div').hide();
+        }
+
+
+        function selectClickPlan(tableName, GetDataUrl, GridType, SortField, Key, BackFiles, width, height, FunBack, multiselect, queryCriteria, isPage) {
+            $.modalOpen({
+                id: "SelectForm",
+                title: "窗口",
+                url: "/Common/SelectForm?tableName=" + tableName + "&GetDataUrl=" + GetDataUrl + "&GridType=" + GridType + "&SortField=" + SortField + "&Key=" + Key + "&multiselect=" + multiselect + "&queryCriteria=" + queryCriteria + "&isPage=" + isPage,
+                width: width,
+                height: height,
+                callBack: function (iframeId) {
+                    var PlanCode = $("#DistributionPlanCode").val();
+                    var BackData = top.frames[iframeId].BackData(multiselect);
+                    if (BackData == "" || BackData == null || BackData == undefined) {
+                        return false;
+                    }
+                    if (!!PlanCode) {
+                        if (PlanCode != BackData[0].DistributionPlanCode) {
+                            top.layer.confirm("重新选择计划单会清空明细数据，请确认", {
+                                icon: "fa-exclamation-circle",
+                                title: "系统提示",
+                                btn: ['确认', '取消'],
+                                btnclass: ['btn btn-primary', 'btn btn-danger'],
+                            }, function (index) {
+                                $("#gridList").jqGrid('clearGridData');
+                                top.layer.close(index);
+                                var a = BackFiles.split(",");
+                                for (var key in BackData[0]) {
+                                    var $id = $('#' + key);
+                                    if ($id.length > 0) {
+                                        $id.val(BackData[0][key]);
+                                    }
+                                    else {
+                                        for (var i = 0; i < a.length; i++) {
+                                            var b = a[i].split("=");
+                                            if (b.length == 2) {
+                                                $("#" + b[0] + "").val(BackData[0][b[1]]);
+                                            } else {
+                                                $("#" + a[i] + "").val(BackData[0][a[i]]);
+                                            }
+                                        }
+                                    }
+                                }
+                                if (FunBack != "" && FunBack != null && FunBack != undefined) {
+                                    //回调函数
+                                    FunBack(BackData);
+                                }
+                                var index = top.layer.getFrameIndex(iframeId);
+                                top.layer.close(index);
+                            }, function () {
+                                var index = top.layer.getFrameIndex(iframeId);
+                                top.layer.close(index);
+                            })
+                        }
+                    } else {
+                        var a = BackFiles.split(",");
+                        for (var key in BackData[0]) {
+                            var $id = $('#' + key);
+                            if ($id.length > 0) {
+                                $id.val(BackData[0][key]);
+                            }
+                            else {
+                                for (var i = 0; i < a.length; i++) {
+                                    var b = a[i].split("=");
+                                    if (b.length == 2) {
+                                        $("#" + b[0] + "").val(BackData[0][b[1]]);
+                                    } else {
+                                        $("#" + a[i] + "").val(BackData[0][a[i]]);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (FunBack != "" && FunBack != null && FunBack != undefined) {
+                            //回调函数
+                            FunBack(BackData);
+                        }
+                        var index = top.layer.getFrameIndex(iframeId);
+                        top.layer.close(index);
+                    }
+                }
+            });
+        }
+
+    </script>
+
+    <!---------附件列表------->
+    <script type="text/javascript">
+        //上传附件
+        function Uplaod() {
+            UplaodFile($("#Enclosure").val(), $("#ID").val(), "DistributionEnt");
+        }
+        //查看附件
+        function uplaodFilelook() {
+            showFile($("#Enclosure").val(), "form", "DistributionEnt");
+        }
+    </script>
+
+    <!---------明细信息------->
+    <script type="text/javascript">
+        var mydata = [];
+        var index = 1;
+        var lastsel;
+        function gridList() {
+            var $gridList = $("#gridList");
+            $gridList.dataGrid({
+                datatype: "json",
+                height: $(window).height() - 160,
+                colModel: [
+                        { label: "主键", name: "ID", hidden: true },
+                        { label: '构件名称', name: 'ComponentName', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '原材料名称', name: 'MaterialName', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '规格', name: 'Standard', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '计量单位', name: 'MeteringUnit', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '单位重量(kg/m,kg/㎡)', name: 'UnitWeight', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '单件用量(m,㎡)', name: 'SingletonWeight', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '件数', name: 'GjNumber', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '打包数量', name: 'PackNumber', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '打包包数', name: 'PackagesNumber', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '未装车件数', name: 'PSAmount', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '本次装车件数', name: 'Number', width: 100, align: "left", sortable: false, editable: true, },
+                        { label: '重量小计(kg)', name: 'WeightGauge', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '加工工艺', name: 'ProcessingTechnology', hidden: true },
+                        { label: '加工工艺', name: 'ProcessingTechnologyValue', width: 120, height: 10, align: "left", sortable: false },
+                        { label: '厂家', name: 'Manufactor', width: 120, align: "left", sortable: false },
+                        { label: '炉批号', name: 'HeatNo', width: 70, align: "left", sortable: false },
+                        { label: '检测报告编号', name: 'TestReport', width: 100, align: "left", sortable: false },
+                        { label: "配送计划明细ID", name: "PlanItemID", hidden: true },
+                        { label: "历史配送件数", name: "PSAmountOld", hidden: true },
+                ],
+                gridComplete: function () {
+                    $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                    $("div.unwritten").remove();
+                },
+                onCellSelect: function (rowid, iCol, cellContent, e) {
+                    //获取表格最后一行Id
+                    var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                    var id = selectedRowIds[selectedRowIds.length - 1];
+                    if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                        $gridList.jqGrid('saveRow', lastsel);
+                        $gridList.jqGrid('editRow', rowid, true);
+                        lastsel = rowid;
+
+                        $("#gridList>tbody").find("input:text").each(function () {
+                            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                            $(this).css("height", "20px").css("width", width + "px");
+                        });
+                    }
+                    valid(rowid);
+                },
+            });
+        }
+
+        /*JQuery 限制文本框只能输入数字和小数点 || 日期控件 || 弹框选择*/
+        function valid(rowid) {
+            //打包件数
+            $("#" + rowid + "_Number")
+                   .keyup(function () { regTextBox(this, 5); })
+                   .bind("paste", function () { regTextBox(this, 5); }).blur(function () { Calculation($(this).parent().parent()); });
+        }
+
+        function regTextBox(obj, isf) {
+            var reg = /^[0-9]*[1-9][0-9]*$/;
+            if (isf) { reg = /\d+\d{0,5}/; }
+            var reg = $(obj).val().match(reg);
+            var txt = '';
+            if (reg != null) { txt = reg[0]; }
+            $(obj).val(txt);
+        }
+
+        //明细计算
+        function Calculation(obj) {
+            var dwzl = $(obj.children()[7]).html();//单位重量
+            var djyl = $(obj.children()[8]).html();//单件用量
+            var num = $(obj.children()[9]).html();//件数
+            var wpsnum = $(obj.children()[12]).html();//未配送数量
+            var psnum = $(obj.children()[13]).children().val();//本次配送数量
+            if (!isNaN(psnum) && !isNaN(wpsnum)) {
+                if (parseFloat(psnum) > parseFloat(wpsnum)) {
+                    $.modalMsg("配送数量超过了未配送数量", "warning");
+                    $(obj.children()[13]).children().val(wpsnum);
+                }
+            }
+        }
+
+        //加载列表数据
+        function lodeList(data) {
+            if (data != null && data != "") {
+                mydata = filterGridData(data);
+            }
+            $("#gridList").jqGrid('clearGridData');
+            $.each(data, function (i, item) {
+                index++;
+                item.id = index;
+                item.PSAmountOld = item.PSAmount;
+                $("#gridList").jqGrid('addRowData', index, item);
+            });
+        }
+
+        //批量添加
+        function btn_add() {
+            var url = "/Distribution/DistributionEnt/GetPSJHItemGridJson&keyValue=PSJHCode/" + $("#OrderCode").val();
+            var str = "";
+            var ret = selectClick('win_ZCPlanItem', url, 'Grid', '', '', str, '50%', '500px', function (row) {
+                AllMyBack(row);
+            }, true);
+        }
+
+        //批量添加回调函数
+        function AllMyBack(row) {
+            var rowData = [];
+            if (row && row.length > 0) {
+                for (var i = 0; i < row.length; i++) {
+                    //打包包数
+                    var dbn = Math.ceil(parseInt(row[i].Number) / (parseInt(row[i].PackNumber)));
+                    if (row[i].ProcessingTechnology == null || row[i].ProcessingTechnology == "" || row[i].ProcessingTechnology == undefined) {
+                        row[i].ProcessingTechnology = 0;
+                    }
+                    var mydata = {
+                        ID: 0,
+                        ComponentName: row[i].ComponentName,
+                        MaterialCode: row[i].MaterialCode,
+                        MaterialName: row[i].MaterialName,
+                        Standard: row[i].SpecificationModel,
+                        MeteringUnit: row[i].MeasurementUnit,
+                        UnitWeight: row[i].MeasurementUnitZl,
+                        PSAmount: row[i].PSAmount,
+                        SingletonWeight: row[i].ItemUseNum,
+                        Number: row[i].PSAmount,
+                        WeightGauge: row[i].WeightSmallPlan,
+                        Manufactor: row[i].Manufactor,
+                        HeatNo: row[i].HeatNo,
+                        TestReport: row[i].TestReportNo,
+                        PlanItemID: row[i].DID,
+                        PSAmountOld: row[i].PSAmount,
+                        GjNumber:row[i].Number,
+                        PackNumber: row[i].PackNumber,
+                        PackagesNumber: dbn,
+                        ProcessingTechnology: row[i].ProcessingTechnology,
+                        ProcessingTechnologyValue: row[i].ProcessingTechnologyValue
+                    };
+                    rowData.push(mydata);
+                }
+            }
+            lodeList(rowData);
+        }
+
+        //去除重复表格数据
+        function filterGridData(data) {
+            var columnData = [];
+            $("#gridList").jqGrid('saveRow', lastsel);
+            var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+            if (ids.length < 1) {
+                columnData = data;
+            }
+            $(ids).each(function (index, item) {
+                var rowData = $("#gridList").jqGrid("getRowData", item);
+                columnData.unshift(rowData);
+            });
+            var codearry = [];
+            columnData.forEach(function (v) { codearry.push(v.PlanItemID); });
+            $.each(data, function (index, item) {
+                var r = $.inArray(item.PlanItemID, codearry)
+                if (r <= -1) {
+                    columnData.push(item);
+                }
+            });
+            return columnData;
+        }
+
+        //删除行
+        function btn_delete() {
+            var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+            if (!rowId) {
+                $.modalMsg("请选择数据", "warning");
+                return false;
+            }
+            $("#gridList").jqGrid('delRowData', rowId);
+        }
+    </script>
+
+    <div style="margin-top: 10px;">
+        <ul class="nav nav-tabs">
+            <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+            <li id="MXXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+        </ul>
+        <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+            <form id="form1">
+                <!---------标识ID------->
+                <input id="ID" name="ID" type="hidden" />
+                <!---------审批状态------->
+                <input id="Examinestatus" name="Examinestatus" type="hidden" />
+                <!---------附件------->
+                <input id="Enclosure" name="Enclosure" type="hidden" />
+                <!------卸货状态------>
+                <input id="UnloadingState" name="UnloadingState" type="hidden">
+                <input id="ProjectId" name="ProjectId" type="hidden">
+                <table class="form">
+                    <tr>
+                        <th class="formTitle">配送编号<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="DistributionCode" name="DistributionCode" type="text" disabled="disabled" value="@ViewBag.DistributionCode" class="form-control required" />
+                        </td>
+                        <th class="formTitle">计划编号<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <div class="input-group input-group-with">
+                                <input id="OrderCode" name="OrderCode" type="hidden" />
+                                <input id="DistributionPlanCode" name="DistributionPlanCode" type="text" disabled="disabled" class="form-control required" />
+                                <span class="input-group-btn" onclick="selectPlan()">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">类型编码<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="TypeCode" name="TypeCode" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                        <th class="formTitle">类型名称<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="TypeName" name="TypeName" disabled="disabled" type="text" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">站点名称<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="SiteCode" name="SiteCode" type="hidden" />
+                            <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                        <th class="formTitle">使用部位<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="UsePart" name="UsePart" disabled="disabled" type="text" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">计划配送日期<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="PlanDistributionTime" name="PlanDistributionTime" disabled="disabled" type="text" class="form-control required" />
+                        </td>
+                        <th class="formTitle">装车完成日期<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="LoadCompleteTime" name="LoadCompleteTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" class="form-control input-wdatepicker" onfocus="WdatePicker({ isShowClear: false, readOnly: false, dateFmt: 'yyyy-MM-dd HH:mm:ss' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">总量合计(kg)<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="TotalAggregate" name="TotalAggregate" disabled="disabled" value="0.0000" type="text" class="form-control ContractData moneyData" />
+                        </td>
+                        <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">车牌号<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <div class="input-group input-group-with">
+                                <input id="VehicleCode" name="VehicleCode" type="hidden" />
+                                <input id="CarCph" name="CarCph" type="text" disabled="disabled" class="form-control required" />
+                                <span class="input-group-btn" onclick="selectCar()">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </td>
+                        <th class="formTitle">驾驶员<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="Driver" name="Driver" type="hidden" class="form-control required" />
+                            <div class="input-group input-group-with">
+                                <input id="CarUser" name="CarUser" type="text" disabled="disabled" class="form-control required" />
+                                <span class="input-group-btn" onclick="selectCarUser()">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">配送地址<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="DistributionAddress" name="DistributionAddress" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">联系人<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <div class="input-group input-group-with">
+                                <input id="Contacts" name="Contacts" type="hidden" class="form-control" />
+                                <input id="ContactsName" name="ContactsName" type="text" disabled="disabled" class="form-control required" />
+                                <span class="input-group-btn" onclick="selectUser()">
+                                    <a style="padding:0px;" class=" btn btn-primary">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </td>
+                        <th class="formTitle">联系人方式<span class="required1">*</span></th>
+                        <td class="formValue">
+                            <input id="ContactWay" name="ContactWay" type="text" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">附件</th>
+                        <td class="formValue" colspan="3">
+                            <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                            <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                            <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">录入人</th>
+                        <td class="formValue">
+                            <input id="InsertUserCode" name="InsertUserCode" type="hidden" value="@ViewBag.UserCode" class="form-control" />
+                            <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control required" />
+                        </td>
+                        <th class="formTitle">录入时间</th>
+                        <td class="formValue">
+                            <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">备注</th>
+                        <td class="formValue" colspan="3">
+                            <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px;"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+        <div id="MXXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+            <div class="toolbar">
+                <div class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+                </div>
+                <div class="btn-group">
+                    <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+                </div>
+            </div>
+            <div class="gridPanel" style="margin-top: 1px; ">
+                <table id="gridList"></table>
+            </div>
+        </div>
+    </div>*@

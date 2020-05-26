@@ -1,0 +1,244 @@
+﻿@{
+    ViewBag.Title = "团队管理编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script>
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    var menuCode = $.request("menuCode");
+    var menuName = $.request("menuName");
+    $(function () {
+        initContrl();
+        LoadTeamMember();
+        if (type == 'edit') {
+            $.ajax({
+                url: "/PermissionsTeam/GetTeamJson",
+                data: { key: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    var mydata = data.PermissionsTeamMember;
+                    lodeList(mydata);
+                }
+            });
+        }
+    });
+
+    function initContrl() {
+        $("#MenuCode").bindSelect({ url: "/PermissionsTeam/GetMenuSelectList" });
+    }
+
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var saveurl = "";
+        if (type == "add") {
+            saveurl = "@Url.Action("Add", "PermissionsTeam")";
+        }
+        else if (type == "edit") {
+            saveurl = "@Url.Action("UpdateTeam", "PermissionsTeam")";
+        }
+        var tableData = [];
+        var tableData = GetGridRowData();
+        if (tableData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        formData.PermissionsTeamMember = tableData;
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: saveurl,
+            param: { param: JSON.stringify(formData) },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+
+    }
+    function LoadTeamMember() {
+        $("#gridList").dataGrid({
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "用户编码", name: "UserCode", width: 350, align: 'left', sortable: false },
+                { label: '用户名称', name: 'UserName', width: 440, align: 'left', sortable: false },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+    }
+
+    //新增团队人员
+    function btn_add() {
+        $.modalOpen({
+            id: "UserForm",
+            title: "选择人员信息",
+            url: '@Url.Action("UserList", "PositionUser")',
+            width: "60%",
+            height: "650px",
+            callBack: function (iframeId) {
+                var backData = top.frames[iframeId].submitForm();
+                if (backData.userData.length > 0) {
+                    var index = top.layer.getFrameIndex(iframeId);
+                    top.layer.close(index);
+                    var row = backData.userData;
+                    var rowData = [];
+                    for (var i = 0; i < row.length; i++) {
+                        var mydata = {
+                            id: 0,
+                            UserCode: row[i].UserCode,
+                            UserName: row[i].UserName,
+                        };
+                        rowData.push(mydata);
+                    }
+                    lodeList(rowData);
+                }
+            }
+        });
+
+    }
+
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+
+
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        }
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.unshift(rowData);
+        });
+        var codearry = [];
+        columnData.forEach(function (v) { codearry.push(v.UserCode); });
+        $.each(data, function (index, item) {
+            var r = $.inArray(item.UserCode, codearry)
+            if (r <= -1) {
+                columnData.push(item);
+            }
+        });
+        return columnData;
+    }
+
+    //获取表格数据
+    function GetGridRowData() {
+        var columnData = [];
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            $.modalMsg("人员信息数据不能为空", "warning");
+            return columnData;
+        }
+        var teamNumber = $("#TeamNumber").val();
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.TeamNumber = teamNumber;
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+
+    //加载列表数据
+    var mydata = [];
+    var index = 0;
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+            $("#gridList").jqGrid('clearGridData');
+        }
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+
+
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+            <li id="TeamMember" onclick="selectTab($(this))"><a href="javascript:void(0);">团队成员</a></li>
+        </ul>
+        <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px;">
+            <div style="padding-top: 20px; margin-right: 30px;">
+                <input id="ID" name="ID" type="hidden" />
+                <table class="form">
+                    <tr>
+                        <th class="formTitle">团队编码<span class="required1">*</span></th>
+                        <td class="formValue" colspan="2">
+                            <input id="TeamNumber" style="background-color: #edf7e6" name="TeamNumber" type="text" value="@ViewBag.TeamNumber" class="form-control required" />
+                        </td>
+                        <th class="formTitle">团队名称<span class="required1">*</span></th>
+                        <td class="formValue" colspan="2">
+                            <input id="TeamName" name="TeamName" style="background-color: #edf7e6" type="text" class="form-control required" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">所属单据<span class="required1">*</span></th>
+                        <td class="formValue" colspan="2">
+                            <select id="MenuCode" name="MenuCode" class="form-control"></select>
+                        </td>
+                        <th class="formTitle">创建时间</th>
+                        <td class="formValue" colspan="2">
+                            <input id="CreateDate" name="CreateDate" style="background-color: #edf7e6" disabled="disabled" value="@(DateTime.Now.ToString("yyyy-MM-dd"))" type="text" class="form-control required" />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th class="formTitle">团队说明</th>
+                        <td class="formValue" colspan="5">
+                            <input type="hidden" id="CreateUser" name="CreateUser" value="@(Convert.ToString(Session["usercode"]))" />
+                            <textarea id="Remark" name="Remark" type="text" style="background-color: #edf7e6" class="form-control" style="height: 60px;"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="TeamMemberInfo" style="padding-top: 5px; display:none; margin-right: 30px;">
+            <div class="toolbar">
+                <div id="LodeBtn" class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>添加</a>
+                </div>
+                <div id="LodeBtn" class="btn-group">
+                    <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o fa-lg"></i>删除</a>
+                </div>
+            </div>
+            <div class="gridPanel" style="margin-top: 1px;">
+                <table id="gridList"></table>
+            </div>
+        </div>
+    </div>
+</form>

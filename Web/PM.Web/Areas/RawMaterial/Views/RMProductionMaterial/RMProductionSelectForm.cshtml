@@ -1,0 +1,76 @@
+﻿@{
+    ViewBag.Title = "原材料生产领料明细页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<!--原材料生产领料明细信息查询处理-->
+<script>
+    var OrderCode = '@ViewBag.OrderCode';
+    $(function () {
+        if (OrderCode) {
+            gridList();//明细数据表格信息查询
+        }
+    });
+
+    //明细数据表格信息查询
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "/RawMaterial/RMProductionMaterial/RMProductionMDetailSelect?OrderCode=" + OrderCode,
+            height: $(window).height() - 128,
+            multiselect: ID == "" ? true : false,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "订单编号", name: "OrderCode", hidden: true },
+                { label: '构件名称', name: 'ComponentName', width: 150, align: 'left', sortable: false },
+                { label: "原材料编号", name: "MaterialCode", hidden: true },
+                { label: '原材料名称', name: 'MaterialName', width: 150, align: 'left', sortable: false },
+                { label: '规格型号', name: 'SpecificationModel', width: 150, align: 'left', sortable: false },
+            ],
+            gridComplete: function () {
+                $("#gridList>tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                    var count = $(this).parent().parent().children()[3];
+                    if ($(count).html() != "0") {
+                        $($(this).parent().parent().children()[1]).html("");
+                    }
+                });
+            },
+            rowNum: -1
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { keyword: $("#txt_keyword").val() },
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+</script>
+
+<div class="topPanel">
+    <div class="search">
+        <table>
+            <tr>
+                <td>
+                    <div class="input-group">
+                        <input id="txt_keyword" type="text" class="form-control" placeholder="构件名称/原材料名称" style="width: 200px;">
+                        <span class="input-group-btn">
+                            <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridList"></table>
+    <div id="gridPager"></div>
+</div>

@@ -1,0 +1,708 @@
+﻿@{
+    ViewBag.Title = "欢迎首页";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+@*2018-07-19 QY 欢迎首页报表设计*@
+<script src="~/Content/js/variable-pie.js"></script>
+<link href="~/Content/css/app.v2.css" rel="stylesheet" />
+<script src="~/Content/js/uploadFile.js"></script>
+<link href="~/Content/js/datepicker/skin/WdatePicker.css" rel="stylesheet" />
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<style type="text/css">
+    .scroll-box {
+        width: 92%;
+        height: 300px;
+        overflow: hidden;
+    }
+
+    ul, li {
+        list-style: none;
+        display: block;
+    }
+
+    #scrollbox #GunDong, #con2 {
+        width: 100%;
+        float: left;
+    }
+
+    /*.redBG {
+        background-color: #c9302c;
+        color: white;
+    }*/
+
+    /*#gridListXH > tbody > tr.active > td.redBG, .table > tbody > tr.success > td.redBG {
+        color: white;
+        background-color: #c9302c;
+    }*/
+    .aa {
+        color: red;
+    }
+
+    .bb {
+        color: #000000;
+    }
+</style>
+<a href="#" class="btn btn-rounded btn-sm btn-twitter" style="position:absolute; right:0; bottom:0; z-index:1300; position:fixed;" id="db_a">
+    <i class="fa fa-arrow-up"></i>&nbsp;回到顶部
+</a>
+
+<div class="col-md-8" style="width:100%;position:absolute; z-index:999;">
+    <section class="panel panel-default" style="height: 50px !important;margin-top:12px">
+        <div class="panel-body">
+            <div style="float:left;width:75%">
+                <span class="btn btn-rounded btn-sm btn-twitter" style="margin-left:10px; margin-top:-5px;"><i class="fa fa-bookmark"></i></span>
+                &nbsp;
+                提示小助手：欢迎回来，
+                <font color="red" style="margin-right:5px;"><b>@ViewBag.UserName</b></font>
+                (本次登陆时间为：
+                @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+            </div>
+            <div class="input-group input-group-with" style="float: right; margin-top: -8px;">
+                <input id="HistoryMonth" name="HistoryMonth" type="text" value="@(DateTime.Now.ToString("yyyy-MM"))" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" style="width:150px" />
+
+            </div>
+        </div>
+    </section>
+</div>
+
+<section class="vbox" style="z-index:0; background-color:#d7d5d5">
+    <section id="content" style="margin-top:74px;">
+        <section class="vbox">
+            <section class="scrollable padder">
+                <section class="panel panel-default">
+                    <div class="row m-l-none m-r-none bg-light lter">
+                        <div class="col-sm-6 col-md-3 padder-v b-r b-light">
+                            <span class="fa-stack fa-2x pull-left m-r-sm" style="margin-left:-10px;">
+                                <i class="fa fa-circle fa-stack-2x text-danger "></i>
+                                <i class="fa fa-database fa-stack-1x text-white"></i>
+                            </span>
+                            <a class="clear">
+                                <span class="h4 block m-t-xs"><strong class="StockCount"></strong></span>
+                                <small class="text-muted text-uc1">当前库存数量（单位：kg）</small>
+                            </a>
+                        </div>
+                        <div class="col-sm-6 col-md-3 padder-v b-r b-light lt">
+                            <span class="fa-stack fa-2x pull-left m-r-sm" style="margin-left: -10px;">
+                                <i class="fa fa-circle fa-stack-2x text-primary"></i>
+                                <i class="fa fa-cogs fa-stack-1x text-white"></i>
+                                <span class="easypiechart pos-abt" data-percent="100" data-line-width="4" data-track-color="#fff" data-scale-color="false" data-size="50" data-line-cap='butt' data-animate="2000" data-target="#bugs" data-update="3000">
+                                </span>
+                            </span>
+                            <a class="clear">
+                                <div id="QtOrg">
+                                    <span class="h4 block m-t-xs">
+                                        <strong id="bugs" class="OrderCount"></strong>
+                                    </span>
+                                    <small class="text-muted text-uc1">当月加工完成总数量（单位：kg）</small>
+                                </div>
+                                <div id="JgcOrg" style="display:none">
+                                    <div style="height:17px;"><small class="text-muted text-uc1">月最大综合产能(kg)：</small><strong class="ycl">0</strong></div>
+                                    <div style="height:17px;"><small class="text-muted text-uc1">当月需加工总量(kg)：</small><strong class="sjcz">0</strong></div>
+                                    <div style="height:17px;"><small class="text-muted text-uc1">产能负荷(%)：</small><strong class="sjfh">0</strong></div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-sm-6 col-md-3 padder-v b-r b-light">
+                            <span class="fa-stack fa-2x pull-left m-r-sm" style="margin-left: -10px;">
+                                <i class="fa fa-circle fa-stack-2x text-info"></i>
+                                <i class="fa fa-truck fa-stack-1x text-white"></i>
+                                <span class="easypiechart pos-abt" data-percent="100" data-line-width="4" data-track-color="#f5f5f5" data-scale-color="false" data-size="50" data-line-cap='butt' data-animate="3000" data-target="#firers" data-update="5000">
+                                </span>
+                            </span>
+                            <a class="clear">
+                                <span class="h4 block m-t-xs"><strong id="firers" class="OrderScheduleCount"></strong></span>
+                                <small class="text-muted text-uc1">当月已配送总数量（单位：kg）</small>
+                            </a>
+                        </div>
+                        <div class="col-sm-6 col-md-3 padder-v b-r b-light lt">
+                            <span class="fa-stack fa-2x pull-left m-r-sm" style="margin-left: -10px;">
+                                <i class="fa fa-circle fa-stack-2x text-success"></i>
+                                <i class="fa fa-pencil-square-o fa-stack-1x text-white"></i>
+                            </span>
+                            <a class="clear">
+                                <span class="h4 block m-t-xs"><strong class="YiDeliveryCount"></strong></span>
+                                <small class="text-muted text-uc1">当月已签收总数量（单位：kg）</small>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+                <div class="row">
+                    <div class="col-md-6" style="padding-right:6px;">
+                        <section class="panel panel-default">
+                            <header class="panel-heading font-bold cc" style="background-color:#ffffff;color:red">
+                                当月报警类型统计
+                                @*<div class="input-group input-group-with" style="float:right;margin-top:-8px;">
+                                        <select id="DateType" name="DateType" class=" form-control" style="width:100px;">
+                                            <option value="本月">本月</option>
+                                            <option value="本周">本周</option>
+                                        </select>
+                                    </div>*@
+                            </header>
+                            <div class="panel-body">
+                                <div id="AlarmMessage" style="height: 300px;"></div>
+                            </div>
+                        </section>
+                    </div>
+                    <div class="col-md-6" style="padding-left:6px;">
+                        <section class="panel panel-default">
+                            <header id="labTitle" class="panel-heading font-bold cc" style="background-color: #ffffff;color:red">
+                                @*<label id="labTitle">审批超时</label>*@
+                            </header>
+                            <div id="PieDetailDiv" class="panel-body">
+                                @*审批超时*@
+                                <div id="SpCsYj" title="审批超时" style="height: 300px;">
+                                    <div class=" gridpanel">
+                                        <table id="gridListSpCsYj"></table>
+                                    </div>
+                                </div>
+                                @*未报月度需求计划*@
+                                <div id="WbydxqjhYj" title="未报月度需求计划" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListWbydxqjhYj"></table>
+                                    </div>
+                                </div>
+                                @*原材料供货超时*@
+                                <div id="YclghCsYj" title="原材料供货超时" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListYclghCsYj"></table>
+                                    </div>
+                                </div>
+                                @*加急订单*@
+                                <div id="JjOrderYj" title="加急订单" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListJjOrderYj"></table>
+                                    </div>
+                                </div>
+                                @*加工进度滞后*@
+                                <div id="JgOrderZhYj" title="加工进度滞后" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListJgOrderZhYj"></table>
+                                    </div>
+                                </div>
+                                @*配送超期*@
+                                <div id="PsCsYj" title="接收配送超期" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListPsCsYj"></table>
+                                    </div>
+                                </div>
+                                @*卸货超时*@
+                                <div id="XhCsYj" title="卸货超时" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListXhCsYj"></table>
+                                    </div>
+                                </div>
+                                @*签收超时*@
+                                <div id="QsCsYj" title="签收超时" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListQsCsYj"></table>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    @*<div class="col-md-6" style="padding-right:6px;">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold cc" style="background-color: #ffffff; color: red">
+                                    供货延时
+                                </header>
+                                <div class="panel-body">
+                                    <div id="SupplyDelay" style="height: 300px;">
+                                        <div class="gridPanel">
+                                            <table id="gridList"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="col-md-6" style="padding-left:6px;">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold cc" style="background-color: #ffffff; color: red">
+                                    加急订单
+                                </header>
+                                <div class="panel-body">
+                                    <div id="UrgentOrder" style="height: 300px;">
+                                        <div class="gridPanel">
+                                            <table id="gridListJJ"></table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>*@
+                    <div class="col-md-8" style="padding-right:15px;width:100%">
+                        <section class="panel panel-default">
+                            <header class="panel-heading font-bold cc" style="background-color: #ffffff; color: red">
+                                卸货问题时间展示
+                            </header>
+                            <div class="panel-body">
+                                <div id="DischargeProcess" style="height: 300px;">
+                                    <div class="gridPanel">
+                                        <table id="gridListXH"></table>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    @*<div class="col-md-8" style="padding-right: 15px;width:100%">
+                            <section class="panel panel-default">
+                                <header class="panel-heading font-bold cc" style="background-color: #ffffff;color:red">
+                                    交流互动
+                                    <a style="float:right;color:#c4c1c1" class="aTable" data-id="Article" href="/Article/Article/Index">
+                                        更多
+                                    </a>
+                                </header>
+                                <div class="panel-body">
+                                    <div id="ExposurePlatform" style="height: 300px;">
+                                        <div class="scroll-box" id="scrollbox">
+                                            <ul id="GunDong" style="padding-top: 10px;"></ul>
+                                            <ul class="notice-list" style="margin-top:0px;" id="con2"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>*@
+                </div>
+            </section>
+        </section>
+    </section>
+</section>
+
+
+<script type="text/javascript">
+    var myDate = new Date();
+    var Year = myDate.getFullYear();
+    var Month = Number(myDate.getMonth()) + Number(1);
+    if (Month.toString().length == 1) {
+        Month = "0" + Month;
+    }
+    CapacityMonth = Year + "-" + Month;
+    //加载数据(统计相关数据)
+    $(function () {
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var HistoryMonth = dp.cal.getNewDateStr();
+                    CapacityMonth = HistoryMonth;
+                    var a = HistoryMonth.split("-");
+                    Year = a[0];
+                    Month = a[1];
+                    LodeTotal(Year, Month);
+                    AlarmMessage(Year, Month);//初始化饼图
+                    GetChangeDateType(Year, Month);//重新加载预警列表数据
+                    pieClick("审批超时");//初始化饼图选中之后的明细信息
+                    AgaingridListXH(Year, Month);
+                }
+            });
+        });
+        LodeTotal(Year, Month);
+        AlarmMessage(Year, Month);//初始化饼图
+        GetRightGridList(Year, Month);//初始化给所有预警列表加载数据
+        pieClick("审批超时");//初始化饼图选中之后的明细信息
+        gridListXH(Year, Month);//卸货问题时间展示
+        var orgType = "@ViewBag.OrgType";
+        var processFactoryCode = "@ViewBag.ProcessFactoryCode";
+        if (orgType == "1" || orgType == "2") {//加工厂、经理部
+            $("#QtOrg").hide();
+            $("#JgcOrg").show();
+        } else {
+            $("#JgcOrg").hide();
+            $("#QtOrg").show();
+        }
+    });
+
+    function LodeTotal(Year, Month) {
+        $.ajax({
+            url: "@Url.Action("GetTotelNum")",
+            data: { Year: Year, Month: Month },
+            success: function (data) {
+                $(".StockCount").html(data.StockCount);
+                $(".OrderCount").html(data.OrderCount);
+                $(".OrderScheduleCount").html(data.OrderScheduleCount);
+                $(".YiDeliveryCount").html(data.YiDeliveryCount);
+            }
+        });
+        $.ajax({
+            url: "@Url.Action("GetCapacityNum")",
+            data: { CapacityMonth: CapacityMonth },
+            success: function (data) {
+                $(".ycl").html(data.ycl);
+                $(".sjcz").html(data.sjcz);
+                if (parseFloat(data.sjfh) >= 80) {
+                    $(".sjfh").addClass("aa");
+                } else {
+                    $(".sjfh").addClass("bb");
+                }
+                $(".sjfh").html(data.sjfh);
+            }
+        });
+    }
+
+    $(function () {
+        $("#db_a").hover(function () {
+            $(this).animate({ height: "50px" });//鼠标移入时高度变为100px
+        }, function () {
+            $(this).animate({ height: "30px" });//还原本体高度
+        });
+    })
+
+    //报警
+    function AlarmMessage(Year, Month) {
+        $.get('/Home/GetAlarmMessage', { Year: Year, Month: Month }, function (data) {
+            var data1 = [];
+            var json = eval('(' + data + ')');
+            if (json.length > 0) {
+                for (var i = 0; i < json.length; i++) {
+                    //data1.push({ name: json[i]["MenuName"], y: parseFloat(json[i]["ct"]) });
+                    if (i == 0) {
+                        data1.push({ name: json[i]["YjTypeName"], y: parseFloat(json[i]["YjNum"]), sliced: true, selected: true });//默认展开
+                    } else {
+                        data1.push({ name: json[i]["YjTypeName"], y: parseFloat(json[i]["YjNum"]) });
+                    }
+
+                }
+            }
+            var chart = Highcharts.chart('AlarmMessage', {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie'
+                },
+                title: {
+                    text: ''
+                },
+                credits: {
+                    enabled: false//是否显示版权信息
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.y} 次数</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.y} 次数',
+                            style: {
+                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                            }
+                        },
+                        events: {
+                            click: function (e) { pieClick(e.point.name); }
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Brands',
+                    colorByPoint: true,
+                    data: data1
+                }]
+            });
+        });
+    }
+
+    var RowNumWidth = 40;
+    //初始化加载所以的预警明细信息
+    function GetRightGridList(Year, Month) {
+        //审批超时
+        $("#gridListSpCsYj").dataGrid({
+            url: "/Home/GetSpCsYjList",
+            height: $("#SpCsYj").height() - 35,
+            colModel: [
+                { label: "预警菜单", name: "MenuName", width: 150, align: 'left', sortable: false },
+                { label: '预警菜单审批节点', name: 'FlowNodeName', width: 280, align: 'left', sortable: false },
+                { label: '流程审批人员', name: 'FlowSpUserName', width: 100, align: 'left', sortable: false },
+                { label: '预警分部', name: 'BranchName', width: 80, align: 'left', sortable: false },
+                { label: '预警工区', name: 'WorkAreaName', width: 80, align: 'left', sortable: false },
+                //{ label: '预警站点', name: 'SiteName', width: 120, align: 'left', sortable: false },
+                { label: '预警单号', name: 'OddNumbers', width: 120, align: 'left', sortable: false },
+                { label: '预警人员', name: 'FlowYjUserName', width: 100, align: 'left', sortable: false },
+                { label: '预警发生时间', name: 'EarlyWarningTime', width: 140, align: 'left', sortable: false },
+                //{ label: '预警内容', name: 'EarlyWarningContent', width: 260, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListSpCsYj",
+            sortname: 'EarlyWarningTime',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //未按时提报月度需求计划
+        $("#gridListWbydxqjhYj").dataGrid({
+            url: "/Home/GetWbydxqjhYjList",
+            height: $("#WbydxqjhYj").height() - 35,
+            colModel: [
+                { label: "预警菜单", name: "MenuName", width: 150, align: 'left', sortable: false },
+                { label: '预警分部', name: 'FbName', width: 80, align: 'left', sortable: false },
+                { label: '预警工区', name: 'GqName', width: 80, align: 'left', sortable: false },
+                { label: '钢筋类型', name: 'RebarType', width: 100, align: 'left', sortable: false },
+                { label: '预警发生时间', name: 'EWTime', width: 140, align: 'left', sortable: false },
+                { label: '预警人员', name: 'UserName', width: 100, align: 'left', sortable: false },
+                //{ label: '预警内容', name: 'EWContent', width: 260, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListWbydxqjhYj",
+            sortname: 'EWTime',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+        //原材料供货超时
+        $("#gridListYclghCsYj").dataGrid({
+            url: "/Home/GetYclghCsYjList",
+            height: $("#YclghCsYj").height() - 35,
+            colModel: [
+                { label: "批次需求计划编号", name: "BatchPlanNum", width: 130, align: 'left', sortable: false },
+                { label: '分部', name: 'BranchName', width: 80, align: 'left', sortable: false },
+                { label: '工区', name: 'WorkAreaName', width: 80, align: 'left', sortable: false },
+                { label: '备注', name: 'Remarks', width: 140, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划到货时间', name: 'SupplyDate', width: 140, align: 'left', sortable: false },
+                { label: '供货完成时间', name: 'SupplyCompleteTime', width: 140, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListYclghCsYj",
+            sortname: 'BatchPlanNum',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //加急订单个数
+        $("#gridListJjOrderYj").dataGrid({
+            url: "/Home/GetJjOrderYjList",
+            height: $("#JjOrderYj").height() - 35,
+            colModel: [
+                { label: "订单编号", name: "OrderCode", width: 120, align: 'left', sortable: false },
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'DistributionTime', width: 140, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListJjOrderYj",
+            sortname: 'OrderCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //加工进度滞后
+        $("#gridListJgOrderZhYj").dataGrid({
+            url: "/Home/GetJgOrderZhYjList",
+            height: $("#JgOrderZhYj").height() - 35,
+            colModel: [
+                { label: "订单编号", name: "OrderCode", width: 120, align: 'left', sortable: false },
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'DistributionTime', width: 140, align: 'left', sortable: false },
+                { label: '加工完成时间', name: 'FinishProcessingDateTime', width: 140, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListJgOrderZhYj",
+            sortname: 'OrderCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //接收配送超期
+        $("#gridListPsCsYj").dataGrid({
+            url: "/Home/GetPsCsYjList",
+            height: $("#PsCsYj").height() - 35,
+            colModel: [
+                { label: "订单编号", name: "OrderCode", width: 120, align: 'left', sortable: false },
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'DistributionTime', width: 140, align: 'left', sortable: false },
+                { label: '实际配送时间', name: 'DeliveryCompleteTime', width: 140, align: 'left', sortable: false },
+                { label: '备注', name: 'Remark', width: 200, align: 'left', sortable: false },
+            ],
+            sortname: 'OrderCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //卸货超时
+        $("#gridListXhCsYj").dataGrid({
+            url: "/Home/GetXhCsYjList",
+            height: $("#XhCsYj").height() - 35,
+            colModel: [
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '到场时间', name: 'EnterSpaceTime', width: 140, align: 'left', sortable: false },
+                { label: '开始卸货时间', name: 'StartDischargeTime', width: 140, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'EndDischargeTime', width: 140, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false }
+            ],
+            sortname: 'EnterSpaceTime',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //签收超时
+        $("#gridListQsCsYj").dataGrid({
+            url: "/Home/GetQsCsYjList",
+            height: $("#QsCsYj").height() - 35,
+            colModel: [
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '配送装车编号', name: 'DistributionCode', width: 120, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'DistributionTime', width: 140, align: 'left', sortable: false },
+                { label: '签收时间', name: 'SigninTime', width: 140, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+            ],
+            sortname: 'DistributionCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+    }
+    //重新加载预警列表信息
+    function GetChangeDateType(Year, Month) {
+        $("#gridListSpCsYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+        $("#gridListWbydxqjhYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+        $("#gridListYclghCsYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+        $("#gridListJjOrderYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+        $("#gridListJgOrderZhYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+        $("#gridListPsCsYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+        $("#gridListXhCsYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+        $("#gridListQsCsYj").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+    }
+    //点击饼图
+    function pieClick(name) {
+        var a = $("#PieDetailDiv").children($("div"));
+        for (var i = 0; i < a.length; i++) {
+            var divtitle = a[i].title;
+            if (divtitle == name) {
+                $("#labTitle").text("报警信息详情——" + name);
+                $("#" + a[i].id).show();
+            } else {
+                $("#" + a[i].id).hide();
+            }
+        }
+    }
+
+    function AgaingridListXH(Year, Month) {
+        $("#gridListXH").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+    }
+
+    function GetGunDong() {
+        var num = 1;
+        $.ajax({
+            url: "/Home/GetJiaoLiu",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length >= 12) {
+                    num = 2;
+                }
+                var html = '';
+                for (var i = 0; i < data.length; i++) {
+                    html += '<li style="margin:5px;"><a class="aTable" style="font-size:13px;color:#000000;" data-id="Article" href="/Article/Article/Details?keyValue=' + data[i].ID + '">' + (i + 1) + ' . ' + showText(data[i].Title, 25) + '</a></li>';
+                }
+                $("#GunDong").html(html);
+            }
+        });
+        return num;
+    }
+
+    function gridListXH(Year, Month) {
+        var $gridList = $("#gridListXH");
+        $gridList.dataGrid({
+            url: "/Home/GetCarReportGridJson",
+            postData: { Year: Year, Month: Month },
+            height: $("#DischargeProcess").height() - 35,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "卸货站点", name: "SiteName", width: 80, align: 'left', sortable: false },
+                { label: "订单编号", name: "OrderCode", width: 100, align: 'left', sortable: false },
+                { label: "装车配送编号", name: "DistributionCode", width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'PlanDistributionTime', width: 150, align: 'left', sortable: false },
+                { label: "实际配送时间", name: "LoadCompleteTime", width: 150, align: 'left', sortable: false },
+                { label: '车牌号及司机', name: 'CarCph', width: 100, align: 'left', sortable: false },
+                { label: "出厂时间", name: "LeaveFactoryTime", width: 80, align: 'left', sortable: false },
+                { label: '运输到场时间', name: 'EnterSpaceTime', width: 80, align: 'left', sortable: false },
+                { label: '等待卸货时间(分)', name: 'WaitTime', width: 150, align: 'left', sortable: false, cellattr: addWaitTimeCellAttr },
+                { label: '开始卸货时间', name: 'StartDischargeTime', width: 100, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'EndDischargeTime', width: 100, align: 'left', sortable: false },
+                { label: '车辆出场时间', name: 'OutSpaceTime', width: 100, align: 'left', sortable: false },
+                { label: "各环节照片", name: "OperateP", width: 100, align: 'center', sortable: false, formatter: ConfirmButton },
+                { label: '问题记录', name: 'IsProblemtr', width: 100, align: 'left', sortable: false, formatter: IsProblem },
+                { label: '附件', name: 'Enclosure', hidden: true },
+                { label: '是否存在问题', name: 'IsProblem', hidden: true },
+            ],
+            gridComplete: function () {
+                $('.aTable').on('click', $.nfinetab.syaddtab);
+            },
+            pager: "#gridPagerXH",
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+    }
+    function addWaitTimeCellAttr(rowId, val, rawObject, cm, rdata) {
+        if (parseInt(rawObject.WaitTime) > 30) {
+            return "style='color:red;font-weight:600'";
+        }
+    }
+    function ConfirmButton(cellvalue, options, rowObject) {
+        if (rowObject.Enclosure != "") {
+            var butHtm = "<a class='btn btn-primary' Enclosure='" + rowObject.Enclosure + "' onclick='onButClick(this)'>查看</a> ";
+            return butHtm;
+        } else {
+            return "";
+        }
+    }
+    function onButClick(obj) {
+        var Enclosure = $(obj).attr("Enclosure");
+        showFile(Enclosure, "details", "DistributionEnt");
+    }
+    function IsProblem(cellvalue, options, rowObject) {
+        if (rowObject.IsProblem == "是") {
+            var butHtm = "<a class='btn btn-primary aTable' data-id='Article'  href='/Article/Article/Index?DistributionCode=" + rowObject.DistributionCode + "'>查看</a> ";
+            return butHtm;
+        } else {
+            return "";
+        }
+    }
+
+    //截取字符串
+    function showText(text, numSub) {
+        if (text == null) {
+            return "";
+        }
+        if (text.length > numSub) {
+            return text.substring(0, numSub - 1) + "...";
+        }
+        return text;
+    }
+</script>
+<script src="~/Content/js/indextab.js" charset="gbk"></script>
+
+

@@ -1,0 +1,48 @@
+﻿/*[class*=" icon-"] {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  margin-top: 1px;
+  *margin-right: .3em;
+  line-height: 14px;
+  vertical-align: text-top;
+  background-image: url("iconImg/back.png");
+  background-position: center;
+  background-repeat: no-repeat;
+}*/
+.icon-00{
+    width: 20px;
+    height: 20px;
+    background-image: url("iconImg/start.png");
+    background-position: center;
+}
+.icon-11{
+    width: 32px;
+    height: 32px;
+    background-image: url("iconImg/11.png");
+    background-position: center;
+}
+.icon-22{
+    width: 32px;
+    height: 32px;
+    background-image: url("iconImg/22.png");
+    background-position: center;
+}
+.icon-33{
+    width: 20px;
+    height: 20px;
+    background-image: url("iconImg/null.png");
+    background-position: center;
+}
+.icon-44{
+    width: 20px;
+    height: 20px;
+    background-image: url("iconImg/flow.png");
+    background-position: center;
+}
+.icon-9999{
+    width: 20px;
+    height: 20px;
+    background-image: url("iconImg/end.png");
+    background-position: center;
+}

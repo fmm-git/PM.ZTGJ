@@ -1,0 +1,418 @@
+﻿@{
+    ViewBag.Title = "原材料到货入库查看";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+
+<style>
+    .ui-jqgrid tr.jqgrow td {
+        vertical-align: middle;
+    }
+</style>
+
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+
+        gridList();
+        $(".ui-jqgrid-view").css("margin-bottom: 0px");
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "InOrder")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                    $("[name='UserName']").val(data.Item1[0].UserName);
+                    $("#WorkAreaName").val(data.Item1[0].BranchName + "/" + data.Item1[0].WorkAreaName);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    var mydata = data.Item2;
+                    lodeList(mydata);
+                }
+            });
+        }
+    });
+
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 180,
+            rownumbers: false,
+            colModel: [
+                 { label: "主键", name: "ID", hidden: true },
+               {
+                   label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false,
+                   cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                       //合并单元格
+                       return 'id=\'MaterialCode' + rowId + "\'";
+                   }
+               },
+                {
+                    label: '原材料名称', name: 'MaterialName', width: 150, height: 10, align: "left", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MaterialName' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '计量单位', name: 'MeasurementUnitText', width: 80, align: "left", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MeasurementUnitText' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '规格', name: 'SpecificationModel', width: 80, align: "left", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'SpecificationModel' + rowId + "\'";
+                    }
+                },
+                {
+                    label: "批次计划数量(kg)", name: "BatchPlanQuantity", width: 95, align: "right", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'BatchPlanQuantity' + rowId + "\'";
+                    }
+                },
+                {
+                    label: "已完成供货量(kg)", name: "HasSupplier", width: 95, align: "right", sortable: false,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'HasSupplier' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '计量单位', name: 'MeasurementUnit', hidden: true,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'MeasurementUnit' + rowId + "\'";
+                    }
+                },
+                {
+                    label: '批次计划明细Id', name: 'BatchPlanItemId', hidden: true,
+                    cellattr: function (rowId, tv, rawObject, cm, rdata) {
+                        //合并单元格
+                        return 'id=\'BatchPlanItemId' + rowId + "\'";
+                    }
+                },
+
+                { label: "供货历史记录编号", name: "BatchPlanItemNewCode", hidden: true },
+                { label: "历史到货时间", name: "ThisTime", width: 80, align: "right", sortable: false, formatter: formatDatebox },
+                { label: "历史到货量(kg)", name: "InOrdeCount", width: 90, align: "right", sortable: false },
+                { label: '合格入库量(kg)', name: 'PassCount', width: 90, align: "right", sortable: false, formatter: CellNewPassCount },
+                { label: '不合格量(kg)', name: 'NoPass', width: 90, align: "right", sortable: false, formatter: CellNewNoPass },
+                { label: '不合格原因', name: 'NoPassReason', width: 140, align: "left", sortable: false },
+                { label: '厂家', name: 'Factory', width: 140, align: "left", sortable: false },
+                { label: '炉批号', name: 'BatchNumber', width: 120, align: "left", sortable: false },
+                { label: '供应商', name: 'SupplierName', width: 140, align: "left", sortable: false },
+                { label: '检测结果', name: 'ChackState', width: 140, align: "left", sortable: false, formatter: CheckStatusFM },
+                { label: '质检报告编号', name: 'TestReportNo', width: 120, align: "left", sortable: false },
+                { label: '检验文件', name: 'EnclosureShow', width:140, align: "left", sortable: false, formatter: ConfirmButton },
+                { label: '计量单位', name: 'MeasurementUnit', hidden: true },
+                { label: '检验文件', name: 'Enclosure', hidden: true },
+                { label: '退回时间', name: 'ReturnTime', hidden: true },
+                { label: '检测结果', name: 'ChackStateH', hidden: true },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+                var gridName = "gridList";
+                Merger(gridName, 'MaterialCode');
+                Merger(gridName, 'MaterialName');
+                Merger(gridName, 'MeasurementUnitText');
+                Merger(gridName, 'SpecificationModel');
+                Merger(gridName, 'BatchPlanQuantity');
+                Merger(gridName, 'HasSupplier');
+                Merger(gridName, 'MeasurementUnit');
+                Merger(gridName, 'BatchPlanItemId');
+                var sampleOrderState = $("#SampleOrderState").val();
+                if (sampleOrderState != "取样未完成") {
+                    var ids = $gridList.getDataIDs();
+                    for (var i = 0; i < ids.length; i++) {
+                        var rowData = $gridList.getRowData(ids[i]);
+                        if (rowData.ChackStateH == "0") {
+                            $('#' + ids[i]).css("background-color", "#D3D3D3");
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    //合并单元格
+    function Merger(gridName, CellName) {
+        //得到显示到界面的id集合
+        var mya = $("#" + gridName + "").getDataIDs();
+        //数据总行数
+        var length = mya.length;
+        //定义合并行数
+        var rowSpanTaxCount = 1;
+        for (var i = 0; i < length; i += rowSpanTaxCount) {
+            //从当前行开始比对下面的信息
+            var before = $("#" + gridName + "").jqGrid('getRowData', mya[i]);
+            rowSpanTaxCount = 1;
+            for (j = i + 1; j <= length; j++) {
+                //和上边的信息对比 如果值一样就合并行数+1 然后设置rowspan 让当前单元格隐藏
+                var end = $("#" + gridName + "").jqGrid('getRowData', mya[j]);
+                if (before[CellName] == end[CellName] && before["BatchPlanItemId"] == end["BatchPlanItemId"]) {
+                    rowSpanTaxCount++;
+                    $("#" + gridName + "").setCell(mya[j], CellName, '', { display: 'none' });
+                } else {
+                    break;
+                }
+            }
+            $("#" + gridName + "").setCell(mya[i], CellName, '', '', { rowspan: rowSpanTaxCount });
+        }
+    };
+    //合格入库量
+    function CellNewPassCount(cellValue, options, rowObject) {
+        var tdhtml = "";
+        var sampleOrderState = $("#SampleOrderState").val();
+        if (sampleOrderState != "取样未完成") {
+            if (rowObject.ChackState == "1") {
+                tdhtml += "<span style='color:green'>" + rowObject.PassCount + "</span>";
+            } else if (rowObject.ChackState == "2" || rowObject.ChackState == "3") {
+                tdhtml += "<span style='color:red'>" + rowObject.PassCount + "</span>";
+            } else {
+                tdhtml += "<span>" + rowObject.PassCount + "</span>";
+            }
+        } else {
+            tdhtml += "<span>" + rowObject.PassCount + "</span>";
+        }
+        return tdhtml;
+    }
+    //合格入库量
+    function CellNewNoPass(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.NoPass>0) {
+            tdhtml += "<span style='color:red'>" + rowObject.NoPass + "</span>";
+        } else {
+            tdhtml += "<span style='color:green'>" + rowObject.NoPass + "</span>";
+        }
+        return tdhtml;
+    }
+    //检测状态
+    function CheckStatusFM(cellValue, options, rowObject) {
+        var tdhtml = "";
+        var sampleOrderState = $("#SampleOrderState").val();
+        if (sampleOrderState != "取样未完成") {
+            if (rowObject.ChackState == "1") {
+                tdhtml += "<span style='color:green;'>合格</span>";
+            } else if (rowObject.ChackState == "2") {
+                tdhtml += "<span style='color:red;'>不合格</span>";
+            } else if (rowObject.ChackState == "3") {
+                tdhtml += "<span style='color:red;'>不合格,已退回(" + formatDatebox(rowObject.ReturnTime) + ")</span>";
+            } else {
+                tdhtml += "<span style='background-color:#FF8C00;color:black; padding:3px;'>待检</span>";
+            }
+        }
+        return tdhtml;
+    }
+    //格式化列表中的时间
+    function formatDatebox(time) {
+        var datetime = new Date(time);
+        var year = datetime.getFullYear();
+        var month = datetime.getMonth() + 1 < 10 ? "0" + (datetime.getMonth() + 1) : datetime.getMonth() + 1;
+        var date = datetime.getDate() < 10 ? "0" + datetime.getDate() : datetime.getDate();
+        return year + "-" + month + "-" + date;
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            item.ChackStateH = item.ChackState;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+</script>
+<!---------附件列表------->
+<script type="text/javascript">
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "detail", "InOrder");
+    }
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+    function ConfirmButton(cellvalue, options, rowObject) {
+        if (rowObject.Enclosure) {
+            return "<a class='btn btn-primary' onclick='UplaodFileSem(" + rowObject.id + ")'>查看</a> ";
+        } else {
+            return "";
+        }
+    }
+    function UplaodFileSem(rowid) {
+        var rowObject = $("#gridList").jqGrid("getRowData", rowid);
+        if (rowObject.Enclosure) {
+            showFile(rowObject.Enclosure, "form", "SampleOrderItem");
+        }
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="formd">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="ChackResult" type="hidden" />
+            <input id="SampleOrderState" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">入库单号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="InOrderCode" name="InOrderCode" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">批次计划编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="BatchPlanCode" name="BatchPlanCode" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">工区名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="WorkAreaCode" name="WorkAreaCode" hidden="hidden" />
+                        <input id="WorkAreaName" name="WorkAreaName" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">钢材类型<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="RebarType" name="RebarType" type="hidden" class="form-control required" />
+                        <input id="RebarTypeName" name="RebarTypeName" class="form-control required" disabled="disabled" />
+                    </td>
+                    @*<th class="formTitle">站点名称</th>
+                        <td class="formValue">
+                            <input id="SiteCode" name="SiteCode" type="hidden">
+                            <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control">
+                        </td>*@
+                </tr>
+                <tr>
+                    <th class="formTitle">工区实验室人员<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SiteUser" name="SiteUser" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">联系方式<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SiteUserTel" name="SiteUserTel" class="form-control required" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">入库仓库<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="StorageCode" name="StorageCode" type="hidden">
+                            <input id="StorageName" name="StorageName" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">交货地点</th>
+                    <td class="formValue">
+                        <input id="Address" name="Address" type="text" class="form-control" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">收货人<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="UserCode" name="UserCode" class="form-control required" type="hidden" />
+                        <input id="DeliverUser" name="DeliverUser" class="form-control required" disabled="disabled" />
+                    </td>
+                    <th class="formTitle">联系方式<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="Tel" name="Tel" class="form-control required" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                    <th class="formTitle">入库总量(kg)</th>
+                    <td class="formValue">
+                        <input id="InCount" name="InCount" value="0" type="text" class="form-control" disabled="disabled" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserName" name="InsertUserName" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+    @*<div id="FJXXInfo" style="padding-top: 5px; display: none; margin: 10px; overflow-x: scroll; ">
+            <div class="toolbar">
+                <div class="btn-group">
+                    <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()"><i class="fa fa-arrow-down"></i>下载</a>
+                </div>
+            </div>
+            <div class="gridPanel" style="margin-top:1px;">
+                <table id="AttachmentList"></table>
+            </div>
+        </div>*@
+</div>
+

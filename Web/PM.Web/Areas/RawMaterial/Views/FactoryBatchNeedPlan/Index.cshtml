@@ -1,0 +1,1099 @@
+﻿@{
+    /*
+     * 首页
+     * 加工厂批次需求计划
+     */
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<link href="~/Content/css/Style.css?v=1.1" rel="stylesheet" />
+<script src="~/Content/js/indextab.js?v=1.1" charset="gbk"></script>
+<script src="~/Content/js/Highcharts-8.0.0/highcharts.js"></script>
+<style type="text/css">
+    /*供货超时*/
+    .SelectCS {
+        background-color: red;
+        color: #111;
+    }
+    /*已供货，但未供货完成*/
+    .SelectWW {
+        background-color: #FFFF00;
+        color: #111;
+    }
+    /*已供货*/
+    .SelectYGH {
+        background-color: #00ff90;
+        color: #111;
+    }
+
+    .a_animate {
+        animation: blinkNew 2s steps(1) infinite;
+        -webkit-animation: blinkNew 2s steps(1) infinite;
+    }
+</style>
+<script>
+    var wm = false;//物贸
+    var fbgqwjb = false;//分部工区物机部
+    var SiteCode = "";
+    //获取从原材料月度需求计划页面传递过来的月度需求计划编号
+    var DemandPlanCode = $.request("DemandPlanCode");
+    $(function () {
+        var llqHeight = $(window).height(); //浏览器当前窗口可视区域高度
+        //设置统计图形的高度
+        var screenHeight = $("body").height();
+        $(".highchartImg").each(function () {
+            $(this).height(screenHeight * 0.4);
+        });
+        $.LodeMenuBtn("/RawMaterial/FactoryBatchNeedPlan/Index");
+        $('#layout').layout();
+        $(".ui-layout-center").css("padding", "10px");
+        leftList();
+        $(".ui-layout-pane-west").css('overflow', 'hidden');
+        gridList();
+        $(".ui-jqgrid-view").css("margin-bottom", "35px");
+        GetIsGh();//是否允许供货
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                //maxDate: '%y-%M-%d',
+            });
+        });
+        //折叠ibox
+        $('.collapse-link').click(function () {
+            var ibox = $(this).closest('div.ibox');
+            var button = $(this).find('i');
+            var content = ibox.find('div.ibox-content');
+            content.slideToggle(150);
+            button.toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
+            ibox.toggleClass('').toggleClass('border-bottom');
+        });
+        //钢筋类型
+        $("input[type='radio']").on("click", function () {
+            var RebarType = $("input[name='RebarType1']:checked").val();
+            var param = $(".search").GetSearchCondition();
+            param.SteelsTypeCode = RebarType;
+            LoadAllImg(param, llqHeight);
+        });
+        var RebarType = $("input[name='RebarType1']:checked").val();
+        var param = $(".search").GetSearchCondition();
+        param.SteelsTypeCode = RebarType;
+        LoadAllImg(param, llqHeight);
+    });
+
+    function LoadAllImg(param, llqHeight) {
+        loadImg1(param, llqHeight);
+        loadImg2(param, llqHeight);
+        loadImg3(param, llqHeight);
+    }
+
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompanyNoSite",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+                { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+                { label: '组织机构类型', name: 'OrgType', hidden: true },
+                { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            sortname: 'CompanyCode',
+            onCellSelect: function (id) {//单击
+                SiteCode = getOrganizationalCode(id);
+                var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+                var RebarType = $("input[name='RebarType1']:checked").val();
+                var DemandMonth = $("#DemandMonth").val();
+                var param = $(".search").GetSearchCondition();
+                param.SiteCode = SiteCode;
+                param.ProjectId = CompanyId.ProjectId;
+                param.OrgType = CompanyId.OrgType;
+                param.SteelsTypeCode = RebarType;
+                var llqHeight = $(window).height(); //浏览器当前窗口可视区域高度
+                LoadAllImg(param, llqHeight);
+            }
+        });
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetAllOrBySearch", "FactoryBatchNeedPlan")",
+            height: $(window).height() * 0.7,
+            colModel: [
+                //{ label: "主键", name: "ID", hidden: true, key: true },
+                //{ label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false },
+                //{
+                //    label: '状态', name: 'StateCode', width: 80, align: 'left', sortable: false,
+                //    formatter: function (value, options, row) {
+                //        var color = "black";
+                //        if (row.SupplyDate != null) {
+                //            var ghtime = ZDate(row.SupplyDate);
+                //            ghtime.setDate(ghtime.getDate());
+                //            var ntime = new Date();//当前时间
+                //            if (ghtime < ntime && value == "未供货") {
+                //                value = "供货超时";
+                //                color = "red";
+                //            }
+                //        }
+                //        if (value == "部分供货") {
+                //            color = "#FF8000";
+                //        }
+                //        else if (value == "已供货") {
+                //            color = "green";
+                //        }
+                //        return "<span style='color:" + color + ";'>" + value + "</span>";
+                //    }
+                //},
+                //{ label: "批次计划编号", name: "BatchPlanNum", width: 120, align: 'left', sortable: false },
+                //{ label: '分部编号', name: 'BranchCode', hidden: true },
+                //{ label: "分部名称", name: "BranchName", width: 100, align: 'left', sortable: false },
+                //{ label: '工区编号', name: 'WorkAreaCode', hidden: true },
+                //{ label: "工区名称", name: "WorkAreaName", width: 100, align: 'left', sortable: false },
+                //{ label: "批次计划总量(kg)", name: "BatchPlanTotal", width: 120, align: 'left', sortable: false },
+                //{ label: '站点编号', name: 'SiteCode', hidden: true },
+                ////{ label: '站点名称', name: 'SiteName', width: 140, align: 'left', sortable: false },
+                //{ label: '加工厂编号', name: 'ProcessFactoryCode', hidden: true },
+                //{ label: '加工厂名称', name: 'ProcessFactoryName', width: 140, align: 'left', sortable: false },
+                ////{ label: '到货时间', name: 'ArrivalDate', width: 130, align: 'left', sortable: false },
+                //{ label: '交货地点', name: 'DeliveryPlace', width: 150, align: 'left', sortable: false },
+                //{ label: '验收人', name: 'Acceptor', hidden: true },
+                //{ label: '验收人', name: 'AcceptorName', width: 120, align: 'left', sortable: false },
+                //{ label: '联系电话', name: 'ContactWay', width: 120, align: 'left', sortable: false },
+                //{ label: '录入人', name: 'InsertUserCode', hidden: true },
+                //{ label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                //{ label: '录入时间', name: 'InsertTime', width: 140, align: 'left', sortable: false },
+                //{ label: '备注', name: 'Remarks', width: 120, align: 'left', sortable: false },
+                //{ label: '总量', name: 'bpq', hidden: true },
+                //{ label: '完成量', name: 'hs', hidden: true },
+                //{ label: '项目编号', name: 'ProjectId', hidden: true },
+                //{ label: '供货时间', name: 'SupplyDate', hidden: true },
+                { label: "主键", name: "ID", hidden: true, key: true },
+                {
+                    label: "工区",
+                    name: "BranchName",
+                    width: 140,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellFbGq
+                },
+                {
+                    label: "批次计划编号",
+                    name: "BatchPlanNumNew",
+                    width: 140,
+                    align: 'center',
+                    sortable: false,
+                    formatter: NewCellPcjhCodeOrEx
+                },
+                { label: "供货状态", name: "StateCodeNew", width: 100, align: 'center', sortable: false, formatter: NewCellGhZt },
+                { label: "计划总量(kg)/应供时间", name: "BatchPlanTotal", width: 140, align: 'center', sortable: false, formatter: NewCellJhzlOrYgsj },
+                { label: "已供总量(kg)/供货完成时间", name: "BatchPlanTotal", width: 160, align: 'center', sortable: false, formatter: NewCellYgzlOrGhwcsj },
+                { label: "验收/检测不合格量（kg）", name: "NoPassTotal", width: 150, align: 'center', sortable: false, formatter: NewCellYsOrJcBhg },
+                { label: "合格供货量(kg)", name: "PassCount", width: 120, align: 'center', sortable: false, formatter: NewCellHgGhl },
+                {
+                    label: '验收人及联系方式',
+                    name: 'ProcessFactoryName',
+                    width: 140,
+                    align: 'left',
+                    sortable: false,
+                    formatter: NewCellJgcOrYsrTel
+                },
+                { label: '录入时间', name: 'InsertTime', width: 140, align: 'left', sortable: false },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '供货时间', name: 'SupplyDate', hidden: true },
+                { label: '批次计划编号', name: 'BatchPlanNum', hidden: true },
+                { label: '审批状态', name: 'Examinestatus', hidden: true },
+                { label: '供货ID', name: 'SupId', hidden: true },
+                { label: '供货状态', name: 'StateCode', hidden: true },
+                { label: '是否有新增供货', name: 'IsAdd', hidden: true },
+                { label: 'SteelsTypeCode', name: 'SteelsTypeCode', hidden: true },
+                { label: 'StateName', name: 'StateName', hidden: true },
+                { label: 'IsAsGh', name: 'IsAsGh', hidden: true },
+            ],
+            beforeRequest: function () {
+                var postData = $gridList.jqGrid("getGridParam", "postData");
+                if (DemandPlanCode != null && DemandPlanCode != "" && DemandPlanCode != undefined) {
+                    postData.DemandPlanCode = DemandPlanCode;
+                }
+            },
+            ondblClickRow: function (id) { //双击
+                btn_details();
+            },
+            gridComplete: function () {
+                $('.aTable').on('click', $.nfinetab.syaddtab);
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam',
+                {
+                    postData: param,
+                    page: 1
+                }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+    //分部、工区
+    function NewCellFbGq(cellValue, options, rowObject) {
+        var tdhtml = rowObject.BranchName + "/" + rowObject.WorkAreaName;
+        return tdhtml;
+    }
+
+    //批次计划编号、审批状态
+    function NewCellPcjhCodeOrEx(cellValue, options, rowObject) {
+        var tdhtml = rowObject.BatchPlanNum + "</br>";
+        if (rowObject.Examinestatus == "审核完成") {
+            tdhtml += "<span style=\"color:green\">" + rowObject.Examinestatus + "</span>";
+        } else {
+            tdhtml += rowObject.Examinestatus;
+        }
+        return tdhtml;
+    }
+    //供货状态
+    function NewCellGhZt(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.StateName) {
+            if (rowObject.StateName == "超期未供货" || rowObject.StateName == "供货不足" || rowObject.StateName == "供货过多") {
+                tdhtml += "<span style=\"color:red\">" + rowObject.StateName + "</span>";
+            } else if (rowObject.StateName == "供货完成") {
+                tdhtml += "<span style=\"color:green\">" + rowObject.StateName + "</span>";
+            } else {
+                tdhtml += "<span>" + rowObject.StateName + "</span>";
+            }
+        }
+        if (rowObject.IsAsGh) {
+            if (rowObject.IsAsGh == "按时供货") {
+                tdhtml += "<br/><span style=\"color:green\">" + rowObject.IsAsGh + "</span>";
+            } else {
+                tdhtml += "<br/><span style=\"color:red\">" + rowObject.IsAsGh + "</span>";
+            }
+
+        }
+        //var yghSj = formatDatebox(rowObject.SupplyDate);
+        //var ghwcSj = formatDatebox(rowObject.SupplyCompleteTime);
+        //var xtSj = (new Date()).Format("yyyy-MM-dd");
+        //if (rowObject.StateCode == "未供货") {
+        //    if (yghSj) {
+        //        if (yghSj >= xtSj) {
+        //            tdhtml += "<span>" + rowObject.StateCode + "</span>";
+        //        } else {
+        //            tdhtml += "<span style=\"color:red\">超期未供货</span>";
+        //        }
+        //    } else {
+        //        tdhtml += "<span>" + rowObject.StateCode + "</span>";
+        //    }
+        //}
+        //else if (rowObject.StateCode == "部分供货") {
+        //    tdhtml += "<span style=\"color:red\">供货不足</span></br>";
+        //    if (yghSj >= xtSj) {//按时供货
+        //        tdhtml += "<span style=\"color:green\">按时供货</span>";
+        //    } else {//延迟供货
+        //        tdhtml += "<span style=\"color:red\">超时供货</span>";
+        //    }
+        //} else if (rowObject.StateCode == "已供货") {
+        //    var ghl = rowObject.HasSupplierTotal;
+        //    var pclsx = parseFloat(rowObject.BatchPlanTotal) + (parseFloat(rowObject.BatchPlanTotal) * 0.05);
+        //    if (ghl > pclsx) {
+        //        tdhtml += "<span style=\"color:red\">供货过多</span></br>";
+        //    } else {
+        //        tdhtml += "<span style=\"color:green\">供货完成</span></br>";
+        //    }
+        //    if (yghSj >= ghwcSj) {//按时供货
+        //        tdhtml += "<span style=\"color:green\">按时供货</span>";
+        //    } else {//延迟供货
+        //        tdhtml += "<span style=\"color:red\">超时供货</span>";
+        //    }
+        //}
+        return tdhtml;
+    }
+    //计划总量、应供时间
+    function NewCellJhzlOrYgsj(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.RebarTypeNew == "建筑钢筋") {
+            tdhtml += rowObject.BatchPlanTotal + "&nbsp;&nbsp;<span style=\"background-color:#4472C4;color:white\">" + rowObject.RebarTypeNew + "</span></br>";
+        } else {
+            tdhtml += rowObject.BatchPlanTotal + "&nbsp;&nbsp;<span style=\"background-color:#F4B183;color:white\">" + rowObject.RebarTypeNew + "</span></br>";
+        }
+        tdhtml += formatDatebox(rowObject.SupplyDate);
+        return tdhtml;
+    }
+    //已供总量、供货完成时间
+    function NewCellYgzlOrGhwcsj(cellValue, options, rowObject) {
+        var tdhtml = "";
+        var yghSj = formatDatebox(rowObject.SupplyDate);
+        var ghwcSj = formatDatebox(rowObject.SupplyCompleteTime);
+        var xtSj = (new Date()).Format("yyyy-MM-dd");
+        if (rowObject.HasSupplierTotal) {
+            //var pcjhl = parseFloat(rowObject.BatchPlanTotal);
+            //var ghl = rowObject.HasSupplierTotal;
+            //var pclsx = parseFloat(rowObject.BatchPlanTotal) + (parseFloat(rowObject.BatchPlanTotal) * 0.05);
+            //if (rowObject.StateCode=="部分供货") {
+            //    tdhtml += "<span style=\"color:red\">" + rowObject.HasSupplierTotal + "</span><br/>";
+            //}
+            //if (rowObject.StateCode == "已供货") {
+            //    if (ghl >= pcjhl && ghl <= pclsx) {
+            //        tdhtml += "<span style=\"color:green\">" + rowObject.HasSupplierTotal + "</span><br/>";
+            //    } else {
+            //        tdhtml += "<span style=\"color:red\">" + rowObject.HasSupplierTotal + "</span><br/>";
+            //    }
+            //    if (yghSj >= ghwcSj) {//按时供货
+            //        tdhtml += "<span style=\"color:green\">" + ghwcSj + "</span>";
+            //    } else {//延迟供货
+            //        tdhtml += "<span style=\"color:red\">" + ghwcSj + "</span>";
+            //    }
+            //}
+            if (rowObject.StateName) {
+                if (rowObject.StateName == "供货不足" || rowObject.StateName == "供货过多") {
+                    tdhtml += "<span style=\"color:red\">" + rowObject.HasSupplierTotal + "</span><br/>";
+                } else if (rowObject.StateName == "供货完成") {
+                    tdhtml += "<span style=\"color:green\">" + rowObject.HasSupplierTotal + "</span><br/>";
+                }
+            }
+            if (ghwcSj && rowObject.IsAsGh) {
+                if (rowObject.IsAsGh == "按时供货") {
+                    tdhtml += "<span style=\"color:green\">" + ghwcSj + "</span>";
+                } else {
+                    tdhtml += "<span style=\"color:red\">" + ghwcSj + "</span>";
+                }
+            }
+
+        }
+        if (rowObject.IsAdd != null && rowObject.IsAdd != "" && rowObject.IsAdd != undefined) {
+            tdhtml += "&nbsp;&nbsp;<span class='btn a_animate' style='background-color:#f15353;color:white;height: 16px;padding:3px;cursor:default;font-size:10px'>新增</span>"
+        }
+        return tdhtml;
+    }
+    //验收不合格、检测不合格
+    function NewCellYsOrJcBhg(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.NoPassTotal > 0) {
+            tdhtml += "<a class='aTable' style=\"color:red\" data-id='InOrder'  href='/RawMaterial/InOrder/Index?BatchPlanNum=" +
+                rowObject.BatchPlanNum +
+                "'>验收:" +
+                rowObject.NoPassTotal +
+                "</a></br>";
+        } else {
+            tdhtml += "验收：<span style=\"color:green\">0</span></br>"
+        }
+        if (rowObject.QyBhgCount > 0) {
+            tdhtml += "<a class='aTable' style=\"color:red\" data-id='SampleOrder'  href='/RawMaterial/SampleOrder/Index?BatchPlanNum=" +
+                rowObject.BatchPlanNum +
+                "'>检测:" +
+                rowObject.QyBhgCount +
+                "</a>";
+        } else {
+            tdhtml += "检测：<span style=\"color:green\">0</span>"
+        }
+        return tdhtml;
+    }
+    //合格供货量
+    function NewCellHgGhl(cellValue, options, rowObject) {
+        var tdhtml = "";
+        if (rowObject.PassCount || rowObject.PassCount == 0) {
+            //if ((rowObject.NoPassTotal && rowObject.NoPassTotal > 0) || (rowObject.QyBhgCount && rowObject.QyBhgCount>0)) {
+            //    tdhtml += '<span style="color:red">' + rowObject.PassCount + '</span>'
+            //} else {
+            tdhtml += '<sapn>' + rowObject.PassCount + '</span>'
+            //}
+        } else {
+            tdhtml += "";
+        }
+        return tdhtml;
+    }
+    //加工厂、验收人、验收人电话
+    function NewCellJgcOrYsrTel(cellValue, options, rowObject) {
+        var tdhtml = rowObject.AcceptorName + "/" + rowObject.ContactWay;
+
+        return tdhtml;
+    }
+
+    function btn_add() {
+        var where = "?type=add&CompanyCode=" + SiteCode;
+        CommonOpenAdd({
+            id: "Form",
+            title: "新增加工厂批次需求计划",
+            url: "@Url.Action("Form", "FactoryBatchNeedPlan")" + where,
+        });
+    }
+
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改加工厂批次需求计划",
+            url: "@Url.Action("Form", "FactoryBatchNeedPlan")",
+            anyUrl: "@Url.Action("AnyInfo", "FactoryBatchNeedPlan")",
+        });
+    }
+
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "FactoryBatchNeedPlan")",
+            anyUrl: "@Url.Action("AnyInfo", "FactoryBatchNeedPlan")",
+            isdel: true,
+        });
+    }
+
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看加工厂批次需求计划",
+            url: "@Url.Action("Details", "FactoryBatchNeedPlan")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var DataId = rowData.ID;
+        if (DataId) {
+            if (rowData.Examinestatus != "未发起") {
+                SeeApproval("FactoryBatchNeedPlan", DataId);
+            }
+            else {
+                var LoginUserCode = '@ViewBag.LoginUserCode';
+                examination(DataId, 'FactoryBatchNeedPlan', rowData.Examinestatus, rowData.BatchPlanNum, rowData.ProjectId, LoginUserCode, rowData.SteelsTypeCode);
+            }
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var id = $('#leftgridList').jqGrid('getGridParam', 'selrow');
+        if (id != null && id != "" && id != undefined) {
+            var siteCode = getOrganizationalCode(id);
+            //重新加载报表数据
+            var CompanyId = $("#leftgridList").jqGrid('getRowData', id);
+            param.SiteCode = siteCode;
+            param.ProjectId = CompanyId.ProjectId;
+        }
+        var url = "@Url.Action("OutputExcel", "FactoryBatchNeedPlan")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+    function GetIsGh() {
+        $.ajax({
+            url: "@Url.Action("GetUserIsWmOrFbGqWjb", "FactoryBatchNeedPlan")",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i]["RebarType"] == "型钢") {
+                            fbgqwjb = true;
+                        } else {//建筑钢筋
+                            wm = true;
+                        }
+                    }
+                }
+            }
+        });
+    }
+    //供货
+    function btn_other1() {
+        var rowID = $("#gridList").getGridParam("selrow");
+        if (rowID == "" || rowID == null || rowID == undefined) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        var rowData = $("#gridList").getRowData(rowID);
+        if (rowData.Examinestatus == "审核完成") {
+            //if (rowData.StateCode == '已供货') {
+            //    $.modalMsg("该订单已供货完成", "warning");
+            //    return false;
+            //}
+            if (wm == true && fbgqwjb == false) {
+                if (rowData.SteelsTypeCode == "SectionSteel") {
+                    $.modalMsg("您是物贸人员只能供货建筑钢筋!", "warning");
+                    return false;
+                }
+            }
+            if (fbgqwjb == true && wm == false) {
+                if (rowData.SteelsTypeCode == "BuildingSteel") {
+                    $.modalMsg("您是物机部人员只能供货型钢!", "warning");
+                    return false;
+                }
+            }
+            if (fbgqwjb == false && wm == false) {
+                $.modalMsg("只有物贸跟物机部人员才能供货!", "warning");
+                return false;
+            }
+            var where = "?keyValue=" + rowData.SupId;
+            CommonOpen("Form", "供货信息登记", "@Url.Action("Form", "SupplyList")" + where, true, true);
+        } else {
+            $.modalMsg("该需求批次计划未审核完成", "warning");
+            return false;
+        }
+    }
+
+    //供货完成
+    function btn_other2() {
+        var keyValue = $("#gridList").getGridParam("selrow");
+        if (keyValue == "" || keyValue == null || keyValue == undefined) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        var rowData = $("#gridList").getRowData(keyValue);
+        if (rowData.Examinestatus == "审核完成") {
+            //if (rowData.StateCode == '已供货') {
+            //    $.modalMsg("该订单已供货完成", "warning");
+            //    return false;
+            //}
+            if (wm == true && fbgqwjb == false) {
+                if (rowData.SteelsTypeCode == "SectionSteel") {
+                    $.modalMsg("您是物贸人员只能供货建筑钢筋!", "warning");
+                    return false;
+                }
+            }
+            if (fbgqwjb == true && wm == false) {
+                if (rowData.SteelsTypeCode == "BuildingSteel") {
+                    $.modalMsg("您是物机部人员只能供货型钢!", "warning");
+                    return false;
+                }
+            }
+            if (fbgqwjb == false && wm == false) {
+                $.modalMsg("只有物贸跟物机部人员才能供货!", "warning");
+                return false;
+            }
+            var where = "?type=pl&keyValue=" + rowData.SupId;
+            CommonOpen("Form", "供货完成", "@Url.Action("Form", "SupplyList")" + where, true, true);
+        } else {
+            $.modalMsg("该需求批次计划未审核完成", "warning");
+            return false;
+        }
+    }
+</script>
+<script>
+    //图表1
+    function loadImg1(param, llqHeight) {
+        var imgSize1 = '120%';
+        var imgSize2 = '70%';
+        //if (llqHeight > 690) {
+        //    imgSize1 = '80%';
+        //    imgSize2 = '60%';
+        //}
+        var Data1 = [];
+        var xqjhs = 0;
+        $.ajax({
+            url: "@Url.Action("Img1", "FactoryBatchNeedPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    xqjhs = parseInt(data[0]["StateCount"] +
+                        data[1]["StateCount"] +
+                        data[2]["StateCount"] +
+                        data[3]["StateCount"] +
+                        data[4]["StateCount"])
+                    Data1.push({
+                        name: "未供货",
+                        y: data[0]["StateCount"]
+                    },
+                        {
+                            name: "超期未供货",
+                            y: data[1]["StateCount"]
+                        },
+                        {
+                            name: "供货不足",
+                            y: data[2]["StateCount"]
+                        },
+                        {
+                            name: "供货完成",
+                            y: data[3]["StateCount"]
+                        },
+                        {
+                            name: "供货过多",
+                            y: data[4]["StateCount"]
+                        });
+                }
+            }
+        });
+        var chart = Highcharts.chart('Img1',
+            {
+                chart: {
+                    spacing: [40, 0, 40, 0]
+                },
+                title: {
+                    floating: true,
+                    text: '<span style="font-size:16px;">需求计划数</span><br/><span style="font-size:16px;font-weight:700;">' + xqjhs + '</span>'
+                },
+                tooltip: {
+                    pointFormat: '<span style="color:#757575">{point.y}({point.percentage:.0f}%)</span>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        size: imgSize1,
+                        innerSize: imgSize2,  //饼图的内圈直径大小
+                        cursor: 'pointer',
+                        dataLabels: {
+                            distance: 5, //控制饼图外面的线的长短,为负数时文本内容在饼图内部
+                            enabled: true,
+                            format: '<span style="color:#757575">{point.name}</span><br/><span style="color:#757575">{point.y}({point.percentage:.0f}%)</span>',
+                            style: {
+                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                            }
+                        },
+                        point: {
+                            events: {
+                                click: function (e) { // 同样的可以在点击事件里处理
+                                    var param1 = $(".search").GetSearchCondition();
+                                    param1.RebarType = param.RebarType;
+                                    param1.StateCode = e.point.name;
+                                    $("#gridList").jqGrid('setGridParam',
+                                        {
+                                            postData: param1,
+                                            page: 1
+                                        }).trigger('reloadGrid');
+                                }
+                            }
+                        },
+                    }
+                },
+                credits: {
+                    enabled: false //右下角不显示highcharts的LOGO
+                },
+                series: [
+                    {
+                        type: 'pie',
+                        data: Data1
+                    }
+                ]
+            },
+            function (c) { // 图表初始化完毕后的会掉函数
+                // 环形图圆心
+                var centerY = c.series[0].center[1],
+                    titleHeight = parseInt(c.title.styles.fontSize);
+                // 动态设置标题位置
+                c.setTitle({
+                    y: centerY + titleHeight / 10
+                });
+            });
+    }
+
+    function loadImg2(param, llqHeight) {
+        try {
+            var imgSize1 = '100%';
+            var imgSize2 = '80%';
+            //if (llqHeight > 690) {
+            //    imgSize1 = '80%';
+            //    imgSize2 = '60%';
+            //}
+            var wghl = 0;
+            var cqwghl = 0;
+            var yghl = 0;
+            var asgh = 0;
+            var csgh = 0;
+            var pcl = 0;
+            $.ajax({
+                url: "@Url.Action("Img2", "FactoryBatchNeedPlan")",
+                data: param,
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    if (data.length > 0) {
+                        wghl = data[0]["wghl"];
+                        cqwghl = data[0]["cswghl"];
+                        yghl = data[0]["yghl"];
+                        asgh = data[0]["asgh"];
+                        csgh = data[0]["csgh"];
+                        pcl = data[0]["pcl"];
+                    }
+                }
+            });
+            var colors = ['#F4B183', '#FF0000', '#4472C4'],
+            categories = [
+                "未供货",
+                "超期未供货",
+                "已供货"
+            ],
+            data = [
+                {
+                    "y": wghl,
+                    "color": colors[0],
+                    "drilldown": {
+                        "name": "未供货",
+                        "categories": [
+                            "未供货"
+                        ],
+                        "data": [
+                            wghl
+                        ]
+                    }
+                },
+                {
+                    "y": cqwghl,
+                    "color": colors[1],
+                    "drilldown": {
+                        "name": "超期未供货",
+                        "categories": [
+                            "超期未供货"
+                        ],
+                        "data": [
+                            cqwghl
+                        ]
+                    }
+                },
+                {
+                    "y": yghl,
+                    "color": colors[2],
+                    "drilldown": {
+                        "name": "已供货",
+                        "categories": [
+                            "按时供货",
+                            "超时供货",
+                        ],
+                        "data": [
+                            asgh,
+                            csgh
+                        ]
+                    }
+                }
+            ],
+            browserData = [],
+            versionsData = [],
+            i,
+            j,
+            dataLen = data.length,
+            drillDataLen,
+            brightness;
+            for (i = 0; i < dataLen; i += 1) {
+                // 内层数据
+                browserData.push({
+                    name: categories[i],
+                    y: data[i].y,
+                    color: data[i].color
+                });
+                // 外层数据
+                drillDataLen = data[i].drilldown.data.length;
+                for (j = 0; j < drillDataLen; j += 1) {
+                    var color = Highcharts.Color(data[i].color).brighten(brightness).get();
+                    if (data[i].drilldown.categories[j] == "按时供货") {
+                        color = '#aec8f6'
+                    } else if (data[i].drilldown.categories[j] == "超时供货") {
+                        color = '#2a5196'
+                    }
+                    brightness = 0.2 - (j / drillDataLen) / 5;
+                    versionsData.push({
+                        name: data[i].drilldown.categories[j],
+                        y: data[i].drilldown.data[j],
+                        color: color
+                    });
+
+                }
+            }
+            Highcharts.chart('Img2', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: ''
+                },
+                subtitle: {
+                    text: '<b style="font-size:15px;font-weight:600;">需求总量:' + pcl + 'kg</b>',
+                    align: 'left'
+                },
+                plotOptions: {
+                    pie: {
+                        shadow: false,
+                        center: ['50%', '50%']
+                    }
+                },
+                tooltip: {
+                    pointFormat: '<span style="color:#757575">{point.y:.0f}({point.percentage:.0f}%)</span>'
+                },
+                credits: {
+                    enabled: false //右下角不显示highcharts的LOGO
+                },
+                series: [{
+                    name: 'Browsers',
+                    data: browserData,
+                    size: imgSize2,
+                    colors: ['#5B9BD5', '#92D050', '#FF3399'],
+                    dataLabels: {
+                        formatter: function () {
+                            var a = null;
+                            if (this.y > 0) {
+                                a = this.point.name;
+                            }
+                            return a;
+                        },
+                        color: '#ffffff',
+                        distance: -40
+                    }
+                }, {
+                    name: 'Versions',
+                    data: versionsData,
+                    size: imgSize1,
+                    innerSize: imgSize2,
+                    dataLabels: {
+                        formatter: function () {
+                            var a = null;
+                            if (this.y > 0) {
+                                a = '<span style="color:#757575">' + this.point.name + '</span><br/><span style="color:#757575">' + this.point.y.toFixed(0) + '(' + this.point.percentage.toFixed(0) + '%)</span>';
+                            }
+                            return a;
+                        },
+                        distance: 1
+                    },
+                    id: 'versions'
+                }],
+                responsive: {
+                    rules: [{
+                        condition: {
+                            maxWidth: 398
+                        },
+                        chartOptions: {
+                            series: [{
+                                id: 'versions',
+                                dataLabels: {
+                                    enabled: false
+                                }
+                            }]
+                        }
+                    }]
+                }
+            });
+        } catch (e) {
+
+        }
+    }
+
+    function loadImg3(param, llqHeight) {
+        var ghcs = 0;
+        var ghl = 0;
+        var Data1 = [];
+        $.ajax({
+            url: "@Url.Action("Img3", "FactoryBatchNeedPlan")",
+            data: param,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i]["GhType"] != "供货") {
+                            Data1.push({
+                                name: data[i]["GhType"],
+                                y: data[i]["GhWeight"],
+                                cs: data[i]["GhCount"]
+                            });
+                        } else {
+                            ghcs = data[i]["GhCount"];
+                            ghl = data[i]["GhWeight"];
+                        }
+                    }
+                }
+            }
+        });
+        Highcharts.chart('Img3', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+            subtitle: {
+                text: '<b style="font-size:15px;font-weight:600;">供货次数:' + ghcs + "次（" + ghl + "kg）</b>",
+                align: 'left'
+            },
+            xAxis: {
+                type: 'category'
+            },
+            yAxis: {
+                title: {
+                    text: false
+                }
+            },
+            exporting: {
+                enabled: false//隐藏右上角的打印导出按钮
+            },
+            legend: {
+                enabled: false//隐藏底部横坐标的值
+            },
+            credits: {
+                enabled: false //右下角不显示highcharts的LOGO
+            },
+            plotOptions: {
+                series: {
+                    borderWidth: 0,
+                    colors: ['#5B9BD5', '#92D050'],
+                    dataLabels: {
+                        enabled: true,
+                        format: '<span style="color:#757575">{point.cs}次/{point.y:.0f}kg</span>',
+                    }
+                }
+            },
+            tooltip: {
+                pointFormat: '<span style="color:#757575">{point.cs}次/{point.y:.0f}kg</span>'
+            },
+            series: [{
+                name: '',
+                colorByPoint: true,
+                data: Data1,
+                events: {
+                    click: function (e) {
+                        var param1 = $(".search").GetSearchCondition();
+                        param1.RebarType = param.RebarType;
+                        param.ZlWtType = e.point.name;
+                        $("#gridList").jqGrid('setGridParam',
+                            {
+                                postData: param,
+                                page: 1
+                            }).trigger('reloadGrid');
+                    }
+                }
+            }]
+        });
+    }
+
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x: visible">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel divwidth1">
+            <div id="toolbar" class="toolbar divwidth2" style="float: left;margin-left: 15px;">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search divwidth2">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group input-group-search">
+                                <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                    <option value="">全部</option>
+                                    <option value="BatchPlanNum">批次计划编号</option>
+                                    <option value="StateCode">供货状态</option>
+                                    <option value="IsAsGh">是否按时供货</option>
+                                    <option value="ZlWtType">质量问题类型</option>
+                                    <option value="HistoryMonth">历史月份</option>
+                                </select>
+                                <input id="BatchPlanNum" name="BatchPlanNum" type="text" class="form-control SearchContent hidSearchContent" placeholder="补充计划编号">
+                                <select id="StateCode" name="StateCode" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="未供货">未供货</option>
+                                    <option value="超期未供货">超期未供货</option>
+                                    <option value="供货不足">供货不足</option>
+                                    <option value="供货过多">供货过多</option>
+                                    <option value="供货完成">供货完成</option>
+                                </select>
+                                <input id="HistoryMonth" name="HistoryMonth" type="text" class="form-control required input-wdatepicker SearchContent hidSearchContent" placeholder="历史月份" />
+                                <select id="IsAsGh" name="IsAsGh" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="按时供货">按时供货</option>
+                                    <option value="超时供货">超时供货</option>
+                                </select>
+                                <select id="ZlWtType" name="ZlWtType" class="form-control SearchContent hidSearchContent">
+                                    <option value="">请选择</option>
+                                    <option value="验收不合格">验收不合格</option>
+                                    <option value="检测不合格">检测不合格</option>
+                                </select>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-search">
+                                <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                                <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel" style="background-color:white">
+            <div class="ibox float-e-margins" style="margin-bottom:5px;">
+                <div class="ibox-title" style="height:40px;padding-top:1px;padding-bottom:3px;">
+                    <h5 id="ReportTitel" style="margin-top:10px;font-size:16px;font-weight:600">报表展示</h5>
+                    <div class="ibox-tools" style="float: left;padding-left:5px;margin-top:7px;">
+                        <a class="collapse-link" style="color:#1490fa">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                    </div>
+                    <div class="imgsearch" style="float:left;margin-top:6px;margin-left:40px;">
+                        <div style="margin-left:5px;float:left;margin-top:3px">
+                            钢筋类型：<input name="RebarType1" type="radio" value="BuildingSteel" checked="checked" />建筑钢筋
+                            <input name="RebarType1" type="radio" value="SectionSteel" />型钢
+                        </div>
+                    </div>
+                </div>
+                <div class="ibox-content" style="overflow-x:scroll;padding-top:5px;padding-bottom:5px;background-color:#EEEEEE;">
+                    <div class="row" style="margin-top: 5px; margin-right:0px;border:0px solid red;white-space:nowrap;width:1350px">
+                        <div style="float:left; width: 430px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:20px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">批次需求计划完成情况</div>
+                                <div style="float: right; padding-right: 5px; font-size: 16px; font-weight: 600;">单位：个</div>
+                            </div>
+                            <div id="Img1" style="float:left; width: 400px;border:0px solid #eee" class="highchartImg"></div>
+                        </div>
+                        <div style="float:left; width: 420px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:20px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">原材料供货情况</div>
+                                <div style="float: right; padding-right: 5px;font-size: 16px;font-weight: 600;">单位：kg</div>
+                            </div>
+                            <div id="Img2" style="float:left; width: 400px;border:0px solid #eee" class="highchartImg">
+                                @*<iframe id="iframeImg2"  width="400" scrolling="no" height="100%" frameborder="0"></iframe>*@
+                            </div>
+                        </div>
+                        <div style="float:left; width: 420px;margin-left:20px;border:0px solid #eee;background-color:white">
+                            <div class="ImgTitle" style="width:100%;height:20px;">
+                                <div style="float:left;text-align:left;font-size:16px;font-weight:600;padding-left:2px;padding-top:2px;">供货质量问题统计</div>
+                                <div style="float: right; padding-right: 5px; font-size: 16px; font-weight: 600;">单位：kg</div>
+                            </div>
+                            <div id="Img3" style="float:left; width: 400px;border:0px solid #eee" class="highchartImg"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager" style="margin-top:30px;position: fixed; bottom: 0; background-color: #F9F9F9;"></div>
+        </div>
+    </div>
+</div>

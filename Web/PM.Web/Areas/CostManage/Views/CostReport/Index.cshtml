@@ -1,0 +1,166 @@
+﻿@{
+    ViewBag.Title = "成本总报表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<!---------组织机构 & 订单------->
+<script type="text/javascript">
+    var projectId = "";
+    $(function () {
+        RoleView();
+        gridList();
+    });
+    //组织机构
+    function RoleView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() * 0.8,
+            colModel: [
+                { label: "公司Code", name: "CompanyCode", hidden: true, key: true },
+                { label: '组织机构', name: 'CompanyFullName', width: 220, align: 'left', sortable: false, },
+               { label: '项目id', name: 'ProjectId', hidden: true }
+            ],
+            treeGrid: true,
+            treeGridModel: 'adjacency',
+            ExpandColumn: 'CompanyFullName',
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                var siteCode = getOrganizationalCode(ucode);
+                projectId = $("#leftgridList").jqGrid('getRowData', ucode).ProjectId;
+            }
+        });
+    }
+    //订单列表
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetOrderGridJson", "CostReport")",
+            height: $(window).height() * 0.285,
+            colModel: [
+                { label: "站点", name: "CompanyFullName", width: 150, align: 'left', sortable: false },
+                { label: "订单编号", name: "OrderCode", width: 150, align: 'left', sortable: false, key: true },
+                { label: "类型编号", name: "TypeCode", width: 150, align: 'left', sortable: false },
+                { label: "类型名称", name: "TypeName", width: 150, align: 'left', sortable: false },
+                { label: "站点", name: "SiteCode", hidden: true },
+            ],
+            pager: "#gridPager",
+            shrinkToFit: false,
+            rownumbers: true,
+            onCellSelect: function (rowid, iCol, cellcontent, e) {
+                var orderCode = $("#gridList").jqGrid('getRowData', rowid).OrderCode;
+                var siteCode = $("#gridList").jqGrid('getRowData', rowid).SiteCode;
+                Report1(orderCode, siteCode);
+            }
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+</script>
+<!---------图形报表------->
+<script type="text/javascript">
+    $(function () {
+        //设置统计图形的高度
+        var screenHeight = $("body").height();
+        $(".highchartImg").each(function () {
+            $(this).height(screenHeight * 0.41);
+        });
+        Report1("","");
+        Report2();
+    });
+
+    //订单费用明细及占比分析
+    function Report1(orderCode, siteCode) {
+        var url = "@Url.Action("GetOrderReport", "CostReport")" + "?OrderCode=" + orderCode + "&SiteCode=" + siteCode + "&ProjectId=" + projectId;
+        getHighchart('Report1', '订单费用明细及占比分析', url, '#000000', '#84C1FF');
+    }
+    //本月各类费用明细占比及分析
+    function Report2() {
+        var url = "@Url.Action("GetMonthReport", "CostReport")" + "?ProjectId=" + projectId;
+        getHighchart('Report2', '本月各类费用明细占比及分析', url, '#84C1FF', '#000000');
+    }
+    //图表数据
+    function getHighchart(id, title, url, color1, color2) {
+        var data1 = [];
+        var data2 = [];
+        $.ajax({
+            url: url,
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                data1 = data.Item1;
+                data2 = data.Item2;
+            }
+        });
+        Highcharts.chart(id, {
+            chart: { zoomType: 'xy' },
+            title: { text: title },
+            xAxis: [{ categories: ['人工费用', '辅料费用', '机械费用', '配送费用'], crosshair: true }],
+            yAxis: [
+                { labels: { format: '{value}%', style: { color: color2 } }, title: { text: '占比', style: { color: color2 } }, opposite: true },
+                { labels: { format: '{value} 元', style: { color: color1 } }, title: { text: '费用', style: { color: color1 } } }],
+            tooltip: { shared: true },
+            plotOptions: {
+                column: { dataLabels: { enabled: true, color: color1 } },
+                spline: { dataLabels: { enabled: true, color: color2 } },
+            },
+            legend: { align: 'center', verticalAlign: 'bottom', y: 25, floating: true },
+            series: [
+                { name: '费用', type: 'column', yAxis: 1, color: color1, data: data1, tooltip: { valueSuffix: '元' } },
+                { name: '占比', type: 'spline', color: color2, data: data2, tooltip: { valueSuffix: '%' } }]
+        });
+    }
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+        <div class="col-xs-6 col-sm-2">
+            <div class="gridPanel">
+                <table id="leftgridList"></table>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-9">
+            <div class="row">
+                <div style="float:left; width:50%;">
+                    <section class="panel panel-default">
+                        <div class="panel-body">
+                            <div id="Report1" class="highchartImg"></div>
+                        </div>
+                    </section>
+                </div>
+                <div style="float: left; width: 50%;">
+                    <section class="panel panel-default">
+                        <div class="panel-body">
+                            <div id="Report2" class="highchartImg"></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div class="row">
+                <div class="gridPanel">
+                    <table id="gridList"></table>
+                    <div id="gridPager"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

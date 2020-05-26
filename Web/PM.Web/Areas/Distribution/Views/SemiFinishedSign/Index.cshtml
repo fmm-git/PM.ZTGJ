@@ -1,0 +1,247 @@
+﻿@{
+    ViewBag.Title = "半成品信息";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<script src="~/Content/js/ShowDialogDiv.js"></script>
+<script src="~/Content/js/BWSPName.js"></script>
+
+<script>
+    $(function () {
+        $.LodeMenuBtn("/Distribution/SemiFinishedSign/Index");
+        initControl();
+
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "SemiFinishedSign")",
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '站点名称', name: 'SiteName', width: 100, align: 'left', sortable: false },
+                { label: "配送装车编号", name: "DistributionCode", width: 120, align: 'left', sortable: false },
+                { label: '签收编号', name: 'SigninNuber', width: 120, align: 'left', sortable: false },
+                //{ label: "卸货编号", name: "DischargeCargoCode", width: 120, align: 'left', sortable: false },
+                { label: "订单编号", name: "OrderCode", width: 140, align: 'left', sortable: false, formatter: OrderCodeFM },
+                { label: '签收状态', name: 'OperateState', width: 80, align: 'left', sortable: false, formatter: OperateStateFM },
+                { label: "操作", name: "Operate", width: 80, align: 'left', sortable: false, formatter: CustomButton },
+                { label: "签收时间", name: "SigninTime", width: 120, align: 'left', sortable: false },
+                //{ label: "卸货状态", name: "DischargeTypeNew", width: 140, align: 'left', sortable: false },
+                //{ label: "运输单号", name: "DistributionCode", width: 140, align: 'left', sortable: false },
+                { label: '站点编号', name: 'SiteCode', hidden: true },
+                { label: '类型编号', name: 'TypeCode', width: 120, align: 'left', sortable: false },
+                { label: '类型名称', name: 'TypeName', width: 120, align: 'left', sortable: false },
+                { label: '使用部位', name: 'UsePart', width: 120, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'PlanDistributionTime', width: 120, align: 'left', sortable: false },
+                { label: '配送完成时间', name: 'DeliveryCompleteTime', width: 120, align: 'left', sortable: false },
+                { label: '配送地址', name: 'DistributionAddress', width: 140, align: 'left', sortable: false },
+
+                { label: '总量合计(kg)', name: 'SumTotal', width: 120, align: 'left', sortable: false },
+                { label: '车牌号', name: 'CarCph', width: 150, align: 'left', sortable: false },
+                { label: '驾驶员', name: 'CarUser', width: 120, align: 'left', sortable: false },
+                { label: '站点联系人', name: 'ContactsName', width: 120, align: 'left', sortable: false },
+                { label: '联系方式', name: 'ContactWay', width: 120, align: 'left', sortable: false },
+                { label: '备注', name: 'Remark', width: 120, align: 'left', sortable: false },
+
+                { label: '录编号', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', hidden: true },
+                { label: '订单编号', name: 'OrderCodeH', hidden: true },
+                { label: '操作状态', name: 'OperateState', hidden: true }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            gridComplete: function () {
+                var ids = $("#gridList").getDataIDs();
+                for (let i = 0; i < ids.length; i++) {
+                    var rowData = $("#gridList").getRowData(ids[i]);
+                    if (rowData.OperateState == '已签收') {
+                        $('#A' + rowData.ID).attr('disabled', 'disabled');
+                    }
+                }
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+        $("#btn_cl").click(function () {
+            $("#SiteCode").val("");
+            $("#SiteName").val("");
+            $("#VehicleCode").val("");
+            $("#SigninTime").val("");
+            let param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+            }).trigger('reloadGrid');
+        });
+    }
+
+
+
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看签收",
+            url: "@Url.Action("Details", "SemiFinishedSign")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "50%",
+            height: "400px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    var CustomButton = function (cellvalue, options, rowObject) {
+        let rowJson = JSON.stringify(rowObject).replace(/\"/g, "'");
+        let butHtm="";
+        if (rowObject.OperateState == "已签收") {
+            //butHtm = '<a  id=A' + rowObject.ID + ' class="btn btn-primary" onclick="SignClick(' + rowJson + ')">已签收</a> ';
+        }
+        else {
+            butHtm = '<a  id=A' + rowObject.ID + ' class="btn btn-primary" onclick="SignClick(' + rowJson + ')">&nbsp;签 收&nbsp;</a> ';
+        }
+        return butHtm;
+    }
+
+    function OrderCodeFM(cellvalue, options, rowObject) {
+        if (rowObject.OrderCodeH != null) {
+            return rowObject.OrderCodeH
+        } else {
+            return cellvalue;
+        }
+    }
+    function OperateStateFM(cellvalue, options, rowObject) {
+        if (rowObject.OperateState == null) {
+            return "<span style='color:red;'>未签收</span>";
+        } else {
+            if (rowObject.OperateState == "未签收") {
+                return "<span style='color:red;'>未签收</span>";
+            } else {
+                return "<span style='color:green;'>" + cellvalue + "</span>";
+            }
+        }
+    }
+    var CustomDate = function (cellvalue, options, rowObject) {
+        if (!cellvalue) {
+            return getNowFormatDate();
+        }
+        return cellvalue.substring(0, 10);
+    }
+
+    var SignClick = function (rowJson) {
+        rowJson.OperateState = "签收";
+        var rowStr = JSON.stringify(rowJson);
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "SemiFinishedSign")",
+            param: { keyValue: rowJson.ID },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+    //查询
+    //选择站点
+    function selectCompanyWorkAreaOrSite(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) { });
+    }
+    function initControl() {
+        //卸货状态
+        $("#DischargeType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "DischargeType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "SemiFinishedSign")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="SigninNuber">签收编号</option>
+                                <option value="DischargeCargoCode">配送装车编号</option>
+                                <option value="OrderCode">订单编号</option>
+                                <option value="OperateState">签收状态</option>
+                                <option value="TypeCode">类型编号</option>
+                                <option value="SigninTime">签收时间</option>
+                                <option value="CarCph">车牌号</option>
+                            </select>
+                            <input id="SigninNuber" name="SigninNuber" type="text" class="form-control SearchContent hidSearchContent" placeholder="签收编号">
+                            <input id="DischargeCargoCode" name="DischargeCargoCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="配送装车编号">
+                            <input id="OrderCode" name="OrderCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="订单编号">
+                            <select id="OperateState" name="OperateState" class=" form-control SearchContent hidSearchContent">
+                                <option value="">请选择</option>
+                                <option value="未签收">未签收</option>
+                                <option value="已签收">已签收</option>
+                            </select>
+                            <input id="TypeCode" name="TypeCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="类型编号">
+                            <input id="SigninTime" name="SigninTime" type="text" placeholder="签收时间" class="form-control input-wdatepicker SearchContent hidSearchContent" onfocus="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            <input id="CarCph" name="CarCph" type="text" class="form-control SearchContent hidSearchContent" placeholder="车牌号" style="width: 140px; margin-left: 5px;">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                            <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

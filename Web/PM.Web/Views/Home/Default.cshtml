@@ -1,0 +1,1552 @@
+﻿@{
+    ViewBag.Title = "欢迎首页";
+    Layout = "~/Views/Shared/_LayoutIndex2.cshtml";
+}
+@*2018-07-19 QY 欢迎首页报表设计*@
+@*<script src="~/Content/js/variable-pie.js"></script>*@
+<link href="~/Content/css/app.v2.css" rel="stylesheet" />
+<script src="~/Content/js/uploadFile.js"></script>
+<link href="~/Content/js/datepicker/skin/WdatePicker.css" rel="stylesheet" />
+<script src="~/Content/js/datepicker/WdatePicker.js"></script>
+<link href="~/Content/css/Style-index.css" rel="stylesheet" />
+<script src="~/Content/js/Highcharts-8.0.0/highcharts.src.js"></script>
+<script src="~/Content/js/MaterialNameSelect.js"></script>
+<script src="~/Content/js/Highcharts-8.0.0/highcharts-more.js"></script>
+<script src="~/Content/js/Highcharts-8.0.0/modules/solid-gauge.js"></script>
+<style type="text/css">
+    .scroll-box {
+        width: 92%;
+        height: 300px;
+        overflow: hidden;
+    }
+
+    ul, li {
+        list-style: none;
+        display: block;
+    }
+
+    #scrollbox #GunDong, #con2 {
+        width: 100%;
+        float: left;
+    }
+
+    /*.redBG {
+        background-color: #c9302c;
+        color: white;
+    }*/
+
+    /*#gridListXH > tbody > tr.active > td.redBG, .table > tbody > tr.success > td.redBG {
+        color: white;
+        background-color: #c9302c;
+    }*/
+    .aa {
+        color: red;
+    }
+
+    .bb {
+        color: #000000;
+    }
+</style>
+<a href="#" class="btn btn-rounded btn-sm btn-twitter" style="position:absolute; right:0; bottom:0; z-index:1300; position:fixed;" id="db_a">
+    <i class="fa fa-arrow-up"></i>&nbsp;回到顶部
+</a>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west left-scrollbar">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="col-md-8" style="width:100%;position:absolute; z-index:999;">
+            <section class="panel panel-default" style="height: 50px !important;margin-top:12px">
+                <div class="panel-body">
+                    <div style="float:left;width:75%">
+                        <span class="btn btn-rounded btn-sm btn-twitter" style="margin-left:10px; margin-top:-5px;"><i class="fa fa-bookmark"></i></span>
+                        &nbsp;
+                        提示小助手：欢迎回来，
+                        <font color="red" style="margin-right:5px;"><b>@ViewBag.UserName</b></font>
+                        (本次登陆时间为：
+                        @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
+                    </div>
+                    <div class="input-group input-group-with" style="float: right; margin-top: -8px;">
+                        <input id="HistoryMonth" name="HistoryMonth" type="text" value="@(DateTime.Now.ToString(" yyyy-MM"))" class="form-control required input-wdatepicker" placeholder="历史月份" style="width:150px" />
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="vbox" style="z-index:0; background-color:#d7d5d5">
+            <section id="content" style="margin-top:74px;">
+                <section class="vbox">
+                    <section class="scrollable padder">
+                        <div class="row">
+                            <div class="col-md-9" style="padding-right:6px;width:80%">
+                                <section class="panel panel-default">
+                                    <header class="panel-heading font-bold cc i-head-color" style="background-color: #ffffff;">
+                                        <img src="~/Content/img/syzl.png" class="sytb" />业务总览
+                                    </header>
+                                    <div class="panel-body" style="padding-top:0px;background-color:whitesmoke;">
+                                        <div class="row">
+                                            <div class="col-md-6 card-body-pan" style="margin-top:10px;width:38%">
+                                                <div class="card" style="background-color:#ADD8E6;padding:0px;height:70px;">
+                                                    <div class="i-head-color" style="position:absolute;z-index:1;margin-left:2px; font-size:14px;border-bottom:0px;">
+                                                        加工厂产能负荷
+                                                    </div>
+                                                    <div class="card-body" style="padding:0px;">
+                                                        <div class="mediaCard">
+                                                            <div id="container-speed" style="width: 120px; height: 90px;margin-left:-8px; float: left"></div>
+                                                            <div style="float:right;width:70%">
+                                                                <div class="i-head-color" style="float:right;font-size:14px;margin-right:5px;border-bottom:0px;" id="showMonth"></div>
+                                                                <div class="mediaCard-body" style="padding-top:20px;">
+                                                                    <span style="color:white">月综合产能 : <label style="margin-left:29px;" class="ycl"></label>kg</span><br />
+                                                                    <span style="color:white">当月需完成总量 :  <label class="sjcz"></label>kg</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2"></div>
+                                            <div class="col-md-4 card-body-pan card-body-rightbox GQSHOW" style="margin-top:1px; ">
+                                                <div class="down"></div>
+                                                <div class="card bg-blue">
+                                                    <h5 class="card-header bg-blue text-white mt-0">
+                                                        原材料月度计划
+                                                        <a href="" class="aTable details-text"></a>
+                                                    </h5>
+                                                    <div class="card-body">
+                                                        <div class="mediaCard">
+                                                            <img src="~/Content/img/t3.png" class="img-size">
+                                                            <div class="mediaCard-body" id="MonthPlan-Card">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#0080FF;">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/RawMaterial/RawMonthDemandPlan/Index" data-id="RawMonthDemandPlan" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row GQSHOW">
+                                            <div class="col-md-9"></div>
+                                            <div class="col-md-3" style="text-align:left;margin-top:0px;padding-left:0px;">
+                                                <div style="float:left;margin-left:35px;font-size:13px;" class="box-fontsize">差</br>额</div>
+                                                <div style="float:left;margin-left:10px;" class="box-fontsize" id="MonthToBatch-Card">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row GQSHOW">
+                                            <div class="col-md-4 card-body-pan" style="margin-top:-130px;">
+                                                <div class="right"></div>
+                                                <div class="card bg-info">
+                                                    <h5 class="card-header bg-info text-white mt-0">
+                                                        加工订单
+                                                        <a href="" class="aTable details-text" onclick="OrderMore()">更多</a>
+                                                    </h5>
+                                                    <div class="card-body" style="height:300px;">
+                                                        <div class="mediaCard">
+                                                            <img src="~/Content/img/t1.png" class="img-size">
+                                                            <div class="mediaCard-body" id="OrderData-Card">
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#3A5FCD">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/Production/WorkOrder/Index" data-id="WorkOrder" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 card-body-pan" style="margin-top:-130px;margin-left:30px;">
+                                                <div class="right" style="border-left-color: #66B3FF;"></div>
+                                                <div class="card bg-green">
+                                                    <h5 class="card-header bg-green text-white mt-0">
+                                                        原材料库存(实时)
+                                                        <a href="" class="aTable details-text"></a>
+                                                    </h5>
+                                                    <div class="card-body" style="height:300px;">
+                                                        <div class="mediaCard">
+                                                            <img src="~/Content/img/t2.png" class="img-size">
+                                                            <div class="mediaCard-body" id="RawMaterialStock-Card">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#5CACEE">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/RawMaterial/RawMaterialStock/Index" data-id="RawMaterialStock" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @*<div class="col-md-1" style="width:auto;padding:0px;padding-top:60px;text-align:center;">
+                                                    <img src="~/Content/img/yjt.png" />
+                                                </div>*@
+                                            <div class="col-md-3 card-body-pan card-body-rightbox" style="margin-top:1px;">
+                                                <div class="card bg-perpul">
+                                                    <h5 class="card-header bg-perpul text-white mt-0">
+                                                        加工厂批次需求计划
+                                                        <a href="" class="aTable details-text" onclick="SupplyrMore('0')">更多</a>
+                                                    </h5>
+                                                    <div class="card-body">
+                                                        <div class="mediaCard">
+                                                            <img src="~/Content/img/t4.png" class="img-size">
+                                                            <div class="mediaCard-body" id="BatchPlan-Card">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#68228B;">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/RawMaterial/FactoryBatchNeedPlan/Index" data-id="FactoryBatchNeedPlan" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row GQSHOW">
+                                            <div class="col-md-9"></div>
+                                            <div class="col-md-3" style="margin-top:-75px;text-align:left;padding-left:0px;">
+                                                <div style="float:left;margin-left:36px;font-size:13px;" class="box-fontsize">差</br>额</div>
+                                                <div style="float:left;margin-left:10px;" class="box-fontsize" id="SupplyToBatch-Card">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row GQSHOW">
+                                            <div class="col-md-4"></div>
+                                            <div class="col-md-4"></div>
+                                            <div class="col-md-4 card-body-rightbox" style="margin-right:-10px;margin-top:-45px;">
+                                                <div class="up"></div>
+                                                <div class="card  bg-perpul2">
+                                                    <h5 class="card-header bg-perpul2 text-white mt-0">
+                                                        原材料供应
+                                                        <a href="" class="aTable details-text" onclick="SupplyrMore('1')">更多</a>
+                                                    </h5>
+                                                    <div class="card-body">
+                                                        <div class="mediaCard">
+                                                            <img src="~/Content/img/t5.png" class="img-size">
+                                                            <div class="mediaCard-body" id="SupplyData-Card">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#191970;">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/RawMaterial/SupplyList/Index" data-id="SupplyList" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row JLBSHOW" style="margin-top:10px;height:462px;">
+                                            <div class="col-md-4 card-body-pan" style="margin-right:10px;">
+                                                <div class="card charhight bg-blue">
+                                                    <h5 class="card-header bg-blue text-white mt-0">
+                                                        原材料月度计划
+                                                        <a href="" class="aTable details-text"></a>
+                                                    </h5>
+                                                    <div class="card-body">
+                                                        <div class="mediaCard JLBDivs">
+                                                            <img src="~/Content/img/t3.png" class="img-size">
+                                                            <div class="mediaCard-body" id="MonthPlan-Card-F">
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body-div charsize" id="container1"></div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#0080FF;">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/RawMaterial/RawMonthDemandPlan/Index" data-id="RawMonthDemandPlan" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 card-body-pan" style="margin-right:2px;">
+                                                <div class="card charhight bg-info">
+                                                    <h5 class="card-header bg-info text-white mt-0">
+                                                        加工订单
+                                                        <a href="" class="aTable details-text" onclick="OrderMore()">更多</a>
+                                                    </h5>
+                                                    <div class="card-body">
+                                                        <div class="mediaCard JLBDivs" style="height:100px;">
+                                                            <img src="~/Content/img/t1.png" class="img-size">
+                                                            <div class="mediaCard-body" id="Order-Card-F">
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body-div charsize" id="container2"></div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#3A5FCD">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/Production/WorkOrder/Index" data-id="WorkOrder" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4" style="margin-top:-10px;">
+                                                <div class="card charhight bg-perpul2">
+                                                    <h5 class="card-header bg-perpul2 text-white mt-0">
+                                                        原材料供应
+                                                        <a href="" class="aTable details-text" onclick="SupplyrMore('1')">更多</a>
+                                                    </h5>
+                                                    <div class="card-body">
+                                                        <div class="mediaCard JLBDivs">
+                                                            <img src="~/Content/img/t5.png" class="img-size">
+                                                            <div class="mediaCard-body">
+                                                                <div class="card-body-div">
+                                                                    <input name="RebarType" type="radio" value="BuildingSteel" />建筑钢筋
+                                                                    <input name="RebarType" type="radio" value="SectionSteel" style="margin-left:20px;" />型钢
+                                                                </div>
+                                                                <div class="card-body-div">需求 : <label class="guide-right" id="Supply1"></label></div>
+                                                                <div class="card-body-div">已供 : <label class="guide-right" id="Supply2"></label></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body-div charsize" id="container3"></div>
+                                                    </div>
+                                                    <div class="detailDiv" style="background-color:#191970;">
+                                                        <div class="detail-left">详情</div>
+                                                        <div class="detail-right">
+                                                            <a href="/RawMaterial/SupplyList/Index" data-id="SupplyList" class="aTable details-text">
+                                                                <img src="~/Content/img/xqjt.png" class="xqimg" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                            <div class="col-md-3" style="padding-left:6px;width:20%">
+                                <section class="panel panel-default" style="width:99%;height:625px;">
+                                    <header class="panel-heading font-bold cc i-head-color" style="background-color: #ffffff;">
+                                        <img src="~/Content/img/syjib.png" class="sytb" />今日简报
+                                    </header>
+                                    <div class="panel-body" id="LInfo-Card" style="margin-top:40px;">
+                                        <div class="main-timeline">
+                                            <div class="timeline date-box-color1">
+                                                <a href="#" class="timeline-content">
+                                                    <div class="timeline-year">
+                                                        <span>今日</span>
+                                                    </div>
+                                                    <div class="inner-content" id="Day-D">
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="main-timeline">
+                                            <div class="timeline date-box-color2">
+                                                <a href="#" class="timeline-content">
+                                                    <div class="timeline-year">
+                                                        <span>本月</span>
+                                                    </div>
+                                                    <div class="inner-content" id="Month-D">
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="main-timeline">
+                                            <div class="timeline date-box-color3">
+                                                <a href="#" class="timeline-content">
+                                                    <div class="timeline-year">
+                                                        <span>今年</span>
+                                                    </div>
+                                                    <div class="inner-content" id="Year-D">
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6" style="padding-right:6px;">
+                                <section class="panel panel-default">
+                                    <header class="panel-heading font-bold cc i-head-color" style="background-color:#ffffff;">
+                                        <img src="~/Content/img/sylb.png" class="sytb" />当月报警类型统计
+                                    </header>
+                                    <div class="panel-body">
+                                        <div id="AlarmMessage" style="height: 300px;"></div>
+                                    </div>
+                                </section>
+                            </div>
+                            <div class="col-md-6" style="padding-left:6px;">
+                                <section class="panel panel-default">
+                                    <header class="panel-heading font-bold cc i-head-color" style="background-color: #ffffff;">
+                                        <img src="~/Content/img/sybj.png" class="sytb" style="margin-top:-10px;" /><label id="labTitle"></label>
+                                    </header>
+                                    <div id="PieDetailDiv" class="panel-body">
+                                        @*审批超时*@
+                                        <div id="SpCsYj" title="审批超时" style="height: 300px;">
+                                            <div class="gridpanel">
+                                                <table id="gridListSpCsYj"></table>
+                                            </div>
+                                        </div>
+                                        @*未报月度需求计划*@
+                                        <div id="WbydxqjhYj" title="未报月度需求计划" style="height: 300px;">
+                                            <div class="gridPanel">
+                                                <table id="gridListWbydxqjhYj"></table>
+                                            </div>
+                                        </div>
+                                        @*原材料供货超时*@
+                                        <div id="YclghCsYj" title="原材料供货超时" style="height: 300px;">
+                                            <div class="gridPanel">
+                                                <table id="gridListYclghCsYj"></table>
+                                            </div>
+                                        </div>
+                                        @*加急订单*@
+                                        <div id="JjOrderYj" title="加急订单" style="height: 300px;">
+                                            <div class="gridPanel">
+                                                <table id="gridListJjOrderYj"></table>
+                                            </div>
+                                        </div>
+                                        @*加工进度滞后*@
+                                        <div id="JgOrderZhYj" title="加工进度滞后" style="height: 300px;">
+                                            <div class="gridPanel">
+                                                <table id="gridListJgOrderZhYj"></table>
+                                            </div>
+                                        </div>
+                                        @*配送超期*@
+                                        <div id="PsCsYj" title="接收配送超期" style="height: 300px;">
+                                            <div class="gridPanel">
+                                                <table id="gridListPsCsYj"></table>
+                                            </div>
+                                        </div>
+                                        @*卸货超时*@
+                                        <div id="XhCsYj" title="卸货超时" style="height: 300px;">
+                                            <div class="gridPanel">
+                                                <table id="gridListXhCsYj"></table>
+                                            </div>
+                                        </div>
+                                        @*签收超时*@
+                                        <div id="QsCsYj" title="签收超时" style="height: 300px;">
+                                            <div class="gridPanel">
+                                                <table id="gridListQsCsYj"></table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            </section>
+        </section>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var myDate = new Date();
+    var Year = myDate.getFullYear();
+    var Month = Number(myDate.getMonth()) + Number(1);
+    if (Month.toString().length == 1) {
+        Month = "0" + Month;
+    }
+    CapacityMonth = Year + "-" + Month;
+    //加载数据(统计相关数据)
+    $(function () {
+        $('#layout').layout();
+        $("#showMonth").html(CapacityMonth);
+        $("#HistoryMonth").click(function () {
+            WdatePicker({
+                readOnly: true,
+                dateFmt: 'yyyy-MM ',
+                maxDate: '%y-%M-%d',
+                onpicking: function (dp) {
+                    var HistoryMonth = dp.cal.getNewDateStr();
+                    CapacityMonth = HistoryMonth;
+                    var a = HistoryMonth.split("-");
+                    Year = a[0];
+                    Month = a[1];
+                    //LodeTotal(Year, Month);
+                    SearchData(HistoryMonth);
+                    GetChangeDateType();//重新加载预警列表数据
+                    pieClick("审批超时");//初始化饼图选中之后的明细信息
+                    //AgaingridListXH(Year, Month);
+                }
+            });
+        });
+        LodeTotal();
+        InitData();
+        GetRightGridList();//初始化预警列表数据
+        pieClick("审批超时");//初始化饼图选中之后的明细信息
+        //gridListXH(Year, Month);//卸货问题时间展示
+        var orgType = "@ViewBag.OrgType";
+        var processFactoryCode = "@ViewBag.ProcessFactoryCode";
+        if (orgType == "1" || orgType == "2") {//加工厂、经理部
+            $("#QtOrg").hide();
+            $("#JgcOrg").show();
+        } else {
+            $("#JgcOrg").hide();
+            $("#QtOrg").show();
+        }
+    });
+
+    function LodeTotal() {
+        $.ajax({
+            url: "@Url.Action("GetCapacityNum")",
+            data: { CapacityMonth: CapacityMonth },
+            success: function (data) {
+                $(".ycl").html(data.ycl);
+                $(".sjcz").html(data.sjcz);
+                LodaHi(data.sjfh);
+            }
+        });
+    }
+
+    $(function () {
+        $("#db_a").hover(function () {
+            $(this).animate({ height: "50px" });//鼠标移入时高度变为100px
+        }, function () {
+            $(this).animate({ height: "30px" });//还原本体高度
+        });
+    })
+
+    //报警
+    function AlarmMessage() {
+        $.ajax({
+            url: "@Url.Action("GetAlarmMessage", "Home")",
+            data: GetRequest(),
+            method: "post",
+            dataType: "json",
+            success: function (json) {
+                var data1 = [];
+                if (json.length > 0) {
+                    for (var i = 0; i < json.length; i++) {
+                        //data1.push({ name: json[i]["MenuName"], y: parseFloat(json[i]["ct"]) });
+                        if (i == 0) {
+                            data1.push({ name: json[i]["YjTypeName"], y: parseFloat(json[i]["YjNum"]), sliced: true, selected: true });//默认展开
+                        } else {
+                            data1.push({ name: json[i]["YjTypeName"], y: parseFloat(json[i]["YjNum"]) });
+                        }
+
+                    }
+                }
+                var chart = Highcharts.chart('AlarmMessage', {
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie'
+                    },
+                    title: {
+                        text: ''
+                    },
+                    credits: {
+                        enabled: false//是否显示版权信息
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.y} 次数</b>'
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.y} 次数',
+                                style: {
+                                    color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                }
+                            },
+                            events: {
+                                click: function (e) { pieClick(e.point.name); }
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Brands',
+                        colorByPoint: true,
+                        data: data1
+                    }]
+                });
+            }
+        });
+    }
+
+    var RowNumWidth = 40;
+    //初始化加载所以的预警明细信息
+    function GetRightGridList() {
+        //审批超时
+        $("#gridListSpCsYj").dataGrid({
+            url: "/Home/GetSpCsYjList",
+            postData: GetRequest(),
+            height: $("#SpCsYj").height() - 35,
+            colModel: [
+                { label: "预警菜单", name: "MenuName", width: 150, align: 'left', sortable: false },
+                { label: '预警菜单审批节点', name: 'FlowNodeName', width: 280, align: 'left', sortable: false },
+                { label: '流程审批人员', name: 'FlowSpUserName', width: 100, align: 'left', sortable: false },
+                { label: '预警分部', name: 'BranchName', width: 80, align: 'left', sortable: false },
+                { label: '预警工区', name: 'WorkAreaName', width: 80, align: 'left', sortable: false },
+                //{ label: '预警站点', name: 'SiteName', width: 120, align: 'left', sortable: false },
+                { label: '预警单号', name: 'OddNumbers', width: 120, align: 'left', sortable: false },
+                { label: '预警人员', name: 'FlowYjUserName', width: 100, align: 'left', sortable: false },
+                { label: '预警发生时间', name: 'EarlyWarningTime', width: 140, align: 'left', sortable: false },
+                //{ label: '预警内容', name: 'EarlyWarningContent', width: 260, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListSpCsYj",
+            sortname: 'EarlyWarningTime',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //未按时提报月度需求计划
+        $("#gridListWbydxqjhYj").dataGrid({
+            url: "/Home/GetWbydxqjhYjList",
+            postData: GetRequest(),
+            height: $("#WbydxqjhYj").height() - 35,
+            colModel: [
+                { label: "预警菜单", name: "MenuName", width: 150, align: 'left', sortable: false },
+                { label: '预警分部', name: 'FbName', width: 80, align: 'left', sortable: false },
+                { label: '预警工区', name: 'GqName', width: 80, align: 'left', sortable: false },
+                { label: '钢筋类型', name: 'RebarType', width: 100, align: 'left', sortable: false },
+                { label: '预警发生时间', name: 'EWTime', width: 140, align: 'left', sortable: false },
+                { label: '预警人员', name: 'UserName', width: 100, align: 'left', sortable: false },
+                //{ label: '预警内容', name: 'EWContent', width: 260, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListWbydxqjhYj",
+            sortname: 'EWTime',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+        //原材料供货超时
+        $("#gridListYclghCsYj").dataGrid({
+            url: "/Home/GetYclghCsYjList",
+            postData: GetRequest(),
+            height: $("#YclghCsYj").height() - 35,
+            colModel: [
+                { label: "批次需求计划编号", name: "BatchPlanNum", width: 130, align: 'left', sortable: false },
+                { label: '分部', name: 'BranchName', width: 80, align: 'left', sortable: false },
+                { label: '工区', name: 'WorkAreaName', width: 80, align: 'left', sortable: false },
+                { label: '备注', name: 'Remarks', width: 140, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划到货时间', name: 'SupplyDate', width: 140, align: 'left', sortable: false },
+                { label: '供货完成时间', name: 'SupplyCompleteTime', width: 140, align: 'left', sortable: false }
+            ],
+            //pager: "#gridListYclghCsYj",
+            sortname: 'BatchPlanNum',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //加急订单个数
+        $("#gridListJjOrderYj").dataGrid({
+            url: "/Home/GetJjOrderYjList",
+            postData: GetRequest(),
+            height: $("#JjOrderYj").height() - 35,
+            colModel: [
+                { label: "订单编号", name: "OrderCode", width: 120, align: 'left', sortable: false },
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'DistributionTime', width: 140, align: 'left', sortable: false, formatter: formatDatebox }
+            ],
+            //pager: "#gridListJjOrderYj",
+            sortname: 'OrderCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //加工进度滞后
+        $("#gridListJgOrderZhYj").dataGrid({
+            url: "/Home/GetJgOrderZhYjList",
+            postData: GetRequest(),
+            height: $("#JgOrderZhYj").height() - 35,
+            colModel: [
+                { label: "订单编号", name: "OrderCode", width: 120, align: 'left', sortable: false },
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'DistributionTime', width: 120, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: '加工完成时间', name: 'FinishProcessingDateTime', width: 140, align: 'left', sortable: false, formatter: formatDatebox }
+            ],
+            //pager: "#gridListJgOrderZhYj",
+            sortname: 'OrderCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //接收配送超期
+        $("#gridListPsCsYj").dataGrid({
+            url: "/Home/GetPsCsYjList",
+            postData: GetRequest(),
+            height: $("#PsCsYj").height() - 35,
+            colModel: [
+                { label: "订单编号", name: "OrderCode", width: 120, align: 'left', sortable: false },
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'DistributionTime', width: 120, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: '实际配送时间', name: 'DeliveryCompleteTime', width: 140, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: '备注', name: 'Remark', width: 200, align: 'left', sortable: false },
+            ],
+            sortname: 'OrderCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //卸货超时
+        $("#gridListXhCsYj").dataGrid({
+            url: "/Home/GetXhCsYjList",
+            postData: GetRequest(),
+            height: $("#XhCsYj").height() - 35,
+            colModel: [
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '到场时间', name: 'EnterSpaceTime', width: 140, align: 'left', sortable: false },
+                { label: '开始卸货时间', name: 'StartDischargeTime', width: 140, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'EndDischargeTime', width: 140, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false }
+            ],
+            sortname: 'EnterSpaceTime',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+
+        //签收超时
+        $("#gridListQsCsYj").dataGrid({
+            url: "/Home/GetQsCsYjList",
+            postData: GetRequest(),
+            height: $("#QsCsYj").height() - 35,
+            colModel: [
+                { label: '站点', name: 'SiteName', width: 80, align: 'left', sortable: false },
+                { label: '配送装车编号', name: 'DistributionCode', width: 120, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'DistributionTime', width: 140, align: 'left', sortable: false },
+                { label: '签收时间', name: 'SigninTime', width: 140, align: 'left', sortable: false },
+                { label: '加工厂', name: 'ProcessFactoryName', width: 100, align: 'left', sortable: false },
+            ],
+            sortname: 'DistributionCode',
+            sortorder: 'desc',
+            shrinkToFit: false,
+            rowNum: -1,
+            rownumWidth: RowNumWidth,
+        });
+    }
+    //重新加载预警列表信息
+    function GetChangeDateType() {
+        $("#gridListSpCsYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+        $("#gridListWbydxqjhYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+        $("#gridListYclghCsYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+        $("#gridListJjOrderYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+        $("#gridListJgOrderZhYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+        $("#gridListPsCsYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+        $("#gridListXhCsYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+        $("#gridListQsCsYj").jqGrid('setGridParam', {
+            postData: GetRequest(),
+        }).trigger('reloadGrid');
+    }
+    //点击饼图
+    function pieClick(name) {
+        var a = $("#PieDetailDiv").children($("div"));
+        for (var i = 0; i < a.length; i++) {
+            var divtitle = a[i].title;
+            if (divtitle == name) {
+                $("#labTitle").text("报警信息详情——" + name);
+                $("#" + a[i].id).show();
+            } else {
+                $("#" + a[i].id).hide();
+            }
+        }
+    }
+
+    //********************暂时弃用Star******************
+    function AgaingridListXH(Year, Month) {
+        $("#gridListXH").jqGrid('setGridParam', {
+            postData: { Year: Year, Month: Month },
+        }).trigger('reloadGrid');
+    }
+
+    function GetGunDong() {
+        var num = 1;
+        $.ajax({
+            url: "/Home/GetJiaoLiu",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                if (data.length >= 12) {
+                    num = 2;
+                }
+                var html = '';
+                for (var i = 0; i < data.length; i++) {
+                    html += '<li style="margin:5px;"><a class="aTable" style="font-size:13px;color:#000000;" data-id="Article" href="/Article/Article/Details?keyValue=' + data[i].ID + '">' + (i + 1) + ' . ' + showText(data[i].Title, 25) + '</a></li>';
+                }
+                $("#GunDong").html(html);
+            }
+        });
+        return num;
+    }
+
+    function gridListXH(Year, Month) {
+        var $gridList = $("#gridListXH");
+        $gridList.dataGrid({
+            url: "/Home/GetCarReportGridJson",
+            postData: { Year: Year, Month: Month },
+            height: $("#DischargeProcess").height() - 35,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "卸货站点", name: "SiteName", width: 80, align: 'left', sortable: false },
+                { label: "订单编号", name: "OrderCode", width: 100, align: 'left', sortable: false },
+                { label: "装车配送编号", name: "DistributionCode", width: 100, align: 'left', sortable: false },
+                { label: '计划配送时间', name: 'PlanDistributionTime', width: 150, align: 'left', sortable: false },
+                { label: "实际配送时间", name: "LoadCompleteTime", width: 150, align: 'left', sortable: false },
+                { label: '车牌号及司机', name: 'CarCph', width: 100, align: 'left', sortable: false },
+                { label: "出厂时间", name: "LeaveFactoryTime", width: 80, align: 'left', sortable: false },
+                { label: '运输到场时间', name: 'EnterSpaceTime', width: 80, align: 'left', sortable: false },
+                { label: '等待卸货时间(分)', name: 'WaitTime', width: 150, align: 'left', sortable: false, cellattr: addWaitTimeCellAttr },
+                { label: '开始卸货时间', name: 'StartDischargeTime', width: 100, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'EndDischargeTime', width: 100, align: 'left', sortable: false },
+                { label: '车辆出场时间', name: 'OutSpaceTime', width: 100, align: 'left', sortable: false },
+                { label: "各环节照片", name: "OperateP", width: 100, align: 'center', sortable: false, formatter: ConfirmButton },
+                { label: '问题记录', name: 'IsProblemtr', width: 100, align: 'left', sortable: false, formatter: IsProblem },
+                { label: '附件', name: 'Enclosure', hidden: true },
+                { label: '是否存在问题', name: 'IsProblem', hidden: true },
+            ],
+            gridComplete: function () {
+                $('.aTable').on('click', $.nfinetab.syaddtab);
+            },
+            pager: "#gridPagerXH",
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+    }
+    function addWaitTimeCellAttr(rowId, val, rawObject, cm, rdata) {
+        if (parseInt(rawObject.WaitTime) > 30) {
+            return "style='color:red;font-weight:600'";
+        }
+    }
+    function ConfirmButton(cellvalue, options, rowObject) {
+        if (rowObject.Enclosure != "") {
+            var butHtm = "<a class='btn btn-primary' Enclosure='" + rowObject.Enclosure + "' onclick='onButClick(this)'>查看</a> ";
+            return butHtm;
+        } else {
+            return "";
+        }
+    }
+    function onButClick(obj) {
+        var Enclosure = $(obj).attr("Enclosure");
+        showFile(Enclosure, "details", "DistributionEnt");
+    }
+    function IsProblem(cellvalue, options, rowObject) {
+        if (rowObject.IsProblem == "是") {
+            var butHtm = "<a class='btn btn-primary aTable' data-id='Article'  href='/Article/Article/Index?DistributionCode=" + rowObject.DistributionCode + "'>查看</a> ";
+            return butHtm;
+        } else {
+            return "";
+        }
+    }
+    //截取字符串
+    function showText(text, numSub) {
+        if (text == null) {
+            return "";
+        }
+        if (text.length > numSub) {
+            return text.substring(0, numSub - 1) + "...";
+        }
+        return text;
+    }
+    //********************暂时弃用End******************
+</script>
+<script type="text/html" id="new-card">
+    <div class="card-body-div">
+        建筑钢筋 :
+        <a href="{url1}" data-id="RawMaterialStock" class="{aTable1} details-text" style="float:right;">
+            <span class="guide-right">{lable1}</span>
+        </a>
+    </div>
+    <div style="margin-top:6px; text-align:right">{B-Weight}</div>
+    <div class="card-body-div" style="{MPX}">
+        型钢 :
+        <a href="{url2}" data-id="RawMaterialStock" class="{aTable2} details-text" style="float:right;">
+            <span class="guide-right">{lable2}</span>
+        </a>
+    </div>
+    <div style="margin-top:6px; text-align:right">{S-Weight}</div>
+</script>
+<script type="text/html" id="new-2card">
+    <div class="card-body-div">建筑钢筋 : <label class="guide-right">{B-Weight}</label></div>
+    <div class="card-body-div" style="{MPX}">型钢 : <label class="guide-right">{S-Weight}</label></div>
+</script>
+<script type="text/html" id="lable-pink">
+    <span class="badge badge-{color}">{text}</span>
+</script>
+<script type="text/html" id="lable-ce">
+    <span style="{color1}">{text1}kg(建筑钢筋)</span></br>
+    <span style="{color2}">{text2}kg(型钢)</span>
+</script>
+<script type="text/html" id="new-order-Card">
+    <div class="card-body-div">当月接单 : <label class="guide-right">{OrderCount}</label></div>
+    <div class="card-body-div"><label class="hlab">x</label><label class="guide-right">{OrderTotal}kg</label></div>
+    <div class="card-body-div">计划完成 : <label class="guide-right">{PlanCount}</label></div>
+    <div class="card-body-div"><label class="hlab">x</label><label class="guide-right">{PlanTotal}kg</label></div>
+    <div class="card-body-div">已加工完成 : <label class="guide-right">{OverCount}</label></div>
+    <div class="card-body-div"><label class="hlab">x</label><label class="guide-right">{OverTotal}kg</label></div>
+    <div class="card-body-div">已配送 : {Distribution} / <label style="color:#ff7575">未配送 : {NotDistribution}</label></div>
+    <div class="card-body-div" style="margin-top:15px;">已签收 : {Sign} / <label style="color:#ff7575">未签收 : {NotSign}</label></div>
+    <div class="card-body-div" style="margin-top:15px;">
+        <a href="javascript:" id="wwcurl" data-id="WorkOrder" class="aTable details-text" style="float:left;">
+            <span class="badge badge-warning">未 完 成&nbsp;&nbsp;</br>{NotOver}</span>
+        </a>
+        <a href="javascript:" id="zhurl" data-id="WorkOrder" class="aTable">
+            <span class="badge badge-pink a-animate-blink" style="margin-left:20px;">进度滞后</br>{Lag}</span>
+        </a>
+    </div>
+</script>
+<script type="text/html" id="new-order-f">
+    <div class="card-body-div">当月接单 :<label class="guide-right">{OrderTotal}kg</label></div>
+    <div class="card-body-div">计划完成 : <label class="guide-right">{PlanTotal}kg</label></div>
+    <div class="card-body-div">加工完成 : <label class="guide-right">{OverTotal}kg</label></div>
+    <div class="card-body-div" style="color:#EA0000">进度滞后 : <label class="guide-right">{LagWeight}kg</label></div>
+</script>
+<script type="text/html" id="new-LInfo-c">
+    <p class="content-order">接单 : <label class="guide-right" style="font-weight:inherit;">{ConfirmWorkCount} ({ConfirmWorkTotal}kg)</label></p>
+    <p class="content-over">加工完成 : <label class="guide-right" style="font-weight:inherit;">{FinishingCount} ({FinishingTotal}kg)</label></p>
+    <br />
+    <p class="content-date">{DateTimeStr}</p>
+</script>
+
+<script type="text/javascript">
+    var request = {};
+    request.DayMonth = "";
+    //request.SiteCode = "";
+    request.ProcessFactoryCode = "@ViewBag.ProcessFactoryCode";
+    var orgType = "@ViewBag.OrgType";
+    function charreflow() {
+        $('#container1').highcharts().reflow();
+        $('#container2').highcharts().reflow();
+        $('#container3').highcharts().reflow();
+    }
+    function GetRequest() {
+        return request;
+    }
+    function InitData() {
+        leftList();
+        var day = $("#HistoryMonth").val();
+        //request.DayMonth = $.trim(day);
+        SearchData(day);
+        var processFactoryCode = "@ViewBag.ProcessFactoryCode";
+        if (orgType == "1" || orgType == "4") {//加工厂1、工区4
+            ShowHidDiv(".JLBSHOW", "none");
+        } else {
+            ShowHidDiv(".GQSHOW", "none");//分部3.经理部2
+        }
+
+        $('input[type=radio][name=RebarType]').change(function () {
+            if (this.value == 'BuildingSteel') {
+                CreatSupplyReport(1);
+            }
+            else if (this.value == 'SectionSteel') {
+                CreatSupplyReport(0);
+            }
+        });
+    }
+
+    function IndexSearch() {
+        var url1 = "/Production/WorkOrder/Index?IndexSearch=jdzh&OrgCode=" + request.SiteCode + "&HistoryMonth=" + request.DayMonth;
+        $("#zhurl").attr("href", url1);
+        var url2 = "/Production/WorkOrder/Index?IndexSearch=wwc&OrgCode=" + request.SiteCode + "&HistoryMonth=" + request.DayMonth;
+        $("#wwcurl").attr("href", url2);
+    }
+    //订单更多
+    function OrderMore() {
+        var where = "?DayMonth=" + request.DayMonth + "&SiteCode=" + request.SiteCode + "&ProcessFactoryCode=" + request.ProcessFactoryCode;
+        $.modalOpen({
+            id: "OrderMore",
+            title: "历史接单量统计",
+            url: "@Url.Action("OrderMore", "Home")" + where,
+            width: "60%",
+            height: "70%",
+            btn: null
+        });
+    }
+    //供应量更多
+    function SupplyrMore(type) {
+        var where = "?DayMonth=" + request.DayMonth + "&SiteCode=" + request.SiteCode + "&ProcessFactoryCode=" + request.ProcessFactoryCode + "&Type=" + type;
+        $.modalOpen({
+            id: "SupplyrMore",
+            title: "供应量需求量统计",
+            url: "@Url.Action("SupplyrMore", "Home")" + where,
+            width: "60%",
+            height: "70%",
+            btn: null
+        });
+    }
+
+    function SearchData(date) {
+        if (date != "") {
+            request.DayMonth = $.trim(date);
+            $('input[type=radio][name=RebarType]').prop("checked", "");
+        }
+        GetOrderData();
+        GetDMYData();
+        GetRawMaterialStockPlanData();
+        GetRawMaterialStockData();
+        //图表
+        GetMonthPlanReport();
+        GetOrderInfoReport();
+        GetSupplyDataReport();
+        $('input[type=radio][name=RebarType][value="BuildingSteel"]').prop("checked", "checked");
+        IndexSearch();
+
+        AlarmMessage();//初始化饼图
+    }
+
+    function leftList() {
+        LoadOrdLabData();
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetLoginUserAllCompany",
+            height: $(window).height() - 50,
+            colModel: [
+               { label: "组织机构编号", name: "CompanyCode", hidden: true, key: true },
+               { label: '组织机构', name: 'CompanyFullName', width: 240, align: 'left', sortable: false, formatter: CompanyFullNameFM },
+               { label: '组织机构类型', name: 'OrgType', hidden: true },
+               { label: '项目id', name: 'ProjectId', hidden: true },
+               { label: 'ParentCompanyCode', name: 'ParentCompanyCode', hidden: true },
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'CompanyFullName',//树型结构在哪列显示
+            rownumbers: false,
+            sortname: 'CompanyCode',
+            onCellSelect: function (id) {//单击
+                var siteCode = getOrganizationalCode(id);
+                //重新加载报表数据
+                request.SiteCode = siteCode;
+                SearchData("");
+                var companyInfo = $("#leftgridList").jqGrid('getRowData', id);
+                if (orgType == "1" || orgType == "4") {//加工厂、工区
+                } else {
+                    if (companyInfo.OrgType == "4" || companyInfo.OrgType == "5") {
+                        ShowHidDiv(".GQSHOW", "block");
+                        ShowHidDiv(".JLBSHOW", "none");
+                    } else {
+                        ShowHidDiv(".JLBSHOW", "block");
+                        ShowHidDiv(".GQSHOW", "none");
+                    }
+                }
+            }
+        });
+    }
+    function ShowHidDiv(id, text) {
+        $(id).each(function () {
+            $(this).css("display", text);
+        });
+    }
+    var treeData = new Array();
+    function GetTreeList() {
+        $.ajax({
+            url: "@Url.Action("GetLoginUserAllCompany", "RawMonthDemandPlan")",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                treeData = data.rows;
+            }
+        });
+    }
+    //标签
+    function CompanyFullNameFM(cellValue, options, rowObject) {
+        var tdhtml = rowObject.CompanyFullName;
+        if (orgType == "2" || orgType == "3") {//分部3.经理部2
+            tdhtml += GetEachDataDi(rowObject.CompanyCode, leftLabData);
+        } else {
+            tdhtml += GetEachData(rowObject.CompanyCode, leftLabData);
+        }
+        return tdhtml;
+    }
+    //树标签数据
+    var leftLabData = {};
+    function LoadOrdLabData() {
+        //if(treeData.length==0){
+        //    GetTreeList();
+        //    var orgList = [];
+        //    var reportData = $.grep(treeData, function (data) {
+        //        return data.OrgType == "5";
+        //    });
+        //    reportData.map((item) => orgList.push(item.CompanyCode));
+        //    if (orgList.length > 0) {
+        //        request.CodeList = orgList.join(",");
+        //    }
+        //}
+        var urlStr = "@Url.Action("GetOrgLabDataForFactory", "Home")";
+        if (orgType == "2" || orgType == "3") {//分部3.经理部2
+            urlStr = "@Url.Action("GetOrgLabDataForJLB", "Home")";
+        } else {
+            if (treeData.length == 0) {
+                GetTreeList();
+            }
+        }
+        $.ajax({
+            url: urlStr,
+            data: request,
+            async: false,
+            method: "post",
+            dataType: "json",
+            success: function (data) {
+                leftLabData = data;
+                $("#leftgridList").trigger("reloadGrid");
+            }
+        });
+    }
+    //不同标签
+    function GetEachDataDi(code, leftData) {
+        var tdhtml = "";
+        if (leftData.length == 0) { return tdhtml; }
+        var codeTep = new Array();
+        var retData = $.grep(leftData, function (data) {
+            return data.OrgCode == code;
+        });
+        if (retData.length == 0) { return tdhtml; }
+        tdhtml += "</br>";
+        var widthleft = 0;
+        if (retData[0].LeveL == 3) {
+            widthleft = 18;
+        } else if (retData[0].LeveL == 4) {
+            widthleft = 36;
+        } else if (retData[0].LeveL == 5) {
+            widthleft = 72;
+        }
+        tdhtml += "<div style='font-size:12px;color:#AAAAAA;padding-left:" + widthleft + "px;'>";
+        $.each(retData[0].LabList, function (i, v) {
+            if (retData[0].LeveL == 5) {
+                tdhtml += "<span>" + v.Name + " <label style='color:" + v.Color + ";'>" + v.Value + "</label></span> / ";
+            } else {
+                tdhtml += "<span style='color:" + v.Color + ";'>" + v.Name + "</span> / ";
+            }
+        });
+        tdhtml = tdhtml.substring(0, tdhtml.lastIndexOf('/'));
+        tdhtml += "</div>";
+        return tdhtml;
+    }
+
+    //今日简报
+    function GetDMYData() {
+        $.ajax({
+            url: "@Url.Action("GetDMYData", "Home")",
+            data: request,
+            method: "post",
+            dataType: "json",
+            success: function (data) {
+                CreatDayInfo("#Day-D", data.DayData);
+                CreatDayInfo("#Month-D", data.MonthData);
+                CreatDayInfo("#Year-D", data.YearData);
+            }
+        });
+    }
+    function CreatDayInfo(id, data) {
+        var item = $("#new-LInfo-c").html()
+                     .replace("{ConfirmWorkCount}", data.ConfirmWorkCount)
+                     .replace("{ConfirmWorkTotal}", data.ConfirmWorkTotal)
+                     .replace("{FinishingCount}", data.FinishingCount)
+                     .replace("{FinishingTotal}", data.FinishingTotal)
+                     .replace("{DateTimeStr}", data.DateTimeStr);
+        $(id).html("");
+        $(id).append(item);
+    }
+    //加工订单
+    function GetOrderData() {
+        $.ajax({
+            url: "@Url.Action("GetOrderData", "Home")",
+            data: request,
+            async: false,
+            method: "post",
+            dataType: "json",
+            success: function (data) {
+                var item = $("#new-order-Card").html()
+                     .replace("{OrderCount}", data.OrderCount)
+                     .replace("{OrderTotal}", data.OrderTotal)
+                     .replace("{OverCount}", data.OverCount)
+                     .replace("{OverTotal}", data.OverTotal)
+                     .replace("{PlanCount}", data.PlanCount)
+                     .replace("{PlanTotal}", data.PlanTotal)
+                     .replace("{NotOver}", data.NotOver)
+                     .replace("{Distribution}", data.Distribution)
+                     .replace("{NotDistribution}", data.NotDistribution)
+                     .replace("{Sign}", data.Sign)
+                     .replace("{NotSign}", data.NotSign)
+                     .replace("{Lag}", data.Lag);
+                $("#OrderData-Card").html("");
+                $("#OrderData-Card").append(item);
+
+                var item2 = $("#new-order-f").html()
+                     .replace("{OrderTotal}", data.OrderTotal)
+                     .replace("{PlanTotal}", data.PlanTotal)
+                     .replace("{OverTotal}", data.OverTotal)
+                     .replace("{LagWeight}", data.LagWeight);
+                $("#Order-Card-F").html("");
+                $("#Order-Card-F").append(item2);
+                $.nfinetab.init();
+            }
+        });
+    }
+
+    var BatchPlan = {}, SupplyData = {};
+    //生产计划数据
+    function GetRawMaterialStockPlanData() {
+        $.ajax({
+            url: "@Url.Action("GetRawMaterialStockPlanData", "Home")",
+            data: request,
+            method: "post",
+            async: false,
+            dataType: "json",
+            success: function (data) {
+                //原材料月度计划
+                CreatCard("#MonthPlan-Card", data.MonthPlan, 0, "计划合理", "计划不足");
+                CreatCard("#MonthPlan-Card-F", data.MonthPlan, -2);
+                //批次计划
+                CreatCard("#BatchPlan-Card", data.BatchPlan, -1);
+                //差额 (月度->批次)
+                CreatCE("#MonthToBatch-Card", data.MonthToBatch);
+                //差额(供应 ->批次)
+                CreatCE("#SupplyToBatch-Card", data.SupplyToBatch);
+                //原材料供应
+                CreatCard("#SupplyData-Card", data.SupplyData, 1, "供货合理", "供货不足");
+                BatchPlan = data.BatchPlan;
+                SupplyData = data.SupplyData;
+            }
+        });
+    }
+    //库存信息
+    function GetRawMaterialStockData() {
+        $.ajax({
+            url: "@Url.Action("GetRawMaterialStockData", "Home")",
+            data: request,
+            async: false,
+            method: "post",
+            dataType: "json",
+            success: function (data) {
+                CreatCard("#RawMaterialStock-Card", data, 2, "库存充足", "库存不足");
+                $.nfinetab.init();
+            }
+        });
+    }
+    function CreatCard(id, data, sstr, lab1, lab2) {
+        var mpx = "";
+        var BWeightStr = data.BuildingSteel.TotalWeight + "kg";
+        var SWeightStr = data.SectionSteel.TotalWeight + "kg";
+        var url1 = "javascript:", url2 = "javascript:";
+        var aTable1 = "";
+        if (sstr == 1) {
+            BWeightStr = data.BuildingSteel.Count + "次/" + BWeightStr;
+            SWeightStr = data.SectionSteel.Count + "次/" + SWeightStr;
+        } else if (sstr == 2) {
+            BWeightStr = BWeightStr + "/" + data.BuildingSteel.Count + "种";
+            SWeightStr = SWeightStr + "/" + data.SectionSteel.Count + "种";
+            url1 = "/RawMaterial/RawMaterialStock/Index?IndexSearch=BuildingSteel&OrgCode=" + request.SiteCode;
+            url2 = "/RawMaterial/RawMaterialStock/Index?IndexSearch=SectionSteel&OrgCode=" + request.SiteCode;
+            aTable1 = "aTable";
+        }
+        if (sstr == 2 || sstr == -2)
+            mpx = "margin-top:20px;"
+        var carstrid = "#new-card";
+        if (sstr == -1 || sstr == -2) { carstrid = "#new-2card"; }
+        var item = $(carstrid).html()
+                    .replace("{B-Weight}", BWeightStr)
+                    .replace("{S-Weight}", SWeightStr)
+                    .replace("{aTable1}", aTable1)
+                    .replace("{aTable2}", aTable1)
+                    .replace("{MPX}", mpx);
+        var lable1 = "", lable2 = "";
+        if (lab1) {
+            var color1 = "green", color2 = "green";
+            var labstr1 = lab1, labstr2 = lab1;
+            var tooFew1 = "否", tooFew2 = "否";
+            if (data.BuildingSteel.TooFew) {
+                color1 = "pink";
+                labstr1 = lab2;
+                tooFew1 = "是";
+                if (sstr == 2)
+                    labstr1 = labstr1 + "(" + data.BuildingSteel.TooFewCount + "种)";
+            }
+            if (data.SectionSteel.TooFew) {
+                color2 = "pink";
+                labstr2 = lab2;
+                tooFew2 = "是";
+                if (sstr == 2)
+                    labstr2 = labstr2 + "(" + data.SectionSteel.TooFewCount + "种)";
+            }
+            if (sstr == 2) {
+                url1 += "&TooFew=" + tooFew1;
+                url2 += "&TooFew=" + tooFew2;
+            }
+            lable1 = $("#lable-pink").html()
+                   .replace("{color}", color1)
+                   .replace("{text}", labstr1);
+            lable2 = $("#lable-pink").html()
+                   .replace("{color}", color2)
+                   .replace("{text}", labstr2);
+        }
+        item = item.replace("{lable1}", lable1).replace("{lable2}", lable2)
+                    .replace("{url1}", url1)
+                    .replace("{url2}", url2);
+        $(id).html("");
+        $(id).append(item);
+    }
+    //差额
+    function CreatCE(id, data) {
+        var color1 = "color:red", color2 = "color:red";
+        var text1 = data.BuildingSteel.TotalWeight, text2 = data.SectionSteel.TotalWeight;
+        if (data.BuildingSteel.TotalWeight >= 0) {
+            color1 = "";
+            text1 = "+" + text1;
+        }
+        if (data.SectionSteel.TotalWeight >= 0) {
+            color2 = "";
+            text2 = "+" + text2;
+        }
+        var item = $("#lable-ce").html()
+                    .replace("{color1}", color1)
+                    .replace("{color2}", color2)
+                    .replace("{text1}", text1)
+                    .replace("{text2}", text2);
+        $(id).html("");
+        $(id).append(item);
+    }
+
+    //月度计划统计图
+    function GetMonthPlanReport() {
+        $.ajax({
+            url: "@Url.Action("GetMonthPlanReport", "Home")",
+            data: request,
+            method: "post",
+            dataType: "json",
+            success: function (data) {
+                var reportData = new Array();
+                var item = { name: "计划不足", y: data.TooFewCount, color: "#FFD306" };
+                var item2 = { name: "计划过多", y: data.TooMuchCount, color: "#8E8E8E" };
+                var item3 = { name: "计划合理", y: data.EqualCount, color: "#007500" };
+                var item4 = { name: "超时未提交", y: data.OverTime, color: "#FF9797" };
+                reportData.push(item);
+                reportData.push(item2);
+                reportData.push(item3);
+                reportData.push(item4);
+                c1(container1, "工区数 ", data.TotalCount, reportData);
+            }
+        });
+    }
+    //加工订单统计图
+    function GetOrderInfoReport() {
+        $.ajax({
+            url: "@Url.Action("GetOrderInfoReport", "Home")",
+            data: request,
+            method: "post",
+            dataType: "json",
+            success: function (data) {
+                var reportData = new Array();
+                var item = { name: "配送超期", y: data.Distribution, color: "#8E8E8E" };
+                var item2 = { name: "加工进度滞后", y: data.LagCount, color: "#AE0000" };
+                reportData.push(item);
+                reportData.push(item2);
+                c1(container2, "工区数 ", data.TotalCount, reportData);
+            }
+        });
+    }
+    //供货单统计图
+    var SectionSupply = {}, BuildingSupply = {};
+    function GetSupplyDataReport() {
+        $.ajax({
+            url: "@Url.Action("GetSupplyDataReport", "Home")",
+            data: request,
+            method: "post",
+            dataType: "json",
+            success: function (data) {
+                SectionSupply = data.SectionSteel;
+                BuildingSupply = data.BuildingSteel;
+                CreatSupplyReport(1);
+            }
+        });
+    }
+    function CreatSupplyReport(type) {
+        var data = SectionSupply;
+        var s1 = BatchPlan.SectionSteel.TotalWeight;
+        var s2 = SupplyData.SectionSteel.TotalWeight;
+        if (type == 1) {
+            data = BuildingSupply;
+            s1 = BatchPlan.BuildingSteel.TotalWeight;
+            s2 = SupplyData.BuildingSteel.TotalWeight;
+        }
+        $("#Supply1").html(s1 + "kg");
+        $("#Supply2").html(s2 + "kg");
+        var reportData = new Array();
+        var item = { name: "按时供货", y: data.OnTime.TotalWeight, color: "#007500" };
+        var item2 = { name: "超时未供货", y: data.OverTimeNoSupply.TotalWeight, color: "#AE0000" };
+        var item3 = { name: "延期供货", y: data.OverTime.TotalWeight, color: "#D26900" };
+        var item4 = { name: "未供货", y: data.NoSupply.TotalWeight, color: "#8E8E8E" };
+        reportData.push(item);
+        reportData.push(item2);
+        reportData.push(item3);
+        reportData.push(item4);
+        var count = data.OnTime.Count + data.OverTimeNoSupply.Count + data.OverTime.Count + data.NoSupply.Count;
+        c1(container3, "需求批次 ", count, reportData);
+    }
+
+    function LodaHi(data) {
+        Highcharts.chart('container-speed', {
+            chart: {
+                type: 'solidgauge',
+                backgroundColor: "rgba(0,0,0,0)",
+            },
+            title: null,
+            pane: {
+                center: ['50%', '85%'],
+                size: '140%',
+                startAngle: -90,
+                endAngle: 90,
+                background: {
+                    backgroundColor: (Highcharts.theme && Highcharts.theme.background2) || '#EEE',
+                    innerRadius: '60%',
+                    outerRadius: '100%',
+                    shape: 'arc'
+                }
+            },
+            tooltip: {
+                enabled: false
+            },
+            yAxis: {
+                stops: [
+                    [0.1, '#55BF3B'], // green
+                    [0.5, '#DDDF0D'], // yellow
+                    [0.9, '#DF5353'] // red
+                ],
+                min: 0,
+                max: 100,
+                lineWidth: 0,
+                minorTickInterval: null,
+                tickPixelInterval: null,
+                tickWidth: 0,
+                title: {
+                    y: -70,
+                    text: ''
+                },
+                labels: {
+                    y: 60
+                }
+            },
+            plotOptions: {
+                solidgauge: {
+                    dataLabels: {
+                        y: 10,
+                        borderWidth: 0,
+                        useHTML: true
+                    }
+                }
+            },
+            credits: {
+                enabled: false
+            },
+            series: [{
+                name: '产能',
+                data: [data],
+                dataLabels: {
+                    format: '<div style="text-align:center"><span style="font-size:12px;color:' +
+                    ((Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black') + '">{y}%</span>' +
+                    '<span style="font-size:12px;color:silver"></span></div>'
+                },
+                tooltip: {
+                    valueSuffix: '%'
+                }
+            }]
+        });
+    }
+
+    function c1(id, titel, tdata, data) {
+        var chart = Highcharts.chart(id, {
+            chart: {
+                //backgroundColor: "rgba(0,0,0,0)",
+                borderRadius: 5,
+            },
+            title: {
+                floating: true,
+                text: '<span style="font-size:16px;">' + titel + '</span><br/><span style="font-size:16px;font-weight:700;">' + tdata + '</span>'
+            },
+            tooltip: {
+                pointFormat: '{series.name}:</br>{point.y}'
+            }, credits: {
+                enabled: false // 禁用版权信息GQSHOW
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: false,
+                    cursor: 'pointer',
+                    //showInLegend:true,
+                    dataLabels: {
+                        enabled: true,
+                        distance: "10",
+                        padding: 0,
+                        connectorPadding: 0,
+                        format: '{point.name}:{point.y}',
+                        style: {
+                            color: 'black',
+                            fontWeight: 'normal'
+                        }
+                    }
+                }
+            },
+            legend: {
+                labelFormat: '{name}:{y}',
+                //floating:true,
+                //x:-50,
+                //y:20
+            },
+            series: [{
+                type: 'pie',
+                innerSize: '60%',
+                size: '70%',
+                name: '',
+                data: data
+            }]
+        }, function (c) { // 图表初始化完毕后的回调函数
+            // 环形图圆心
+            var centerY = c.series[0].center[1],
+                titleHeight = parseInt(c.title.styles.fontSize);
+            // 动态设置标题位置
+            c.setTitle({
+                y: centerY + titleHeight / 2
+            });
+        });
+    }
+</script>
+<script src="~/Content/js/indextab.js" charset="gbk"></script>

@@ -1,0 +1,157 @@
+﻿@{
+    ViewBag.Title = "辅料计划申报列表";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        $.LodeMenuBtn("/CostManage/ValuationDeclare/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "ValuationDeclare")",
+            height: $(window).height() - 178,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', width: 80, align: 'left', sortable: false },
+                { label: "申报编号", name: "ValuationDeclareCode", width: 100, align: 'left', sortable: false },
+                { label: '合同名称', name: 'ContractName', width: 150, align: 'left', sortable: false },
+                { label: "加工厂名称", name: "ProcessFactoryName", width: 150, align: 'left', sortable: false },
+                { label: '分部名称', name: 'BranchName', width: 100, align: 'left', sortable: false },
+                { label: "站点名称", name: "SiteName", width: 80, align: 'left', sortable: false },
+                { label: '申报人', name: 'DeclareUserName', width: 80, align: 'left', sortable: false },
+                { label: '申报日期', name: 'DeclareTime', width: 150, align: 'left', sortable: false, formatter: formatDatebox },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增辅料计划申报信息", "@Url.Action("Form", "ValuationDeclare")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改辅料计划申报",
+            url: "@Url.Action("Form", "ValuationDeclare")",
+            anyUrl: "@Url.Action("AnyInfo", "ValuationDeclare")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "ValuationDeclare")",
+            anyUrl: "@Url.Action("AnyInfo", "ValuationDeclare")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看辅料计划申报",
+            url: "@Url.Action("Details", "ValuationDeclare")",
+            isbtn: false,
+            isAny: false,
+            isBack:false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "500px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'ValuationDeclare', rowData.Examinestatus, rowData.ValuationDeclareCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+    //站点选择
+    function selectSite() {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/5";
+        var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+        });
+    }
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+    </div>
+    <div class="topPanel">
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <input id="ValuationDeclareCode" type="text" class="form-control" placeholder="申报编号">
+                            <input id="SiteCode" type="hidden">
+                            <input id="SiteName" type="text" class="form-control" readonly="readonly" placeholder="站点名称">
+                            <span class="input-group-btn input-group-btn-search">
+                                <button type="button" class="btn  btn-primary" onclick="selectSite();"><i class="fa fa-search"></i></button>
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_search">查询</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

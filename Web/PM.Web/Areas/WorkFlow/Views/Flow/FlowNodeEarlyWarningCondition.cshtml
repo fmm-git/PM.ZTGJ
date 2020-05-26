@@ -1,0 +1,120 @@
+﻿@{
+    ViewBag.Title = "FlowNodeEarlyWarningCondition";
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>预警条件</title>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+    <link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="form-inline" style="margin-left:15px;padding-top:10px;">
+        <button class="btn btn-info" type="button" onclick="Add();" id="add_earlywarning_person">添加</button>
+        <button class="btn btn-primary" type="button" onclick="Update();" id="edit_earlywarning_person">修改</button>
+        <button class="btn btn-danger" type="button" onclick="Delete();" id="del_earlywarning_person">删除</button>
+    </div>
+    <div class="row" style="margin-left:15px;margin-top:10px;">
+        <div class="gridPanel">
+            <table id="gridList"></table>
+        </div>
+    </div>
+    <script src="/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+    <script src="/UiFrame/FlowChartTool/jquery.window.js"></script>
+    <script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+    <link href="~/Content/js/select2/select2.min.css" rel="stylesheet" />
+    <script src="~/Content/js/select2/select2.min.js"></script>
+    <link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+    <script src="~/Content/js/framework-ui.js?v=1.0"></script>
+    <script src="~/Content/js/layer/layer.js"></script>
+    <script type="text/javascript">
+        var type = "";
+        $(function () {
+            var $gridList = $("#gridList");
+            $gridList.dataGrid({
+                height: $(window).height() - 100,
+                colModel: [
+                    { label: "ID", name: "ID", width: 100, align: 'left', sortable: false, key: true, hidden: true },
+                    { label: "预警条件编号", name: "EarlyWarningCode", width: 100, align: 'left', sortable: false },
+                    { label: "流程编号", name: "FlowCode", width: 100, align: 'left', sortable: false },
+                    { label: "流程节点编号", name: "FlowNodeCode", width: 100, align: 'left', sortable: false },
+                    { label: "预警条件名称", name: "EarlyWarningName", width: 160, align: 'left', sortable: false },
+                    { label: "预警时间", name: "EarlyWarningTime", width: 100, align: 'left', sortable: false },
+                    { label: "预警时间类型", name: "EarlyWarningTimeType", width: 100, align: 'left', sortable: false },
+                    { label: "预警序号", name: "EarlyWarningOrder", width: 100, align: 'left', sortable: false },
+                    { label: "说明", name: "Remark", width: 160, align: 'left', sortable: false },
+                    { label: "预警人员", name: "EarlyWarningUser", hidden: true, sortable: false }
+                ]
+            });
+            $.post("/WorkFlow/Flow/GetEarlyWarningConditionGridJson", { FlowCode: '@ViewBag.FlowCode', FlowNodeCode: '@ViewBag.FlowNodeCode' }, function (data) {
+                var json = JSON.parse(data);
+                if (json.length > 0) $("div.unwritten").remove();
+                for (var i = 0; i < json.length; i++) { $("#gridList").jqGrid('addRowData', i, json[i]); }
+            });
+        });
+        var rowid = 0;
+        //新增
+        function Add() {
+            layer.open({
+                type: 2,
+                title: "预警条件",
+                area: ['95%', '95%'],
+                content: "/WorkFlow/Flow/FlowNodeEarlyWarningDefineNew?FlowCode=@ViewBag.FlowCode" + "&FlowNodeCode=@ViewBag.FlowNodeCode" + "&type=add",
+                btn: ['确定', '关闭'],
+                yes: function (index, layero) {
+                    var Result = layero.find("iframe")[0].contentWindow.BackData();
+                    $.post("/Flow/Flow/AddEarylWarning", { EarylWarningInfo: JSON.stringify(Result) }, function (data) {
+                        $.modalMsg("添加预警条件成功", "success");
+                        Refresh();
+                    });
+                }, cancel: function (index) { }
+            });
+        }
+        //修改
+        function Update() {
+            var keyValue = $("#gridList").jqGridRowValue().ID;
+            var EarlyWarningCode = $("#gridList").jqGridRowValue().EarlyWarningCode;
+            if (keyValue) {
+                layer.open({
+                    type: 2,
+                    title: "预警条件",
+                    area: ['90%', '90%'],
+                    content: "/WorkFlow/Flow/FlowNodeEarlyWarningDefineNew?FlowCode=@ViewBag.FlowCode" + "&FlowNodeCode=@ViewBag.FlowNodeCode"+"&EarlyWarningCode=" + EarlyWarningCode + "&type=edit",
+                    btn: ['确定', '关闭'],
+                    yes: function (index, layero) {
+                        var Result = layero.find("iframe")[0].contentWindow.BackData();
+                        $.post("/Flow/Flow/UpdateEarylWarning", { EarylWarningInfo: JSON.stringify(Result) }, function (data) {
+                            $.modalMsg("修改预警条件成功", "success");
+                            Refresh();
+                        });
+                    }, cancel: function (index) { }
+                });
+            }
+            else {
+                $.modalMsg("请选择要修改的数据", "warning");
+                return false;
+            }
+        }
+        //删除
+        function Delete() {
+            var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+            if (!rowId) {
+                $.modalMsg("请选择要删除的数据", "warning");
+                return false;
+            }
+            $("#gridList").jqGrid('delRowData', rowId);
+        }
+        //刷新界面方法
+        function Refresh() {
+            location.reload();
+        }
+    </script>
+
+</body>
+</html>

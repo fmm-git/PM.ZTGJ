@@ -1,0 +1,471 @@
+﻿@{
+    ViewBag.Title = "进度计划";
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>进度计划</title>
+</head>
+<body style="padding: 0; margin: 0;">
+    <div id="list_layout" class="easyui-layout" data-options="fit:true,border:false">
+        <div data-options="region:'north',border:false" style="height: 30px;">
+            <div id="toolbar" class="easyui-panel" data-options="fit:true,border:false" style="padding: 1px;">
+                <a href="javascript:void(0);" onclick="viewItem();" class="easyui-linkbutton" iconcls="pmicon-wizard-16" id="btnQuery">查看</a>
+            </div>
+        </div>
+        <div data-options="region:'center',border:false">
+            <div class="easyui-layout" data-options="fit:true,border:false">
+                <div data-options="region:'north',border:false" style="height: 30px;">
+                    <input type="hidden" id="RegProjcetCode" />
+                    <table style="height: 24px">
+                        <tr>
+                            <td>
+                                <label>
+                                    <input name='scales' onclick='zoom_tasks(this)' type='radio' value='week'>
+                                    <span>时</span>
+                                </label>
+                                <label>
+                                    <input name='scales' onclick='zoom_tasks(this)' type='radio' value='trplweek' checked='true'>
+                                    <span>日</span>
+                                </label>
+                                <label>
+                                    <input name='scales' onclick='zoom_tasks(this)' type='radio' value='year'>
+                                    <span>月</span>
+                                </label>
+                            </td>
+                            <td>
+                                <div id="filter_days" style="display: inline-block;">
+                                    <label>
+                                        <input name='scales_filter' onclick='set_scale_units(this)' type='radio' value='full_week'>
+                                        <span>显示非工作日</span>
+                                    </label>
+                                    <label>
+                                        <input name='scales_filter' onclick='set_scale_units(this)' type='radio' value='work_week'>
+                                        <span>隐藏非工作日</span>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div data-options="region:'center',border:false">
+                    <div id="gantt_here" style='width: 100%; height: 100%'></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dlgEdit" class="easyui-dialog" data-options="closed:true,buttons:'#dlg-buttons',maximizable:true,modal:true" style="width: 750px; height: 450px">
+    </div>
+
+    <div id="dlg-buttons" style="text-align: center; display: none;">
+        <a href='javascript:void(0);' class='easyui-linkbutton' iconcls='icon-save' id='btnPerformFlow' style="display: none;">审批流程</a>
+        <a href="javascript:void(0);" onclick="saveItem();" class="easyui-linkbutton" iconcls="icon-save" id="btnSave">保存</a>
+        <a href="javascript:void(0);" onclick="javascript: $('#dlgEdit').dialog('close');" class="easyui-linkbutton" iconcls="icon-cancel">取消</a>
+    </div>
+
+    <div id='PerformFlowWind' class='easyui-dialog' data-options='maximizable:true,resizable:true,closed:true' style='width: 600px; height: 550px;'></div>
+    <div id='loadFlowDiagram' class='easyui-dialog' data-options='title:"流程",closed:true,maximizable:true,resizable:true,closable:true,border:false,modal:true' style='width: 100%; height: 100%'>
+        <iframe frameborder='no' style='width: 100%; height: 100%' scrolling='no' id='loadFlowDiagramIframe'></iframe>
+    </div>
+
+    <script type="text/javascript">
+        gantt.config.keep_grid_width = false;
+        gantt.config.drag_resize = false;
+        gantt.config.drag_progress = false;
+        gantt.config.drag_links = true;
+        gantt.config.drag_lightbox = true;
+        gantt.config.drag_move = true;
+        gantt.config.details_on_dblclick = false;
+
+        gantt.config.highlight_critical_path = true; //显示关键路径
+        gantt.config.autosize = "xy"; //自动大小时，控件本身的滚动条不会出现
+        gantt.config.row_height = 30; //设置表格行高
+        gantt.config.min_column_width = 50;//设置图形区域最小列宽
+        gantt.config.task_height = 18;//设置任务图形高度
+        gantt.config.min_grid_column_width = 10;//设置数据表格拖动时的最小调整宽度
+        gantt.config.open_tree_initially = true;//设置初始化时展开所有节点
+        gantt.config.order_branch = true;//允许通过表格拖动调整节点顺序
+        gantt.config.order_branch_free = true;//允许通过表格拖动节点（包括其下级节点一起）
+        gantt.config.start_on_monday = true;//设置周开始于星期一
+        gantt.config.skip_off_time = false;//隐藏非工作时间
+        gantt.config.duration_unit = "day";
+        gantt.config.work_time = true;
+        gantt.config.correct_work_time = true;
+
+        gantt.templates.progress_text = function (start, end, task) {
+            return "<span style='text-align:left;'>" + Math.round(task.progress * 100) + "% </span>";
+        };
+
+        /*定义任务列表grid列*/
+        gantt.config.columns = [
+           { name: "$index", label: "序号", align: "center", width: 25, resize: true },
+           //{ name: "Examinestatus", label: "审核状态", align: "left", width: 150, resize: true },
+           { name: "text", label: "任务名称", tree: true, align: "left", width: 150, resize: true },
+           { name: "DepartmentName", label: "责任部门", align: "left", width: 80, resize: true },
+           { name: "Executor", label: "执行人", align: "left", width: 80, resize: true },
+           { name: "EmployeeName", label: "责任人", align: "left", width: 80, resize: true },
+           { name: "start_date", label: "开始日期", align: "right", width: 70, resize: true },
+           { name: "endDate", label: "结束日期", align: "right", width: 70, resize: true },
+           { name: "TaskType", label: "任务类别", align: "right", width: 70, resize: true },
+           { name: "priority", label: "优先级", align: "center", width: 70, resize: true },
+           { name: "duration", label: "工期", align: "center", width: 30, resize: true },
+           { name: "CompletedProgressTotal", label: "完成进度(%)", width: 70, resize: true }
+        ];
+        //设置日期格式
+        gantt.config.xml_date = "%Y-%m-%d";
+
+        var notSave = false;
+
+
+        //保存所有任务和前置任务
+        function UpdateAllTaskList() {
+            if (notSave) {
+                $.messager.progress();
+                var url = '/api/form/ade/formProjectTask/UpdateOrder';
+                var FrontTaskListJson = [];
+                var TaskListArr = new Object();
+                var TaskList = new Array(gantt.getTaskCount());
+                $.each(gantt._pull, function (i, item) {
+                    TaskList[item.$index] = { $index: item.$index, TaskID: item.TaskID, TaskPlanStartDate: item.start_date.Format("yyyy-MM-dd hh:mm:ss"), TaskPlanEndDate: item.endDate, ParentTaskCode: item.parent };
+                });
+                $.each(gantt._lpull, function (i, item) {
+                    FrontTaskListJson.push({ FrontTaskCode: item.source, TaskCode: item.target, TaskRelations: item.type, TimeInterval: item.TimeInterval ? item.TimeInterval : 0 });
+                });
+                TaskListArr["TbProjectTask"] = JSON.stringify(TaskList);
+                TaskListArr["TbProjectFrontTask"] = JSON.stringify(FrontTaskListJson);
+                TaskListArr["RegProjcetCode"] = $('#RegProjcetCode').val();
+                if (FrontTaskListJson.length == 0) {
+                    url = '/api/form/ade/formProjectTask/UpdateOrder2';
+                }
+
+                //更新任务
+                $.post(url, TaskListArr, function (result) {
+                    $.messager.progress('close');	// 如果提交成功则隐藏进度条
+                    if (result.success) {
+                        $.messager.alert('操作提示', '保存成功。', 'success');
+                        refresh();
+                        notSave = false;
+                    } else {
+                        $.messager.alert('操作提示', result.message, 'error');
+                    }
+                }, 'json');
+
+            }
+            else {
+                $.messager.show({
+                    title: '提示',
+                    msg: '没有需要保存的内容。',
+                    showType: 'slide',
+                    style: {
+                        right: '',
+                        top: document.body.scrollTop + document.documentElement.scrollTop,
+                        bottom: ''
+                    }
+                });
+            }
+        }
+
+        //拖动任务记录结束事件
+        gantt.attachEvent("onBeforeRowDragEnd", function (id, target) {
+            notSave = true;
+            notSaveMessager();
+        });
+
+        //添加箭头验证
+        gantt.attachEvent("onBeforeLinkAdd", function (id, link) {
+            var links = gantt.getLinks();
+            for (var i = 0; i < links.length; i++) {
+                if (link.source == links[i].target && link.target == links[i].source) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        //双击箭头事件
+        gantt.attachEvent("onLinkDblClick", function (id, e) {
+            $.messager.confirm('提示', '确定删除前置任务？', function (r) {
+                if (r) {
+                    gantt.deleteLink(id);
+                }
+            });
+        });
+
+        //拖动任务图形结束事件
+        gantt.attachEvent("onAfterTaskDrag", function (id, mode, e) {
+            var task = gantt.getTask(id);
+            var endDate_Old = gantt.date.parseDate(task.endDate, "%Y-%m-%d %H:%i:%s");
+            var endTimeStr = endDate_Old.Format("hh:mm:ss");
+
+            var endDate = gantt.calculateEndDate(task.start_date, task.duration, 'day');
+            endDate.setDate(endDate.getDate() - 1);
+            task.endDate = endDate.Format("yyyy-MM-dd") + " " + endTimeStr;
+            gantt.updateTask(id);
+            notSave = true;
+            notSaveMessager();
+        });
+
+        gantt.attachEvent("onAfterLinkAdd", function (id, item) {
+            notSave = true;
+            notSaveMessager();
+        });
+
+        gantt.templates.scale_cell_class = function (date) {
+            if (date.getDay() == 0 || date.getDay() == 6) {
+                return "weekend";
+            }
+        };
+        gantt.templates.task_cell_class = function (item, date) {
+            if (date.getDay() == 0 || date.getDay() == 6) {
+                return "weekend";
+            }
+        };
+
+
+
+        function show_scale_options(mode) {
+            var dayConf = document.getElementById("filter_days");
+            if (mode == 'day') {
+                dayConf.style.display = "";
+                dayConf.getElementsByTagName("input")[0].checked = true;
+            } else {
+                dayConf.style.display = "none";
+            }
+        }
+        function set_scale_units(mode) {
+            if (mode && mode.getAttribute) {
+                mode = mode.getAttribute("value");
+            }
+
+            switch (mode) {
+                case "work_week":
+                    gantt.ignore_time = function (date) {
+                        if (gantt.isWorkTime(date)) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    };
+
+                    break;
+                default:
+                    gantt.ignore_time = null;
+                    break;
+            }
+            gantt.render();
+        }
+
+
+        function zoom_tasks(node) {
+            switch (node.value) {
+                case "week":
+                    gantt.config.scale_unit = "day";
+                    gantt.config.date_scale = "%Y年%m月%d日";
+
+                    gantt.config.scale_height = 60;
+                    gantt.config.min_column_width = 30;
+                    gantt.config.subscales = [
+                          { unit: "hour", step: 1, date: "%H时" }
+                    ];
+                    show_scale_options("day");
+                    break;
+                case "trplweek":
+                    gantt.config.min_column_width = 70;
+                    gantt.config.scale_unit = "month";
+                    gantt.config.date_scale = "%Y年%m月";
+                    gantt.config.scale_height = 60;
+                    gantt.config.subscales = [
+                        { unit: "day", step: 1, date: "%D, %j" }
+                    ];
+                    show_scale_options("day");
+
+                    break;
+                case "year":
+                    gantt.config.min_column_width = 70;
+                    gantt.config.scale_unit = "year";
+                    gantt.config.date_scale = "%Y年";
+                    gantt.config.scale_height = 60;
+                    show_scale_options();
+                    gantt.config.subscales = [
+                          { unit: "month", step: 1, date: "%m月" }
+                    ];
+                    break;
+            }
+            set_scale_units();
+            gantt.render();
+        }
+
+        gantt.config.min_column_width = 70;
+        gantt.config.scale_unit = "month";
+        gantt.config.date_scale = "%Y年%m月";
+        gantt.config.scale_height = 60;
+        gantt.config.subscales = [
+            { unit: "day", step: 1, date: "%D, %j" }
+        ];
+        show_scale_options("day");
+        gantt.config.details_on_create = true;
+
+        gantt.templates.task_class = function (start, end, obj) {
+            return obj.project ? "project" : "";
+        }
+
+        gantt.init("gantt_here");
+
+        function notSaveMessager() {
+            $.messager.show({
+                title: '拖动内容未保存',
+                msg: '<-----请点击“保存”按钮进行保存。',
+                timeout: 5000,
+                showType: 'show',
+                style: {
+                    left: '',
+                    right: 0,
+                    top: document.body.scrollTop + document.documentElement.scrollTop,
+                    bottom: ''
+                }
+            });
+        }
+    </script>
+
+    <script type="text/javascript">
+        var ItemAddOrEditURL;
+        var ActionType;
+        var TempHolidayList = [];
+        var addOrder = undefined;
+        var RegProjcetCode = '@ViewBag.RegProjcetCode';
+        $.parser.onComplete = function () {
+            LoadProjectTask();
+            ShowTheam(null);
+        }
+
+        //下载
+        function DownloadFormatter(row) {
+            if (row.StorageOver == 0) {
+                return "<a href=\"javascript:void(0);\" onclick=\"DownloadAttachment('" + row.FileID + "');\">下载</a>";
+            }
+            else {
+                return "";
+            }
+
+        }
+
+        function DownloadAttachment(fileID) {
+            window.open('/api/FileCenter/FileDownload?FileID=' + fileID);
+        }
+
+        //初始化列表数据
+        function LoadProjectTask() {
+            gantt.clearAll();
+            gantt.load('/api/form/GanttData/formProjectTask/GetGanttData' + '?RegProjcetCode=' + RegProjcetCode);
+        }
+
+        //加载日历
+        function LoadCalendar() {
+            $.ajax({
+                type: 'get',
+                url: '/api/datagrid/list/formProjectTask/GetCalendarDay',
+                data: { RegProjcetCode: $('#RegProjcetCode').val() },
+                dataType: 'json',
+                success: function (data) {
+                    if (data[0]) {
+                        SetCalendarDayWorkTimeOff(data[0].Monday, 1);
+                        SetCalendarDayWorkTimeOff(data[0].Tuesday, 2);
+                        SetCalendarDayWorkTimeOff(data[0].Wednesday, 3);
+                        SetCalendarDayWorkTimeOff(data[0].Thursday, 4);
+                        SetCalendarDayWorkTimeOff(data[0].Friday, 5);
+                        SetCalendarDayWorkTimeOff(data[0].Saturday, 6);
+                        SetCalendarDayWorkTimeOff(data[0].Sunday, 0);
+                    }
+                },
+                async: false
+            });
+        }
+
+        //加载节假日
+        function LoadHoliday() {
+            $.ajax({
+                type: 'get',
+                url: '/api/datagrid/list/formProjectTask/GetHoliday',
+                data: { RegProjcetCode: $('#RegProjcetCode').val() },
+                dataType: 'json',
+                success: function (data) {
+                    ClearLastHolidayWorkTimeOn();
+                    if (data) {
+                        for (var i = 0; i < data.length; i++) {
+                            SetHolidayWorkTimeOff(data[i].StartDate, data[i].Diff);
+                        }
+                    }
+                },
+                async: false
+            });
+        }
+
+        //设置日历非工作项
+        function SetCalendarDayWorkTimeOff(isWorkTime, dayIndex) {
+            if (isWorkTime == 1) {
+                gantt.setWorkTime({ day: dayIndex, hours: false });
+            }
+            else {
+                gantt.setWorkTime({ day: dayIndex, hours: [1, 23] });
+            }
+        }
+
+        //设置节假日非工作项
+        function SetHolidayWorkTimeOff(day, diff) {
+            gantt.setWorkTime({ date: day, hours: false });
+            TempHolidayList.push(day);
+            for (var i = 1; i <= diff; i++) {
+                var date = new Date(day);
+                date.setDate(date.getDate() + i);
+                var dateStr = date.Format("yyyy-MM-dd");
+                TempHolidayList.push(dateStr);
+                gantt.setWorkTime({ date: dateStr, hours: false });
+            }
+        }
+
+        //清除上一次节假日设定
+        function ClearLastHolidayWorkTimeOn() {
+            for (var i = 0; i < TempHolidayList.length; i++) {
+                gantt.setWorkTime({ date: TempHolidayList[i] });
+            }
+            TempHolidayList = [];
+        }
+
+        //查看
+        function viewItem() {
+            ActionType = '查看';
+            ItemAddOrEditURL = '';
+            var taskcode = gantt.getSelectedId();
+            if (taskcode) {
+                var taskObj = gantt.getTask(taskcode);
+                $("#dlgEdit").dialog('open').dialog('refresh', '/page/form/formProjectTask/edit/' + taskObj.TaskID).dialog('setTitle', '进度计划' + ':查看');
+                $.post('<%=ResolveUrl(GetRouteUrl("GridListAPI", new {FunCode="GetFormFlowFlag"}))%>', { FormCode: 'formProjectTask' }, function (data) {
+
+                    if (data.length > 0 && data[0].FormFlow == 1) {//启用了审批流程
+                        ApprovalProcessFlow('formProjectTask', taskObj.TaskID);
+                    } else {
+                        $("#btnPerformFlow").hide();
+                    }
+                }, 'json');
+
+                $('#btnSave').linkbutton('disable');
+
+            } else {
+                $.messager.alert('操作提示', '请选择要查看的数据', 'info');
+            }
+        }
+        //刷新
+        function refresh() {
+            gantt.clearAll();
+            LoadProjectTask();
+        }
+
+    </script>
+
+</body>
+</html>
+

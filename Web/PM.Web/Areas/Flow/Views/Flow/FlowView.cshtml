@@ -1,0 +1,140 @@
+﻿@{
+    ViewBag.Title = "审批流程图查看";
+}
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>审批流程图查看</title>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/css/site.css" rel="stylesheet" />
+    <link href="~/UiFrame/FlowChartTool/js/flowdesign/flowdesign.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/default/easyui.css" rel="stylesheet" />
+    <link href="~/UiFrame/EasyUi/themes/icon.css" rel="stylesheet" />
+
+    <script src="~/UiFrame/FlowChartTool/jquery-1.7.2.min.js"></script>
+    <script src="~/UiFrame/EasyUi/jquery.easyui.min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/css/bootstrap/js/bootstrap.min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/jquery-ui/jquery-ui-1.9.2-min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/jsPlumb/jquery.jsPlumb-1.3.16-all-min.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/jquery.contextmenu.r2.js"></script>
+    <script src="~/UiFrame/FlowChartTool/js/flowdesign/leipi.flowdesign.v2_Preview.js"></script>
+    <link href="~/UiFrame/FlowChartTool/css/bootstrap/css/iconStyle.css" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="navbar navbar-fixed-top" id="saveDiv">
+        <div class="navbar-inner">
+            <div class="container">
+                <div style="float: left;">@Html.Raw(ViewBag.ColorDescription) </div>
+                <div class="pull-right">
+                    <button class="btn btn-info" type="button" id="leipi_save" style="display: none">保存设计</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="flowdesign_canvas" style="width: 3000px; height: 2000px;">
+    </div>
+
+    <script type="text/javascript">
+        var _lineInfo;//存储连线信息
+        var _globalcanvas;//存储设计器对象
+        var _processData;
+        var _FlowCode;
+        $(function () {
+            //获取_FlowCode
+            $.post('@Url.Action("GridListApi", "Flow", new { FunCode = "GetFlowPerformID_Display" })', { FlowPerformID: "@ViewBag.FlowPerformID" }, function (data) {
+                _FlowCode = $.parseJSON(data)[0].FlowCode;
+            });
+        var alertModal = $('#alertModal'), attributeModal = $("#attributeModal");
+        //消息提示
+        mAlert = function (messages, s) {
+            if (!messages) messages = "";
+            if (!s) s = 2000;
+            alertModal.find(".modal-body").html(messages);
+            alertModal.modal('toggle');
+            setTimeout(function () { alertModal.modal("hide") }, s);
+        }
+        //属性设置
+        attributeModal.on("hidden", function () {
+            $(this).removeData("modal");//移除数据，防止缓存
+        });
+        ajaxModal = function (url, fn) {
+            url += url.indexOf('?') ? '&' : '?';
+            url += '_t=' + new Date().getTime();
+            attributeModal.modal({
+                remote: url
+            })
+            //加载完成执行
+            if (fn) {
+                attributeModal.on('shown', fn);
+            }
+        }
+        function page_reload() {
+            location.reload();
+        }
+
+        /*
+        php 命名习惯 单词用下划线_隔开
+        js 命名习惯：首字母小写 + 其它首字线大写
+        */
+        /*步骤数据*/
+        var processData = getFlowJson();
+
+        /*创建流程设计器*/
+        var _canvas = $("#flowdesign_canvas").Flowdesign({
+            "processData": processData
+            , fnDbClick: function (nodeid) { }
+        });
+        _globalcanvas = _canvas;
+        _processData = processData;
+
+        $("span").each(function () {
+            $(this).removeAttr("id");
+        })
+        //$("#canvasMenu").remove();
+        });
+
+        //获取流程图JSON字符串
+        function getFlowJson() {
+            var flowjson = "";
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GridListApi", "Flow", new { FunCode = "GetStartFlowUI" })',
+                data: { FlowPerformID: "@ViewBag.FlowPerformID" },
+                async: false, //设为false就是同步请求
+            cache: false,
+            success: function (data) {
+                var json = eval(data);
+                //对获取的字段进行拼接
+                for (var i in json) {
+                    if (json.length == 1) {
+                        flowjson += '"list": {"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" }}';
+                    }
+                    else if (i == 0) {
+                        flowjson += '"list": {"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" },';
+                    }
+                        //如果是最后一个
+                    else if (i == json.length - 1) {
+                        flowjson += '"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" }}';
+                    }
+                    else {
+                        flowjson += '"' + json[i].FlowNodeCode + '": { "id": "' + json[i].FlowNodeCode + '", "flow_id": "' + json[i].FlowCode + '", "icon": "' + json[i].icon + '", "process_name": "' + json[i].FlowNodeName + '", "process_to": "' + json[i].processData + '", "style": "left:' + json[i].NodeLeft + 'px;top:' + json[i].NodeTop + 'px;color:' + json[i].background + ';" },';
+                    }
+                }
+            }
+        });
+        if (flowjson == "") {
+            return null;
+        } else {
+            return $.parseJSON("{" + flowjson + "}");
+        }
+        }
+    </script>
+</body>
+</html>
+
+

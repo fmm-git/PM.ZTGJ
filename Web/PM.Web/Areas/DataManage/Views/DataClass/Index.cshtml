@@ -1,0 +1,136 @@
+﻿@{
+    ViewBag.Title = "资料分类统计数据列表页";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script src="/Content/js/uploadFile.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $.LodeMenuBtn("/DataManage/DataClass/Index");//这里是对应网页的菜单管理地址
+        $('#layout').layout();//第二步：初始化入口 第三步：DIV的ID为layout，见下DIV布局
+        leftGridList();//左侧导航按钮事件
+        gridList();
+        jQuery("#gridList").jqGrid('setFrozenColumns');
+    })
+    function leftGridList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/DataManage/DataClass/GetTreeGridJson",
+            height: $(window).height() - 46,
+            colModel: [
+                {
+                    label: '菜单名称', name: 'MenuName', width: 200, align: 'left', sortable: false
+                },
+                { label: "菜单编号", name: "MenuCode", hidden: true, key: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'MenuName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (code) {//点击事件
+                $("#AttachmentList").jqGrid('clearGridData');
+                $("#AttachmentList").jqGrid('setGridParam', {  // 重新加载数据
+                    url: "/DataManage/DataClass/GetDataList?code=" + code,
+                }).trigger("reloadGrid");
+            }
+        });
+    }
+    function gridList() {
+        var $gridList = $("#AttachmentList");
+        $gridList.dataGrid({
+            url: "/DataManage/DataClass/GetDataList",
+            height: $(window).height() - 134,                       
+            colModel: [
+                { label: "附件名称", name: "FileName", width: 300, align: 'left', formatter: defaultformatterNameC },
+                { label: '附件大小', name: 'FileSize', width: 60, align: 'left', sortable: false },
+                { label: '上传人', name: 'FunModule', width: 60, align: 'left', sortable: false },
+                { label: '上传时间', name: 'LastTime', width: 140, align: 'left', sortable: false },
+                { label: '地址', name: 'FileStoragePath', align: 'left', hidden: true, sortable: false },
+                {
+                    label: '操作', name: 'FileID', width: 60, align: 'left', sortable: false, formatter: function (cellvalue, options, rowObject) {
+                        return '<a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()" style="margin-top:3px;"><i class="fa fa-arrow-down"></i>下载</a>';
+                    }
+                },
+                { label: "主键", name: "FileID", hidden: true, key: true }
+            ],
+            multiselect: true,
+            gridComplete: function (id) {
+                $("#AttachmentList>tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+            },
+            sortorder: "desc",
+            sortname: 'InsertDate',
+            pager: "#gridPager",
+            viewrecords: true,
+            rownumbers: true,
+            shrinkToFit: false,//冻结列第一步
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $("#form1").formSerialize(),
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    }
+  
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%; ">
+    <div class="ui-layout-west" style="overflow: scroll; overflow-x: hidden; ">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div class="toolbar" id="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <form id="form1">
+                    <table>
+                        <tr>
+                            @*<td>
+                                资料名称：
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input id="MenuName" name="MenuName" type="text" value="" class="form-control" placeholder="资料名称" />
+                                </div>
+                            </td>*@
+                            @*<td>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;模块归属：
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input id="MenuCode" name="MenuCode" type="text" value="" class="form-control" placeholder="模块归属" />
+                                </div>
+                            </td>*@
+                            @*<td>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a id="btn_search" class="btn btn-primary">查询</a>
+                                </div>
+                            </td>*@
+                        </tr>
+                    </table>
+                </form>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="AttachmentList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

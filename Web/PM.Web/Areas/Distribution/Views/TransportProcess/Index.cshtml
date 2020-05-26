@@ -1,0 +1,279 @@
+﻿@{
+    ViewBag.Title = "运输过程列表";
+    Layout = null;
+    var host = ViewContext.HttpContext.Request.Url.Host;//域名
+    var port = ViewContext.HttpContext.Request.Url.Port;//端口
+    var address = "http://" + host + ":" + port;
+}
+<link href="~/Content/css/framework-font.css" rel="stylesheet" />
+<link href="~/Content/css/framework-theme.css" rel="stylesheet" />
+<script src="~/Content/js/jquery/jquery-2.1.1.min.js"></script>
+<script src="~/Content/js/bootstrap/bootstrap.js"></script>
+<link href="~/Content/js/bootstrap/bootstrap.min.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+<script src="~/Content/js/framework-ui.js?v=1.0"></script>
+<script src="~/Content/js/layer/layer.js"></script>
+<style type="text/css">
+    .panel-success > .panel-heading {
+        color: white;
+        background-color: #14a689;
+        border-color: #14a689;
+    }
+
+    .panel-success {
+        border-color: white;
+    }
+
+    #allmap {
+        width: 100%;
+        height: 90%;
+    }
+
+    .ui-jqgrid-htable, .ui-jqgrid-btable, .ui-pg-table {
+        font-size: 12px;
+    }
+
+    .ui-jqgrid-pager {
+        height: 6%;
+    }
+</style>
+<div class="ui-layout-center">
+    <div class="topPanel divwidth1">
+        <div class="topPanel-btn divwidth2" id="toolbar" style="padding-top: 10px;">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+        <div class="search divwidth2">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group">
+                            <input id="txt_keyword" type="text" class="form-control" placeholder="配送装车编号" style="width: 200px; font-size:14px;">
+                            <span class="input-group-btn">
+                                <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-6 col-sm-4 sidebar-offcanvas" id="sidebar">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title">正在配送车辆</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="gridPanel">
+                        <table id="gridList"></table>
+                        <div id="gridPager"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-7">
+            <div id="allmap"></div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=Phnw2gHnCkLGeP4qbk1hQik68PnMRQ6p"></script>
+<script type="text/javascript">
+    $(function () {
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "TransportProcess")",
+            height: $(window).height() - 220,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "运输节点", name: "FlowState", hidden: true },
+                { label: "电话", name: "Tel", hidden: true },
+                { label: '配送装车编号', name: 'DistributionCode', width: 100, align: 'left', sortable: false },
+                { label: '站点名称', name: 'SiteName', width: 100, align: 'left', sortable: false },
+                { label: '订单编号', name: 'OrderCode', width: 100, align: 'left', sortable: false },
+                { label: "是否进场", name: "IsinTo", width: 50, align: 'left', sortable: false },
+                { label: '车牌号', name: 'CarNumber', width: 100, align: 'left', sortable: false },
+                { label: "驾驶员名称", name: "DriverName", width: 80, align: 'left', sortable: false }
+            ],
+            gridComplete: function () {
+                var ids = $("#gridList").getDataIDs();
+                for (let i = 0; i < ids.length; i++) {
+                    var rowData = $("#gridList").getRowData(ids[i]);
+                    var state = $('#' + ids[i]).find("[aria-describedby='gridList_IsinTo']");
+                    $(state).html("是");
+                    var flowState = parseInt(rowData.FlowState);
+                    if (flowState == 1) {
+                        $(state).html("否");
+                    }
+                }
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                var rowData = $("#gridList").getRowData(rowid);
+                if (rowData.DistributionCode == "" || rowData.DistributionCode == null) {
+                    $.modalMsg("请选择数据行", "warning");
+                    return false;
+                }
+                getTransportLine(rowData);
+            },
+            pager: "#gridPager",
+            viewrecords: false
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: { DistributionCode: $("#txt_keyword").val() },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+
+</script>
+<script type="text/javascript">
+    var map = null;
+    $(function () {
+        initMap();
+    });
+    var pointArr = [];
+    //获取车辆配送路线信息
+    function getTransportLine(obj) {
+        $.ajax({
+            url: "@Url.Action("GetTransportLine", "TransportProcess")",
+            data: { distributionCode: obj.DistributionCode },
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                pointArr = [];
+                $.each(data, function (i, item) {
+                    pointArr.push({
+                        lng: item.lng,
+                        lat: item.lat
+                    });
+                });
+                if (pointArr.length > 1) {
+                    drawMap(obj);
+                }
+                else {
+                    initMap();
+                }
+            }
+        });
+    }
+    //初始化地图
+    function initMap() {
+        map = new BMap.Map("allmap");
+        map.enableScrollWheelZoom(); // 开启鼠标滚轮缩放
+        map.addControl(new BMap.ScaleControl()); // 添加比例尺控件
+        // 用经纬度设置地图中心点
+        var point = new BMap.Point(104.091878, 30.624503);
+        map.centerAndZoom(point, 14);
+        //根据Ip定位
+        function myFun(result) {
+            var cityName = result.name;
+            map.setCenter(cityName);
+        }
+        var myCity = new BMap.LocalCity();
+        myCity.get(myFun);
+    }
+
+    //绘制地图
+    function drawMap(obj) {
+        // 生成坐标点
+        var trackPoint = [];
+        for (var i = 0, j = pointArr.length; i < j; i++) {
+            trackPoint.push(new BMap.Point(pointArr[i].lng, pointArr[i].lat));
+        }
+        setZoom(pointArr);
+        // 画线(虚线)
+        var sy = new BMap.Symbol(BMap_Symbol_SHAPE_BACKWARD_OPEN_ARROW, {
+            scale: 0.6,//图标缩放大小
+            strokeColor: '#fff',//设置矢量图标的线填充颜色
+            strokeWeight: '2',//设置线宽
+        });
+        var icons = new BMap.IconSequence(sy, '10', '30');
+        var polyline = new BMap.Polyline(trackPoint, { strokeColor: "#3CB371", strokeWeight: 7, icons: [icons], setStrokeStyle: "dashed", strokeOpacity: 1 });
+        map.addOverlay(polyline);
+        // 设置图标(起点)
+        var size = new BMap.Size(36, 57);
+        var offset = new BMap.Size(0, 0);
+        var imageSize = new BMap.Size(36, 57);
+        var icon = new BMap.Icon('@address' + "/Content/img/samples/start.png", size, { imageSize: imageSize, infoWindowAnchor: new BMap.Size(0, -3) });
+        var marker = new BMap.Marker(trackPoint[0], { icon: icon, offset: offset });
+        map.addOverlay(marker);
+        // 设置图标(当前位置)
+        var size = new BMap.Size(50, 39);
+        var offset = new BMap.Size(0, 0);
+        var imageSize = new BMap.Size(50, 39);
+        var icon = new BMap.Icon('@address' + "/Content/img/samples/car.png", size, { imageSize: imageSize, infoWindowAnchor: new BMap.Size(0, -3) });
+        var i = trackPoint.length - 1;
+        var marker = new BMap.Marker(trackPoint[i], { icon: icon, offset: offset });
+        map.addOverlay(marker);
+        //当前位置显示信息
+        var geoc = new BMap.Geocoder();
+        var opts = { width: 80, height: 120, title: "当前位置信息", }
+        geoc.getLocation(trackPoint[i], function (rs) {
+            var addComp = rs.addressComponents;
+            var addressMsg = "地址：" + addComp.province + addComp.city + addComp.district + addComp.street + addComp.streetNumber;
+            addressMsg += "<br>联系电话：" + obj.Tel;
+            addressMsg += "<br>车牌号：" + obj.CarNumber;
+            addressMsg += "<br>司机：" + obj.DriverName;
+            var infoWindow = new BMap.InfoWindow(addressMsg, opts);
+            map.openInfoWindow(infoWindow, trackPoint[i]); //开启信息窗口
+            marker.addEventListener("click", function () {
+                map.openInfoWindow(infoWindow, trackPoint[i]);
+            });
+        });
+    }
+
+    //根据经纬极值计算绽放级别
+    function getZoom(maxLng, minLng, maxLat, minLat) {
+        var zoom = ["50", "100", "200", "500", "1000", "2000", "5000", "10000", "20000", "25000", "50000", "100000", "200000", "500000", "1000000", "2000000"]; // 级别18到3。
+        var pointA = new BMap.Point(maxLng, maxLat); // 创建点坐标A
+        var pointB = new BMap.Point(minLng, minLat); // 创建点坐标B
+        var distance = map.getDistance(pointA, pointB).toFixed(1); //获取两点距离,保留小数点后两位
+        for (var i = 0, zoomLen = zoom.length; i < zoomLen; i++) {
+            if (zoom[i] - distance > 0) {
+                return 18 - i + 3; //之所以会多3，是因为地图范围常常是比例尺距离的10倍以上。所以级别会增加3。
+            }
+        }
+    }
+
+    //绘制坐标点
+    function setZoom(points) {
+        if (points.length > 0) {
+            var maxLng = points[0].lng;
+            var minLng = points[0].lng;
+            var maxLat = points[0].lat;
+            var minLat = points[0].lat;
+            var res;
+            for (var i = points.length - 1; i >= 0; i--) {
+                res = points[i];
+                if (res.lng > maxLng) maxLng = res.lng;
+                if (res.lng < minLng) minLng = res.lng;
+                if (res.lat > maxLat) maxLat = res.lat;
+                if (res.lat < minLat) minLat = res.lat;
+            }
+            var cenLng = (parseFloat(maxLng) + parseFloat(minLng)) / 2;
+            var cenLat = (parseFloat(maxLat) + parseFloat(minLat)) / 2;
+            var zoom = getZoom(maxLng, minLng, maxLat, minLat);
+            map.centerAndZoom(new BMap.Point(cenLng, cenLat), zoom);
+        } else {
+            //没有坐标，显示全中国
+            map.centerAndZoom(new BMap.Point(103.388611, 35.563611), 5);
+        }
+    }
+</script>

@@ -1,0 +1,402 @@
+﻿@{
+    ViewBag.Title = "人员费用核算编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "UserCost")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data.Item2);
+                }
+            });
+        }
+        else {
+            getUserCostItem();
+        }
+    });
+
+    //订单选择
+    function selectOrder() {
+        var url = '/Production/ProblemOrder/GetOrderGridJson&keyValue=IsCost/true';
+        var ret = selectClick('win_ProblemOrder_Order', url, 'Grid', 'InsertTime', '', '', '550px', '450px', function (data) {
+
+        })
+    }
+    //提交数据
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var tableData = [];
+        var tableData = GetGridRowData();
+        if (tableData.length < 1) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        formData.ProjectId = $("#ProjectId").val();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitForm", "UserCost")",
+            param: { model: JSON.stringify(formData), itemModel: JSON.stringify(tableData), type: type },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+
+    var mydata = [
+                  {
+                      ID: index
+                      , MachinType: ""
+                      , MachinNumber: ""
+                      , Days: ""
+                      , Price: ""
+                      , TotalPrice: ""
+                  }
+    ];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '班组', name: 'MachinType', width: 210, height: 10, align: "left", sortable: false, editable: true },
+                { label: '加工人数', name: 'MachinNumber', width: 120, height: 10, align: "left", sortable: false, editable: true },
+                { label: '天数', name: 'Days', width: 120, align: "left", sortable: false, editable: true },
+                { label: '单价', name: 'Price', width: 120, align: "left", sortable: false, editable: true },
+                { label: '费用合计', name: 'TotalPrice', width: 205, align: "left", sortable: false },
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+                valid(rowid);
+            }
+        });
+    }
+
+    //获取班组模板
+    function getUserCostItem() {
+        $.ajax({
+            url: "@Url.Action("GetUserCostDataList", "UserCost")",
+            dataType: "json",
+            async: false,
+            success: function (data) {
+                lodeList(data);
+            }
+        });
+    }
+    //批量添加
+    function btn_add() {
+        index++;
+        mydata[0].ID = index;
+        $("#gridList").jqGrid('addRowData', index, mydata[0]);
+    }
+    //删除行
+    function btn_delete() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var CheckCode = $("#CheckCode").val();
+        var columnData = [];
+        var sumCount = 0;
+        $(ids).each(function (index, yu) {
+            var rowData = $("#gridList").jqGrid("getRowData", yu);
+            rowData.ID = 0;
+            rowData.CheckCode = CheckCode;
+            var count = parseFloat(rowData.TotalPrice);
+            if (isNaN(count)) {
+                $.modalMsg("明细数据不完整", "warning");
+                columnData = [];
+                return false;
+            }
+            columnData.push(rowData);
+            sumCount += count;
+        });
+        $("#TotalAmount").val(sumCount.toFixed(5))
+        return columnData;
+    }
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        $("#" + rowid + "_Price")
+               .keyup(function () { regTextBox(this, true); })
+               .bind("paste", function () { regTextBox(this, true); })
+               .blur(function () { Compute($(this).parent().parent()) }).css("ime-mode", "disabled");
+        $("#" + rowid + "_Days")
+               .keyup(function () { regTextBox(this, true); })
+               .bind("paste", function () { regTextBox(this, true); })
+               .blur(function () { Compute($(this).parent().parent()) }).css("ime-mode", "disabled");
+        $("#" + rowid + "_MachinNumber")
+               .keyup(function () { regTextBox(this, false); })
+               .bind("paste", function () { regTextBox(this, false); })
+               .blur(function () { Compute($(this).parent().parent()) }).css("ime-mode", "disabled");
+    }
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,5}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = '';
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    function Compute(obj) {
+        var Count = $($(obj.children()[3]).children()).val();//人数
+        var Days = $($(obj.children()[4]).children()).val();//天数
+        var Price = $($(obj.children()[5]).children()).val();//单价
+        var Total = $(obj.children()[6]);//合价
+        var money = ((parseFloat(Days) * parseFloat(Price)) * parseFloat(Count)).toFixed(5);//金额
+        if (!isNaN(money)) { $(Total).html(money); };
+    }
+</script>
+<!---------附件列表------->
+<script type="text/javascript">
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "UserCost");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "form", "UserCost");
+    }
+
+    //$(function () {
+    //    //加载附件列表
+    //    AttachmentList();
+    //});
+
+    ////加载附件列表
+    //function AttachmentList() {
+    //    $("#AttachmentList").dataGrid({
+    //        url: "/Attachment/GetAttachmentJson?FileID=" + $("#Enclosure").val(),
+    //        height: $(window).height() - 160,
+    //        colModel: [
+    //            { label: "附件名称", name: "FileName", width: 250, align: 'left', formatter: defaultformatterNameC },
+    //            { label: '附件大小', name: 'FileSize', width: 150, align: 'left', sortable: false },
+    //            { label: '上传人', name: 'UserName', width: 120, align: 'left', sortable: false },
+    //            { label: '上传时间', name: 'LastTime', width: 120, align: 'left', sortable: false },
+    //            { label: '地址', name: 'FileStoragePath', width: 150, align: 'left', hidden: true, sortable: false },
+    //            { label: '操作', name: 'FileID', width: 100, align: 'left', sortable: false, formatter: defaultformatterC },
+    //            { label: "主键", name: "FileID", hidden: true, key: true }
+    //        ],
+    //        multiselect: true,
+    //        gridComplete: function (id) {
+    //            $("#AttachmentList>tbody").find("input:checkbox").each(function () {
+    //                $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+    //            });
+    //            $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+    //        }
+    //    });
+    //}
+
+    function selectTab(v) {
+        var id = v.attr('id');
+        if (id != "JBXX") {
+            if (!$('#form1').formValid()) {
+                return false;
+            }
+        }
+        else {
+            GetGridRowData();
+        }
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+        @*<li id="FJXX" onclick="selectTab($(this))"><a href="javascript:void(0);">附件信息</a></li>*@
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="form1">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="ProjectId" name="ProjectId" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">核算编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="CheckCode" name="CheckCode" type="text" value="@ViewBag.CheckCode" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">订单编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="OrderCode" name="OrderCode" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn" onclick="selectOrder();">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">类型编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TypeCode" name="TypeCode" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                    <th class="formTitle">类型名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TypeName" name="TypeName" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                        <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                    <th class="formTitle">站点名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="SiteCode" name="SiteCode" type="hidden">
+                        <input id="SiteName" name="SiteName" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">使用部位<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="UsePart" name="UsePart" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                    <th class="formTitle">人工费用合计<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TotalAmount" name="TotalAmount" type="text" value="0" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新增</a>
+            </div>
+            <div class="btn-group">
+                <a id="NF-delete" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+    <div id="FJXXInfo" style="padding-top: 5px; display: none; margin: 10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="PM-fileUplode" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonUpload()"><i class="fa fa-arrow-up"></i>上传</a>
+            </div>
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()"><i class="fa fa-arrow-down"></i>下载</a>
+            </div>
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDeleteFile()"><i class="fa fa-remove "></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top:1px;">
+            <table id="AttachmentList"></table>
+        </div>
+    </div>
+</div>
+

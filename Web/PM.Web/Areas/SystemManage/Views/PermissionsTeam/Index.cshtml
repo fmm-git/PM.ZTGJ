@@ -1,0 +1,191 @@
+﻿@{
+    ViewBag.Title = "团队列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script>
+    $(function () {
+        $('#layout').layout();
+        $.LodeMenuBtn("/SystemManage/PermissionsTeam/Index");
+        FlowDefineView();
+        gridList();
+        $("#btn_search").click(function () {
+            $("#gridList").jqGrid('setGridParam', {
+                postData: { Key: $("#TeamName").val(),MenuCode:'' },
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        };
+    })
+
+    function FlowDefineView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "/PermissionsTeam/GetMenuList",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: "菜单编码", name: "MenuCode", hidden: true, key: true },
+                { label: '菜单名称', name: 'MenuName', width: 240, align: 'left' },
+                { label: '父级菜单编码', name: 'MenuPCode', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'MenuName',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (ucode) {
+                $("#gridList").jqGrid('setGridParam', {
+                    postData: {Key: $("#TeamName").val(),MenuCode:ucode },
+                }).trigger('reloadGrid');
+            }
+        });
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            treeGrid: false,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            url: "/PermissionsTeam/GetList",
+            height: $(window).height() - 128,
+            rownumbers: false,
+            colModel: [
+                { label: "团队编码", name: "TeamNumber", width: 100, align: 'left', sortable: false },
+                { label: "团队名称", name: "TeamName", width: 200, align: 'left', sortable: false, key: true },
+                { label: "菜单名称", name: "MenuName", width: 100, align: 'left', sortable: false },
+                { label: "创建时间", name: "CreateDate", width: 100, align: 'left', sortable: false },
+                { label: "团队说明", name: "Remark", width: 300, align: 'left', sortable: false },
+            ],
+            ondblClickRow: function (rowid) {
+                btn_details(rowid);
+            }
+        });
+
+        $("#btn_search").click(function () {
+            var treeNodeId = "";
+            var treeNode = $("#leftgridList").jqGridRowValue();
+            if (treeNode != null) {
+                var itemId = treeNode.MenuCode;
+                if (itemId) {
+                    treeNodeId = itemId;
+                }
+            }
+            $gridList.jqGrid('setGridParam', {
+                postData: { Key: $("#TeamName").val(), MenuCode: treeNodeId },
+            }).trigger('reloadGrid');
+        });
+    }
+    function btn_add() {
+        var MenuCode = "";
+        var MenuName = "";
+        var MenuPCode = "";
+        var treeNode = $("#leftgridList").jqGridRowValue();
+        if (treeNode != null) {
+            MenuCode = treeNode.MenuCode;
+            MenuName = treeNode.MenuName;
+            MenuPCode = treeNode.MenuPCode;
+        }
+        if (MenuPCode == "0")
+        {
+            $.modalAlert("请选择末级菜单设置团队", "warning");
+            return;
+        }
+        $.modalOpen({
+            id: "Form",
+            title: "新增团队",
+            url: "@Url.Action("Form", "PermissionsTeam", new { type = "add" })" + "&menuCode=" + MenuCode+"&menuName="+MenuName,
+            width: "75%",
+            height: "400px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().TeamNumber;
+        if (keyValue == undefined || keyValue == "") {
+            return false;
+        }
+        $.modalOpen({
+            id: "Form",
+            title: "编辑团队",
+            url: "@Url.Action("Form", "PermissionsTeam", new { type = "edit" })" + "&keyValue=" + keyValue,
+            width: "75%",
+            height: "500px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_delete() {
+        
+        var keyValue = $("#gridList").jqGridRowValue().TeamNumber;
+        if (keyValue == undefined || keyValue == "") {
+            return false;
+        }
+        $.deleteForm({
+            url: "/PermissionsTeam/DeleteTeam",
+            param: { Key: keyValue },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+    function btn_details() {
+        var keyValue = $("#gridList").jqGridRowValue().TeamNumber;
+        if (keyValue == undefined || keyValue == "") {
+            $.modalAlert("请选择数据", "warning");
+            return false;
+        }
+        $.modalOpen({
+            id: "Detail",
+            title: "查看团队",
+            url: "@Url.Action("Detail", "PermissionsTeam")" + "?keyValue=" + keyValue,
+            width: "75%",
+            height: "500px",
+            btn: null,
+        });
+    }
+    function btn_other1()
+    {
+        
+    }
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow:no-display;">
+        <table id="leftgridList"></table>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+            <div class="search">
+                <table>
+                    <tr>
+                        <td>
+                            <div class="input-group">
+                                <input id="TeamName" type="text" class="form-control" placeholder="团队名称" style="width: 240px;">
+                                    <span class="input-group-btn">
+                                        <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                                    </span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+
+

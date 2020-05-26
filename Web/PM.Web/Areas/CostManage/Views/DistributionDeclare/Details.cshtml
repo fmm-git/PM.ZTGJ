@@ -1,0 +1,217 @@
+﻿@{
+    ViewBag.Title = "配送费用申报编辑";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var type = $.request("type");
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "DistributionDeclare")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#formd").formSerialize(data.Item1[0]);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                    lodeList(data.Item2);
+                }
+            });
+        }
+    });
+</script>
+
+<!---------明细列表------->
+<script type="text/javascript">
+
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 160,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '订单类型编码', name: 'TypeCode', width: 120, height: 10, align: "left", sortable: false },
+                { label: '工点', name: 'SiteName', width: 120, height: 10, align: "left", sortable: false },
+                { label: '使用部位', name: 'UsePart', width: 80, align: "left", sortable: false},
+                { label: '单位', name: 'Unit', width: 80, align: "left", sortable: false },
+                { label: '配送数量', name: 'DistributionCount', width: 120, align: "left", sortable: false },
+                { label: '单价', name: 'Price', width: 80, align: "right", sortable: false},
+                { label: '金额', name: 'Amount', width: 80, align: "right", sortable: false},
+                { label: '配送日期', name: 'DistributionTime', width: 120, align: "left", sortable: false},
+                { label: '备  注', name: 'Remarks', width: 200, align: "left", sortable: false},
+            ],
+            gridComplete: function () {
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+                $("div.unwritten").remove();
+            }
+        });
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+</script>
+<!---------附件列表------->
+<script type="text/javascript">
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "detail", "DistributionDeclare");
+    }
+    //$(function () {
+    //    //加载附件列表
+    //    AttachmentList();
+    //});
+
+    ////加载附件列表
+    //function AttachmentList() {
+    //    $("#AttachmentList").dataGrid({
+    //        url: "/Attachment/GetAttachmentJson?FileID=" + $("#Enclosure").val(),
+    //        height: $(window).height() - 160,
+    //        colModel: [
+    //            { label: "附件名称", name: "FileName", width: 250, align: 'left', formatter: defaultformatterNameC },
+    //            { label: '附件大小', name: 'FileSize', width: 150, align: 'left', sortable: false },
+    //            { label: '上传人', name: 'UserName', width: 120, align: 'left', sortable: false },
+    //            { label: '上传时间', name: 'LastTime', width: 120, align: 'left', sortable: false },
+    //            { label: '地址', name: 'FileStoragePath', width: 150, align: 'left', hidden: true, sortable: false },
+    //            { label: '操作', name: 'FileID', width: 100, align: 'left', sortable: false, formatter: defaultformatterC },
+    //            { label: "主键", name: "FileID", hidden: true, key: true }
+    //        ],
+    //        multiselect: true,
+    //        gridComplete: function (id) {
+    //            $("#AttachmentList>tbody").find("input:checkbox").each(function () {
+    //                $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+    //            });
+    //            $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+    //        }
+    //    });
+    //}
+
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" onclick="selectTab($(this))" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        <li id="ItemXX" onclick="selectTab($(this))"><a href="javascript:void(0);">明细信息</a></li>
+        @*<li id="FJXX" onclick="selectTab($(this))"><a href="javascript:void(0);">附件信息</a></li>*@
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px; margin-right: 30px; margin-left: 10px;">
+        <form id="formd">
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Examinestatus" name="Examinestatus" type="hidden" />
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">申报编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DistributionDeclareCode" name="DistributionDeclareCode" type="text" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden">
+                        <input id="ProcessFactoryName" name="ProcessFactoryName" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">申报人<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group">
+                            <input id="DeclareUserCode" name="DeclareUserCode" type="hidden">
+                            <input id="DeclareUserName" name="DeclareUserName" type="text" readonly="readonly" class="form-control required">
+                            <span class=" input-group-btn" onclick="selectUser();">
+                                <a style="padding: 0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                    <th class="formTitle">申报时间<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="DeclareTime" name="DeclareTime" type="text" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">合计金额<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="TotalAmount" name="TotalAmount" type="text" value="0" disabled="disabled" class="form-control required">
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">附件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px; padding-right: 2px;"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="UserName" name="UserName" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" disabled="disabled" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="ItemXXInfo" style="padding-top: 5px; display: none; margin:10px; overflow-x: scroll; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+    @*<div id="FJXXInfo" style="padding-top: 5px; display: none; margin: 10px; overflow-x: scroll; ">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()"><i class="fa fa-arrow-down"></i>下载</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top:1px;">
+            <table id="AttachmentList"></table>
+        </div>
+    </div>*@
+</div>
+

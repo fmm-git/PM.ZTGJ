@@ -1,0 +1,125 @@
+﻿@{
+    ViewBag.Title = "FreeChooseEarlyWarningUser";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<script src="~/Content/js/wdtree/tree.js"></script>
+<link href="~/Content/js/wdtree/tree.css" rel="stylesheet" />
+<link href="~/Content/js/select2/select2.min.css" rel="stylesheet" />
+<script src="~/Content/js/select2/select2.min.js"></script>
+<link href="~/Content/js/wizard/wizard.css" rel="stylesheet" />
+<script src="~/Content/js/wizard/wizard.js"></script>
+<link href="~/Content/css/framework-ui.css" rel="stylesheet" />
+<script src="~/Content/js/framework-ui.js"></script>
+<script src="~/Content/js/layer/layer.js?v=1.0"></script>
+<link href="~/Content/css/framework-tab.css" rel="stylesheet" />
+<script src="~/Content/js/Comm.js"></script>
+<style>
+    .table-responsive {
+        margin-bottom: 0px;
+    }
+</style>
+<script type="text/javascript">
+    $(function () {
+        PositionView();
+        gridList();
+    });
+    //加载组织机构
+    function PositionView() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: '/Flow/Flow/GetOrg',
+            height: $(window).height(),
+            colModel: [
+                { label: '编号', name: 'id', hidden: true, key: true },
+                { label: '名称', name: 'Name', width: 220, align: 'left' },
+                { label: '类型', name: 'TypeName', hidden: true }
+            ],
+            treeGrid: true,//启用树型Grid功能
+            treeGridModel: 'adjacency',//表示返回数据的读取类型，分为两种：和adjacency
+            ExpandColumn: 'Name',//树型结构在哪列显示
+            rownumbers: false,
+            onCellSelect: function (id) {//单击
+                clickPosition(id);
+            }
+        });
+    }
+    //加载岗位人员
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            height: $(window).height() - 128,
+            colModel: [
+                { label: "主键", name: "id", hidden: true, key: true },
+                { label: '人员来源', name: 'TypeName', width: 90, align: 'left', formatter: function (v) { if (v == "Dep") return "部门"; else if (v == "User") return "操作员"; else if (v == "Role") return "角色"; } },
+                { label: '人员名称', name: 'Name', width: 90, align: 'left' },
+                {
+                    label: '人员类型', name: 'ActionType', width: 90, align: 'left', editable: true, edittype: "select", editoptions: { value: "预警:预警" }
+                }
+            ],
+            multiselect: false,
+            sortname: 'id',
+            viewrecords: true,
+            gridComplete: function (id) { }
+        });
+    }
+    var lastsel;
+    var number = 0;
+    function clickPosition(id) {
+        $("div.unwritten").remove();
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length > 0) number = parseInt(ids[ids.length - 1]) + 1;
+        var positionData = $("#leftgridList").jqGrid('getRowData', id);
+        if (positionData.TypeName == "Org") { $.modalMsg("预警人员不能选择组织机构"); return; };
+        $("#gridList").jqGrid('addRowData', number, { id: id, TypeName: positionData.TypeName, Name: positionData.Name, ActionType: '预警' });
+        $("#gridList").jqGrid("re");
+    }
+
+
+
+    //删除已选用户
+    function UnSelectedEmployee() {
+        var rowId = $("#gridList").jqGrid('getGridParam', 'selrow');
+        if (!rowId) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        $("#gridList").jqGrid('delRowData', rowId);
+
+    }
+    //确认
+    function BackData() {
+        var rows = $('#gridList').jqGrid('getRowData');//获取所有数据
+        ////处理少一行bug
+        var allCountID = $("#gridList").jqGrid('getDataIDs'); //这里获取所有行 主键id 是全的
+        rows.push($("#gridList").jqGrid('getRowData', allCountID[allCountID.length - 1]));  //单独用最后一个 ID 获取行数据 并 追加到 集合里
+        if (rows.length < 0) {
+            $.modalMsg("请选择数据", "warning");
+            return false;
+        }
+        return rows;
+    }
+</script>
+<div style="width: 100%; margin-top: 5px; ">
+    <div id="DialogDiv1" class="panel panel-success" style="width: 49%; float: left; margin-right: 5px; border-color: #1ABC9C;">
+        <div class="panel-heading" style="border-color: #1ABC9C">
+            <h3 class="panel-title">组织机构</h3>
+        </div>
+        <div class="panel-body">
+            <table id="leftgridList"></table>
+        </div>
+    </div>
+    <div id="DialogDiv2" class="panel panel-success" style="width:49%; float: left; margin-right: 5px; border-color: #1ABC9C;">
+        <div class="panel-heading" style="border-color: #1ABC9C">
+            <h3 class="panel-title">已选审批人员</h3>
+        </div>
+        <div class="panel-body">
+            <div id="DialogDiv4" style="width: 100%;height:40px;margin-bottom:5px;">
+                <button id="btn_search" type="button" class="btn  btn-primary" onclick="UnSelectedEmployee();"><i class="fa fa-trash-o">删除</i></button>
+            </div>
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>
+

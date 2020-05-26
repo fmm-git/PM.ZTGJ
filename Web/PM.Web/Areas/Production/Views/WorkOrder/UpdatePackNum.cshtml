@@ -1,0 +1,217 @@
+﻿@{
+    ViewBag.Title = "修改打包数量";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<style>
+    .SelectBG {
+        background-color: #cecece;
+        color: #FFF;
+    }
+</style>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    $(function () {
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson1", "WorkOrder")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    lodeList(data.Item1);//加载明细信息
+                }
+            });
+        }
+        $(window).resize(function () {
+            $("#gridList").setGridHeight($(window).height() - 160);
+            $("#gridList").setGridWidth($(window).width());
+        });
+    });
+    //提交数据
+    function SavePackNum() {
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            $.modalMsg("订单明细不完善", "warning");
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SavePackNum", "WorkOrder")",
+            param: { keyValue: keyValue, itemModel: JSON.stringify(tableData) },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+    //--------------明细表信息----------
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 80,
+            colModel: [
+                    { label: "主键", name: "ID", hidden: true },
+                    { label: '构件名称', name: 'ComponentName', width: 140, height: 10, align: "left", sortable: false },
+                    { label: '大样图', name: 'LargePattern', width: 140, height: 10, align: "left", sortable: false },
+                    { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                    { label: '原材料名称', name: 'MaterialName', width: 140, height: 10, align: "left", sortable: false },
+                    { label: '规格', name: 'SpecificationModel', width: 140, align: "left", sortable: false },
+                    { label: '计量单位', name: 'MeasurementUnitText', width: 100, align: "left", sortable: false },
+                    { label: '计量单位', name: 'MeasurementUnit', hidden: true },
+                    { label: '单位重量(kg/m,kg/㎡)', name: 'MeasurementUnitZl', width: 120, align: "left", sortable: false },//9
+                    { label: '单件用量(m,㎡)', name: 'ItemUseNum', width: 120, align: "left", sortable: false },//10
+                    { label: '件数', name: 'Number', width: 120, align: "left", sortable: false },//11
+                    { label: '重量小计(kg)', name: 'WeightSmallPlan', width: 140, align: "left", sortable: false },//12
+                    { label: '加工状态', name: 'DaetailWorkStrat', width: 120, align: "left", sortable: false },//13
+                    { label: '撤销状态', name: 'RevokeStart', width: 120, align: "left", sortable: false },//14
+                    { label: '打包数量', name: 'PackNumber', width: 120, align: "left", sortable: false, editable: true },//15
+                    { label: '打包包数', name: 'PackageNumber', width: 120, align: "left", sortable: false},//16
+                    { label: '技术要求', name: 'SkillRequirement', width: 140, align: "left", sortable: false },//17
+                    { label: '加工工艺', name: 'ProcessingTechnology', hidden: true },//18
+                    { label: '加工工艺', name: 'ProcessingTechnologyName', width: 140, align: "left", sortable: false },
+                    { label: '备注', name: 'Remark', width: 140, align: "left", sortable: false },
+                    { label: '厂家', name: 'Manufactor', width: 140, align: "left", sortable: false },
+                    { label: '炉批号', name: 'HeatNo', width: 140, align: "left", sortable: false },
+                    { label: '质检报告编号', name: 'TestReportNo', width: 160, align: "left", sortable: false },
+                    { label: '领料订单明细id', name: 'WorkOrderItemId', hidden: true },
+            ],
+            gridComplete: function () {
+                $("div.unwritten").remove();
+                var ids = $("#gridList").getDataIDs();
+                for (var i = 0; i < ids.length; i++) {
+                    var rowData = $("#gridList").getRowData(ids[i]);
+                    if (rowData.WorkOrderItemId==0) {//如果为未领料，则背景色置于灰色
+                        $('#' + ids[i]).find("td").addClass("SelectBG");
+                    }
+                }
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                var data = $("#" + rowid + ">td");
+                var jgzt = data[13].innerHTML;
+                var llddmxid = data[24].innerHTML;
+                if (jgzt != '加工完成' && llddmxid!=0) {
+                    $gridList.jqGrid('editRow', rowid, true, null, null, null, null, null, null, null, iCol);
+                    //获取表格最后一行Id
+                    var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                    var id = selectedRowIds[selectedRowIds.length - 1];
+                    if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                        $gridList.jqGrid('saveRow', lastsel);
+                        $gridList.jqGrid('editRow', rowid, true);
+                        lastsel = rowid;
+                        $("#gridList>tbody").find("input:text").each(function () {
+                            var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                            $(this).css("height", "20px").css("width", width + "px");
+                        });
+                    }
+                    valid(rowid);
+                }
+            },
+            rowNum: 2000, //一页显示多少条
+        });
+    }
+    /*JQuery 限制文本框只能输入数字和小数点*/
+    function valid(rowid) {
+        //打包件数
+        $("#" + rowid + "_PackNumber")
+               .keyup(function () { regTextBox(this, 0); })
+               .bind("paste", function () { regTextBox(this, 0); }).blur(function () { PackNumber($(this).parent().parent()); });
+
+    }
+    //文本框只能输入数字和小数点
+    //isf要保留的小数位数
+    function regTextBox(obj, isf) {
+        var reg = /^[0-9]*[1-9][0-9]*$/;
+        if (isf) { reg = /\d+\.?\d{0,4}/; }
+        var reg = $(obj).val().match(reg);
+        var txt = 0;
+        if (reg != null) { txt = reg[0]; }
+        $(obj).val(txt);
+    }
+    //判断打包件数是否超过件数
+    function PackNumber(obj) {
+        var jgzt = $(obj.children()[13]).html();//加工状态
+        var Number = $(obj.children()[11]).html();//件数
+        var PackNumber = $(obj.children()[15]).children().val();//打包件数
+        if (!isNaN(Number) && !isNaN(PackNumber)) {
+            if (parseFloat(PackNumber) > parseFloat(Number)) {
+                $.modalMsg("打包件数超过了实际件数", "warning");
+                $(obj.children()[15]).children().val(Number);
+                //打包包数
+                var dbn = Math.ceil(parseInt(Number) / (parseInt(PackNumber)));
+                $(obj.children()[16]).html(dbn);
+            } else {
+                //打包包数
+                var dbn = Math.ceil(parseInt(Number) / (parseInt(PackNumber)));
+                if (dbn != "Infinity ") {
+                    $(obj.children()[16]).html(dbn);
+                }
+                else {
+                    $(obj.children()[16]).html(0);
+                }
+            }
+        }
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = filterGridData(data);
+        }
+        $("#gridList").jqGrid('clearGridData');
+        //$.each(mydata, function (i, item) {
+        //    index++;
+        //    item.id = index;
+        //    if (item.PackNumber == 0 &&item.WorkOrderItemId!=0) {
+        //        item.PackNumber = item.Number;
+        //        item.PackageNumber =1;
+        //    }
+        //    $("#gridList").jqGrid('addRowData', index, item);
+        //});
+        $("#gridList")[0].addJSONData(data);
+    }
+    //去除重复表格数据
+    function filterGridData(data) {
+        var columnData = [];
+        $("#gridList").jqGrid('saveRow', lastsel);
+        var ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            columnData = data;
+        } else {
+            $(ids).each(function (index, item) {
+                var rowData = $("#gridList").jqGrid("getRowData", item);
+                columnData.unshift(rowData);
+            });
+            columnData.push(data);
+        }
+        return columnData;
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        let ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData = [];
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+</script>
+<div style="margin-top: 10px;">
+    <div id="MXXXInfo" style="padding-top: 5px; margin:10px; ">
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

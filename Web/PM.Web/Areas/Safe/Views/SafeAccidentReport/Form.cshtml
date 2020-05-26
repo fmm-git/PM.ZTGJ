@@ -1,0 +1,256 @@
+﻿@{
+    /*
+     * 新增/编辑页
+     * 安全周例会
+     */
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<link href="~/Content/js/wangEditor/css/wangEditor.min.css" rel="stylesheet" />
+<script src="~/Content/js/wangEditor/js/wangEditor.js"></script>
+<script src="~/Content/js/wangEditor/js/wangEditor.config.js"></script>
+<style>
+    .select2-container {
+        box-sizing: border-box;
+        display: inline-block;
+        margin: 0;
+        position: relative;
+        vertical-align: middle;
+        width: 102% !important;
+    }
+</style>
+<!---------基本信息------->
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    var Week = $.request("Week");
+    var type = $.request("type");
+    var editor;
+    $(function () {
+        //选择框样式调整
+        $(".input-group-btn").each(function () {
+            $(this).parent().parent().css("padding-right", "0px");
+            $(this).css("padding-left", "8px");
+            $(this).find("i").css("padding-bottom", "8px").css("padding-top", "8px");
+        });
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "SafeAccidentReport")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data.Item1[0]);
+                    editor = $("#MeetingContent").PowerEditor();
+                }
+            });
+        } else {
+            editor = $("#MeetingContent").PowerEditor()
+        }
+        if (!!Week)
+        {
+            $("#Week").val(Week);
+        }
+    });
+    //讲话人选择
+    function selectUser() {
+        var str = "UserCode,UserName";
+        var ret = selectClickNew(str, '75%', '75%', function (row) {
+            var uName = "";
+            var uCode = "";
+            if (row && row.length > 0) {
+                for (var i = 0; i < row.length; i++) {
+                    uName += row[i].UserName + ","
+                    uCode += row[i].UserCode + "','"
+                }
+                var name = uName.substring(0, uName.length - 1);
+                var code = uCode.substring(0, uCode.length - 3);
+                $("#ParticipantsName").val(name);
+                $("#Participants").val(code);
+            }
+        }, true)
+    }
+
+    //提交数据
+    function submitForm() {
+        if (type == "add") {
+            $("#BrowseCount").val(0);
+        }
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var formData = $("#form1").formSerialize();
+        if (!formData.ID && formData.ID == 0 && formData.ID == "") {
+            formData.ID = 0;
+        }
+        formData.MeetingContent = editor.getEncodeContent();
+        $.submitForm({
+            url: "/Safe/SafeAccidentReport/SubmitForm?type=" + type,
+            param: { model: JSON.stringify(formData), type: type },
+            success: function () {
+                var $loadingpage = top.$("#loadingPage");
+                $loadingpage.hide();
+            }
+        })
+    }
+    //选项卡
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+    }
+
+    function selectProcessFactory()
+    {
+        var pfType = $("#pfType").val();
+        var type = "1";
+        if (pfType != "1")
+        {
+            var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+            var str = "ProcessFactoryCode=CompanyCode,ProcessFactoryName=CompanyFullName";
+            var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function () {
+            });
+        }
+    }
+
+</script>
+
+<!---------附件列表------->
+<script type="text/javascript">
+    $(function () {
+        //加载附件列表
+        AttachmentList();
+    });
+
+    //加载附件列表
+    function AttachmentList() {
+        $("#AttachmentList").dataGrid({
+            url: "/Attachment/GetAttachmentJson?FileID=" + $("#Enclosure").val(),
+            height: $(window).height() - 160,
+            colModel: [
+               { label: "附件名称", name: "FileName", width: 250, align: 'left', formatter: defaultformatterNameC },
+                { label: '附件大小', name: 'FileSize', width: 150, align: 'left', sortable: false },
+                { label: '上传人', name: 'UserName', width: 110, align: 'left', sortable: false },
+                { label: '上传时间', name: 'LastTime', width: 110, align: 'left', sortable: false },
+                { label: '地址', name: 'FileStoragePath', align: 'left', hidden: true, sortable: false },
+                { label: '操作', name: 'FileID', width: 120, align: 'left', sortable: false, formatter: defaultformatterC },
+                { label: "主键", name: "FileID", hidden: true, key: true }
+            ],
+            multiselect: true,
+            gridComplete: function (id) {
+                $("#AttachmentList>tbody").find("input:checkbox").each(function () {
+                    $(this).parent().css("padding-top", "8px").css("padding-left", "14px");
+                });
+                $(".ui-jqgrid-bdiv").css("overflow-x", "hidden");
+            }
+        });
+    }
+</script>
+
+<div style="margin-top: 10px;">
+    <ul class="nav nav-tabs">
+        <li id="JBXX" class="active"><a href="javascript:void(0);">基本信息</a></li>
+        @*<li id="FJXX" onclick="selectTab($(this))"><a href="javascript:void(0);">附件信息</a></li>*@
+    </ul>
+    <div id="JBXXInfo" style="padding-top: 5px;margin-right:20px;">
+        <form id="form1">
+            <!---------标识ID------->
+            <input id="ID" name="ID" type="hidden" />
+            <input id="Week" name="Week" type="hidden" />
+            <!---------附件------->
+            <input id="Enclosure" name="Enclosure" type="hidden" />
+            <input id="BrowseCount" name="BrowseCount" type="hidden" />
+            <table class="form">
+                <tr>
+                    <th class="formTitle">会议编号<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="MeetingCode" name="MeetingCode" type="text" disabled="disabled" value="@ViewBag.MeetingCode" class="form-control required" />
+                    </td>
+                    <th class="formTitle">加工厂名称<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <div class="input-group input-group-with" style="width:100%">
+                            <input id="pfType" name="pfType" value="@ViewBag.pfType" type="hidden" />
+                            <input id="ProcessFactoryCode" name="ProcessFactoryCode" type="hidden" value="@ViewBag.ProcessFactoryCode" />
+                            <input id="ProcessFactoryName" name="ProcessFactoryName" value="@ViewBag.ProcessFactoryName" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectProcessFactory()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">开始时间<span class="required1">*</span></th>
+                    <td class="formValue">
+                        <input id="StartTime" name="StartTime" type="text" disabled="disabled" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">会议主题<span class="required1">*</span></th>
+                    <td class="formValue" colspan="3">
+                        <input id="MeetingTheme" name="MeetingTheme" type="text" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">参会人员<span class="required1">*</span></th>
+                    <td class="formValue" colspan="3">
+                        <div class="input-group input-group-with" style="width:100%">
+                            <input id="Participants" name="Participants" type="hidden" />
+                            <input id="ParticipantsName" name="ParticipantsName" type="text" disabled="disabled" class="form-control required" />
+                            <span class="input-group-btn" onclick="selectUser()">
+                                <a style="padding:0px;" class=" btn btn-primary">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">会议内容</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="MeetingContent" class="form-control required" rows="24"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">录入人</th>
+                    <td class="formValue">
+                        <input id="InsertUserCode" name="InsertUserCode" type="hidden" value="@ViewBag.UserCode" class="form-control" />
+                        <input id="InsertUserName" name="InsertUserName" type="text" value="@ViewBag.UserName" disabled="disabled" class="form-control required" />
+                    </td>
+                    <th class="formTitle">录入时间</th>
+                    <td class="formValue">
+                        <input id="InsertTime" name="InsertTime" type="text" value="@(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))" disabled="disabled" class="form-control required" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">备注</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remarks" name="Remarks" class="form-control" style="height: 60px; width: 98.2%;"></textarea>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="FJXXInfo" style="padding-top: 5px; padding-left: 10px; display: none; overflow-x: scroll;">
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="PM-fileUplode" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonUpload()"><i class="fa fa-arrow-up"></i>上传</a>
+            </div>
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDownload()"><i class="fa fa-arrow-down"></i>下载</a>
+            </div>
+            <div class="btn-group">
+                <a id="PM-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="CommonDeleteFile()"><i class="fa fa-remove "></i>删除</a>
+            </div>
+        </div>
+        <div class="gridPanel" style="margin-top:1px;">
+            <table id="AttachmentList"></table>
+        </div>
+    </div>
+</div>

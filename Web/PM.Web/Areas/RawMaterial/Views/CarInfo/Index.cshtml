@@ -1,0 +1,141 @@
+﻿@{
+    ViewBag.Title = "车辆信息列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script>
+    $(function () {
+        $.LodeMenuBtn("/RawMaterial/CarInfo/Index");
+        gridList();
+    });
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "CarInfo")",
+            height: $(window).height() - 178,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: "车辆编号 ", name: "CarCode", width: 100, align: 'left', sortable: false },
+                { label: '车牌号', name: 'CarCph', width: 150, align: 'left', sortable: false },
+                { label: "行驶证号", name: "DrivingLicenseNum", width: 150, align: 'left', sortable: false },
+                { label: '车辆型号', name: 'CarXh', width: 100, align: 'left', sortable: false },
+                { label: "车辆使用状态", name: "CarStartName", width: 80, align: 'left', sortable: false },
+                { label: '所属单位', name: 'SupplierName', width: 140, align: 'left', sortable: false },
+                { label: '所属加工厂', name: 'ProcessFactoryName', width: 140, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 150, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            $gridList.jqGrid('setGridParam', {
+                postData: $(".search").formSerialize(),
+            }).trigger('reloadGrid');
+        });
+
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增车辆信息", "@Url.Action("Form", "CarInfo")" + where, true, true)
+    }
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改车辆",
+            url: "@Url.Action("Form", "CarInfo")",
+            anyUrl: "@Url.Action("AnyInfo", "CarInfo")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "CarInfo")",
+            anyUrl: "@Url.Action("AnyInfo", "CarInfo")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看车辆",
+            url: "@Url.Action("Details", "CarInfo")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "55%",
+            height: "600px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+
+    //导出excel
+    function btn_output() {
+        var param = $(".search").GetSearchCondition();
+        var url = "@Url.Action("OutputExcel", "CarInfo")";
+        location.href = url + "?jsonData=" + escape(JSON.stringify(param));
+    }
+
+</script>
+
+<div class="ui-layout-center">
+    <div class="topPanel">
+        <div class="topPanel-btn" id="toolbar">
+            <div class="btn-group">
+                <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+            </div>
+        </div>
+    </div>
+    <div class="topPanel">
+        <div class="search">
+            <table>
+                <tr>
+                    <td>
+                        <div class="input-group input-group-search">
+                            <select id="SearchType" name="SearchType" class="form-control" style="width: 120px;">
+                                <option value="">全部</option>
+                                <option value="CarCode">车辆编号</option>
+                                <option value="CarCph">车牌号</option>
+                            </select>
+                            <input id="CarCode" name="CarCode" type="text" class="form-control SearchContent hidSearchContent" placeholder="车辆编号">
+                            <input id="CarCph" name="CarCph" type="text" class="form-control SearchContent hidSearchContent" placeholder="车牌号">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="btn-search">
+                            <a class="btn btn-primary" id="btn_searchOne">查询</a>
+                            <a class="btn btn-primary" id="btn_search">结果中搜索</a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="gridPanel">
+        <table id="gridList"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

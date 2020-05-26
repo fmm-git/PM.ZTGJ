@@ -1,0 +1,135 @@
+﻿@{
+    ViewBag.Title = "预警节点配置";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script>
+    $(function () {
+        //加载菜单按钮
+        $.LodeMenuBtn("/EarlyWarning/FormEarlyWarningBegTime/Index");
+        $("#NF-Details").parent().hide();//隐藏查看按钮
+        $('#layout').layout();
+        leftList();
+        gridList();
+    });
+    function leftList() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "@Url.Action("GetMenu", "FormEarlyWarningNode")",
+            height: $(window).height() - 85,
+            colModel: [
+                { label: '菜单编号', name: 'MenuCode', hidden: true},
+                { label: '预警编号', name: 'EarlyWarningCode', hidden: true, key: true },
+                { label: '项目编号', name: 'ProjectId', hidden: true },
+                { label: '预警信息', name: 'EarlyWarningTitle', width: 200, align: 'left' },
+            ],
+            pager: "#leftgridPager",
+            sortname: 'MenuCode',
+            onCellSelect: function (id) {//单击
+                clickMeun(id);
+            }
+        });
+    }
+    //点击菜单加载右边菜单预警开始时间
+    function clickMeun(id) {
+        $("#gridList").jqGrid('setGridParam', {
+            postData: { EarlyWarningCode: id },
+        }).trigger('reloadGrid');
+    }
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "FormEarlyWarningNode")",
+            height: $(window).height() - 130,
+            colModel: [
+                { label: "主键", name: "ID", key: true, hidden: true, frozen: true },
+                { label: '菜单编号', name: 'MenuCode', width: 150, align: 'left', sortable: false },
+                { label: '菜单名称', name: 'MenuName', width: 150, align: 'left ' },
+                { label: '预警节点编号', name: 'EWNodeCode', width: 100, align: 'left' },
+                { label: '预警节点名称', name: 'EWNodeName', width: 150, align: 'left' },
+                { label: '预警时间', name: 'EWTime', width: 100, align: 'left' },
+                { label: '预警时间类型', name: 'EWTimeType', width: 100, align: 'left' },
+            ],
+            loadComplete: function () {
+                //让滚动条默认回到顶部
+                $('#gview_gridList .ui-jqgrid-bdiv').scrollTop(0);
+            },
+            pager: "#gridPager",
+            sortname: 'id',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+    }
+    function btn_add() {
+        var MenuCode = $("#leftgridList").jqGridRowValue().MenuCode;
+        var EarlyWarningCode = $("#leftgridList").jqGridRowValue().EarlyWarningCode;
+        var ProjectId = $("#leftgridList").jqGridRowValue().ProjectId;
+        if (MenuCode == null||MenuCode==""||MenuCode==undefined) {
+            $.modalMsg("请选择菜单信息", "warning");
+            return false;
+        }
+        $.modalOpen({
+            id: "Form",
+            title: "新增菜单预警节点",
+            url: "/EarlyWarning/FormEarlyWarningNode/Form?type=add" + "&MenuCode=" + MenuCode + "&EarlyWarningCode=" + EarlyWarningCode + "&ProjectId=" + ProjectId,
+            width: "40%",
+            height: "550px",
+            callBack: function (iframeId) {
+                top.frames[iframeId].submitForm();
+            }
+        });
+    }
+    function btn_edit() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.modalOpen({
+                id: "Form",
+                title: "修改菜单预警节点",
+                url: "/EarlyWarning/FormEarlyWarningNode/Form?keyValue=" + keyValue + "&type=edit",
+                width: "40%",
+                height: "550px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].submitForm();
+                }
+            });
+        } else {
+            $.modalMsg("请选择要修改的菜单信息", "warning");
+            return false;
+        }
+    }
+    function btn_delete() {
+        var keyValue = $("#gridList").jqGridRowValue().ID;
+        if (keyValue != "" && keyValue != null && keyValue != undefined) {
+            $.deleteForm({
+                url: "/EarlyWarning/FormEarlyWarningNode/DeleteForm",
+                param: { keyValue: keyValue },
+                success: function () {
+                    $.currentWindow().$("#gridList").resetSelection();
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            });
+        } else {
+            $.modalMsg("请选择要删除的菜单预警节点信息", "warning");
+            return false;
+        }
+    }
+</script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west" style="overflow-x:visible">
+        <table id="leftgridList"></table>
+        <div id="leftgridPager"></div>
+    </div>
+    <div class="ui-layout-center">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>

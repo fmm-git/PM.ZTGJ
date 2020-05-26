@@ -1,0 +1,160 @@
+﻿@{
+    ViewBag.Title = "上传检验文件";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="~/Content/js/Comm.js"></script>
+<script src="~/Content/js/jqgrid/jqgrid.min.js"></script>
+<link href="~/Content/js/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="~/Content/js/jqgrid/grid.locale-cn.js"></script>
+<script src="~/Content/js/uploadFile.js"></script>
+<script type="text/javascript">
+    var keyValue = $.request("keyValue");
+    $(function () {
+        gridList();
+        if (!!keyValue) {
+            $.ajax({
+                url: "@Url.Action("GetFormJson", "InOrder")",
+                data: { keyValue: keyValue },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    lodeList(data.Item2);//加载明细信息
+                    $("#Enclosure").val(data.Item1[0].Enclosure);
+                    if ($("#Enclosure").val()) {
+                        $("#uplaodFileTitle").html("已上传");
+                        $("#uplaodFilelook").show();
+                    }
+                }
+            });
+        }
+    });
+    //提交数据
+    function submitForm() {
+        var tableData = GetGridRowData();//明细信息
+        if (tableData.length < 1) {
+            $.modalMsg("请完善质检报告编号信息", "warning");
+            return false;
+        }
+        var Enclosure = $("#Enclosure").val();
+        if (Enclosure == "" || Enclosure==undefined) {
+            $.modalMsg("请上传检验文件", "warning");
+            return false;
+        }
+        $.submitForm({
+            url: "@Url.Action("SubmitTestReport", "InOrder")",
+            param: { enclosure: Enclosure, itemModel: JSON.stringify(tableData) },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+    //--------------明细表信息----------
+    var mydata = [];
+    var index = 1;
+    var lastsel;
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            datatype: "json",
+            height: $(window).height() - 120,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true },
+                { label: '原材料编号', name: 'MaterialCode', width: 120, height: 10, align: "left", sortable: false },
+                { label: '原材料名称', name: 'MaterialName', width: 150, height: 10, align: "left", sortable: false },
+                { label: '规格', name: 'SpecificationModel', width: 80, align: "left", sortable: false },
+                { label: '计量单位', name: 'MeasurementUnitText', width: 80, align: "left", sortable: false },
+                { label: "批次计划数量", name: "BatchPlanQuantity", width: 80, align: "right", sortable: false },
+                { label: '合格数量', name: 'PassCount', width: 80, align: "right", sortable: false},
+                { label: '厂家', name: 'Factory', width: 140, align: "left", sortable: false},
+                { label: '炉批号', name: 'BatchNumber', width: 120, align: "left", sortable: false},
+                { label: '质检报告编号', name: 'TestReportNo', width: 160, align: "left", sortable: false, editable: true },
+                { label: '计量单位', name: 'MeasurementUnit', hidden: true },
+                { label: '入库单号', name: 'InOrderCode', hidden: true },
+            ],
+            gridComplete: function () {
+                $("div.unwritten").remove();
+            },
+            onCellSelect: function (rowid, iCol, cellContent, e) {
+                $gridList.jqGrid('editRow', rowid, true, null, null, null, null, null, null, null, iCol);
+                //获取表格最后一行Id
+                var selectedRowIds = $gridList.jqGrid("getDataIDs");
+                var id = selectedRowIds[selectedRowIds.length - 1];
+                if (rowid && (rowid !== lastsel || rowid == id)) {
+
+                    $gridList.jqGrid('saveRow', lastsel);
+                    $gridList.jqGrid('editRow', rowid, true);
+                    lastsel = rowid;
+                    $("#gridList>tbody").find("input:text").each(function () {
+                        var width = parseInt($(this).css("width").replace('px', '')) - 25;
+                        $(this).css("height", "20px").css("width", width + "px");
+                    });
+                }
+            },
+        });
+    }
+    //加载列表数据
+    function lodeList(data) {
+        if (data != null && data != "") {
+            mydata = data;
+        }
+        $("#gridList").jqGrid('clearGridData');
+        $.each(mydata, function (i, item) {
+            index++;
+            item.id = index;
+            $("#gridList").jqGrid('addRowData', index, item);
+        });
+    }
+    //获取表格数据
+    function GetGridRowData() {
+        $("#gridList").jqGrid('saveRow', lastsel);
+        let ids = $("#gridList").jqGrid('getDataIDs');//获取多行的id
+        if (ids.length < 1) {
+            $.modalMsg("明细数据不完整", "warning");
+            return null;
+        }
+        var columnData = [];
+        $(ids).each(function (index, item) {
+            var rowData = $("#gridList").jqGrid("getRowData", item);
+            if (rowData.TestReportNo == "") {
+                $.modalMsg("请填写质检报告编号", "warning");
+                return null;
+            }
+            columnData.push(rowData);
+        });
+        return columnData;
+    }
+</script>
+<!---------附件列表------->
+<script type="text/javascript">
+
+    //上传附件
+    function Uplaod() {
+        UplaodFile($("#Enclosure").val(), $("#ID").val(), "InOrder");
+    }
+    //查看附件
+    function uplaodFilelook() {
+        showFile($("#Enclosure").val(), "TestReport", "InOrder");
+    }
+
+</script>
+<div style="margin-top: 10px;">
+    <input id="Enclosure" name="Enclosure" type="hidden" />
+    <input id="ID" name="ID" type="hidden" />
+    <div id="MXXXInfo" style="padding-top: 5px; margin:10px; ">
+        <div>
+            <table class="form">
+                <tr>
+                    <th class="formTitle">检验文件</th>
+                    <td class="formValue" colspan="3">
+                        <span id="uplaodFileTitle" class="Isfile">未上传</span>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFile" onclick="Uplaod();">上传</a>
+                        <a class="layui-layer-btn0 btn btn-primary" id="uplaodFilelook" onclick="uplaodFilelook();" style="display:none;">查看</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="gridPanel" style="margin-top: 1px; ">
+            <table id="gridList"></table>
+        </div>
+    </div>
+</div>

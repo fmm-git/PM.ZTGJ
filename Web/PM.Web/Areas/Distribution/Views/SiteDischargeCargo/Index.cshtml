@@ -1,0 +1,326 @@
+﻿@{
+    ViewBag.Title = "站点卸货列表";
+    Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<style type="text/css">
+    .btn-default, .btn-default:hover {
+        background-color: #e6e6e6;
+        border-color: #e6e6e6;
+        cursor: default;
+    }
+</style>
+<script>
+    $(function () {
+        $.LodeMenuBtn("/Distribution/SiteDischargeCargo/Index");
+        //initControl();
+        $('#layout').layout();
+        leftGridListDischargeZT();//卸货状态
+        leftGridListSiteName();//项目类型
+        $(".ui-layout-west .ui-jqgrid-hdiv").css("display", "none");
+        gridList();
+    });
+    function selectTab(v) {
+        var id = v.attr('id');
+        $("#" + id + "").addClass("active").siblings().removeClass("active");
+        $("#" + id + "Info").show();
+        $("#" + id + "Info").siblings('div').hide();
+        if (id == "DischargeZT") {
+            $("#DischargeZT a").css("color", "#1ABC9C");
+            $("#SiteName a").css("color", "");
+        } else {
+            $("#SiteName a").css("color", "#1ABC9C");
+            $("#DischargeZT a").css("color", "");
+        }
+    }
+    //卸货状态
+    function leftGridListDischargeZT() {
+        var $leftgridList = $("#leftgridList");
+        $leftgridList.dataGrid({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "DischargeType" })",
+            height: $(window).height() - 46,
+            colModel: [
+                { label: '卸货状态编号', name: 'DictionaryCode', hidden: true, key: true },
+                { label: '卸货状态', name: 'DictionaryText', width: 170, align: 'left' }
+            ],
+            sortname: 'DictionaryCode',
+            onCellSelect: function (id) {//单击
+                clickDischargeType(id);
+            }
+        });
+    }
+    function clickDischargeType(id) {
+        var rows = $("#leftgridList").jqGrid('getRowData', id);
+        $("#gridList").jqGrid('setGridParam', {
+            url: "/SiteDischargeCargo/GetGridJson",
+            postData: { keyword: $("#txt_keyword").val(), DischargeType: rows.DictionaryCode },
+            page: 1
+        }).trigger('reloadGrid');
+    }
+    //站点名称
+    function leftGridListSiteName() {
+        var $leftgridList = $("#leftgridListType");
+        $leftgridList.dataGrid({
+            url: "/RawMaterial/RawMonthDemandPlan/GetCompanyList?type=5",
+            height: $(window).height() - 90,
+            colModel: [
+                { label: "站点编号", name: "CompanyCode", hidden: true, key: true },
+                { label: '站点名称', name: 'CompanyFullName', width: 195, align: 'left' }
+            ],
+            rownumbers: false,
+            onCellSelect: function (id) {
+                clickSiteName(id);
+            }
+        });
+    }
+    function clickSiteName(id) {
+        var rows = $("#leftgridListType").jqGrid('getRowData', id);
+        $("#gridList").jqGrid('setGridParam', {
+            url: "/SiteDischargeCargo/GetGridJson",
+            postData: { keyword: $("#txt_keyword").val(), SiteCode: rows.CompanyCode },
+            page: 1
+        }).trigger('reloadGrid');
+    }
+
+    function gridList() {
+        var $gridList = $("#gridList");
+        $gridList.dataGrid({
+            url: "@Url.Action("GetGridJson", "SiteDischargeCargo")",
+            height: $(window).height() - 178,
+            colModel: [
+                { label: "主键", name: "ID", hidden: true, key: true },
+                { label: '审批状态', name: 'Examinestatus', hidden: true, width: 80, align: 'left', sortable: false },
+                { label: "卸货编号", name: "DischargeCargoCode", width: 120, align: 'left', sortable: false },
+                { label: "订单编号", name: "OrderCode", width: 120, align: 'left', sortable: false },
+                { label: "卸货状态", name: "DischargeTypeNew", width: 60, align: 'left', sortable: false },
+                { label: "操作", name: "Operate", width: 140, align: 'center', sortable: false, formatter: ConfirmButton },
+                { label: '类型编码', name: 'TypeCode', width: 120, align: 'left', sortable: false },
+                { label: '类型名称', name: 'TypeName', width: 120, align: 'left' },
+                { label: "运输单号", name: "DistributionCode", width: 140, align: 'left', sortable: false },
+                { label: '站点编号', name: 'SiteCode', hidden: true },
+                { label: '站点名称', name: 'SiteName', width: 140, align: 'left', sortable: false },
+                { label: '卸货负责人编号', name: 'Contacts', hidden: true },
+                { label: '卸货负责人', name: 'ContactsName', width: 140, align: 'left', sortable: false },
+                { label: "联系方式", name: "ContactWay", width: 80, align: 'left', sortable: false },
+                { label: '卸货完成时间', name: 'DistributionTime', width: 120, align: 'left', sortable: false },
+                { label: '卸货地址', name: 'DistributionAddress', width: 120, align: 'left', sortable: false },
+                { label: '总量合计(kg)', name: 'SumTotal', width: 120, align: 'left', sortable: false },
+                { label: '车牌号', name: 'CarCph', width: 150, align: 'left', sortable: false },
+                //{ label: '驾驶员编号', name: 'Driver', hidden: true },
+                { label: '驾驶员', name: 'CarUser', width: 120, align: 'left', sortable: false },
+                { label: '录入人', name: 'InsertUserCode', hidden: true },
+                { label: '录入人', name: 'UserName', width: 100, align: 'left', sortable: false },
+                { label: '录入时间', name: 'InsertTime', width: 140, align: 'left', sortable: false }
+            ],
+            ondblClickRow: function (id) {//双击
+                btn_details();
+            },
+            pager: "#gridPager",
+            sortname: 'InsertTime',
+            sortorder: 'desc',
+            viewrecords: true,
+            shrinkToFit: false,
+        });
+        $("#btn_search").click(function () {
+            var param = $(".search").GetSearchCondition();
+            $gridList.jqGrid('setGridParam', {
+                postData: param,
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //回车查询
+        document.onkeydown = function (e) {
+            if (!e) e = window.event;
+            if ((e.keyCode || e.which) == 13) {
+                $('#btn_search').trigger("click");
+            }
+        }
+    }
+    function btn_add() {
+        var where = "?type=add";
+        CommonOpen("Form", "新增站点卸货", "@Url.Action("Form", "SiteDischargeCargo")" + where, true, true);
+    }
+
+    function btn_edit() {
+        CommonView({
+            id: "Form",
+            title: "修改站点卸货",
+            url: "@Url.Action("Form", "SiteDischargeCargo")",
+            anyUrl: "@Url.Action("AnyInfo", "SiteDischargeCargo")",
+        });
+    }
+    function btn_delete() {
+        CommonView({
+            url: "@Url.Action("DeleteForm", "SiteDischargeCargo")",
+            anyUrl: "@Url.Action("AnyInfo", "SiteDischargeCargo")",
+            isdel: true,
+        });
+    }
+    function btn_details() {
+        CommonView({
+            id: "Details",
+            title: "查看站点卸货",
+            url: "@Url.Action("Details", "SiteDischargeCargo")",
+            isbtn: false,
+            isAny: false,
+            isBack: false
+        });
+    }
+
+    function CommonOpen(id, title, url, isbtn, isBack) {
+        $.modalOpen({
+            id: id,
+            title: title,
+            url: url,
+            width: "60%",
+            height: "550px",
+            btn: isbtn ? ['确认', '关闭'] : null,
+            callBack: isBack ? function (iframeId) {
+                top.frames[iframeId].submitForm();
+            } : null
+        });
+    }
+    //审批流程
+    function btn_examination() {
+        var rowData = $("#gridList").jqGridRowValue();
+        if (rowData.length > 1) {
+            $.modalMsg("只能选择一条数据发起流程", "warning");
+            return false;
+        }
+        var id = rowData.ID;
+        if (id != "" && id != null && id != undefined) {
+            examination(id, 'SiteDischargeCargo', rowData.Examinestatus, rowData.DischargeCargoCode);
+        }
+        else {
+            $.modalMsg("请选择要发起流程的信息", "warning");
+            return false;
+        }
+    }
+    function ConfirmButton(cellvalue, options, rowObject) {
+        if (rowObject.DischargeTypeNew == "未完成") {
+            var butHtm = '<a  id=A' + rowObject.ID + ' class="btn btn-primary" onclick="onButClick(' + rowObject.ID + ')">确认卸货</a> ';
+            return butHtm;
+        }
+        else {
+            var butHtm = '<a  class="btn btn-default">已 卸 货&nbsp;</a> ';
+            return butHtm;
+        }
+    }
+    function onButClick(ID) {
+        if (ID == null || ID == undefined) {
+            $.modalMsg("信息错误", "warning");
+            return false;
+        }
+        $.deleteForm({
+            prompt: "注：您确定要确认卸货吗？",
+            loading: "正在提交数据...",
+            url: "@Url.Action("DischargeCargoConfirm", "SiteDischargeCargo")",
+            param: { keyValue: ID },
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        });
+    }
+    @*//查询
+    //选择站点
+    function selectCompanyWorkAreaOrSite(type) {
+        var url = "/RawMaterial/RawMonthDemandPlan/GetCompanyList&keyValue=type/" + type;
+        var str = "SiteCode=CompanyCode,SiteName=CompanyFullName";
+        var ret = selectClick('win_TbCompany', url, 'Grid', '', '', str, '550px', '450px', function (row) { });
+    }
+    function initControl() {
+        //卸货状态
+        $("#DischargeType").bindSelect({
+            url: "@Url.Action("GetDicByCode", "DataDictionary", new { area = "SystemManage", dicCode = "DischargeType" })",
+            id: "DictionaryCode",
+            text: "DictionaryText"
+        });
+    }*@
+</script>
+<script src="~/Content/js/Comm.js"></script>
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west">
+        <ul class="nav nav-tabs">
+            <li id="DischargeZT" onclick="selectTab($(this))" class="active"><a style="color: #1ABC9C" href="javascript:void(0);">卸货状态</a></li>
+            <li id="SiteName" onclick="selectTab($(this))"><a href="javascript:void(0);">站点名称</a></li>
+        </ul>
+        <div id="DischargeZTInfo" style="overflow-x: hidden;">
+            <table id="leftgridList"></table>
+        </div>
+        <div id="SiteNameInfo" style="display:none; overflow-x:hidden;">
+            <table id="leftgridListType"></table>
+        </div>
+    </div>
+    <div class="ui-layout-center" style="position:relative">
+        <div class="topPanel">
+            <div id="toolbar" class="toolbar" style="float:left;margin-left:15px;">
+                <div class="btn-group">
+                    <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span>刷新</a>
+                </div>
+            </div>
+        </div>
+        <div class="topPanel">
+            <div class="search">
+                <table>
+                    <tr>
+                        @*<td>
+                                <div class="input-group">
+                                    <input id="SiteCode" name="SiteCode" type="hidden">
+                                    <input id="SiteName" name="SiteName" type="text" class="form-control" placeholder="站点" style="width: 140px; margin-left: 5px;" readonly="readonly">
+                                    <span class="input-group-btn">
+                                        <button id="btn_search4" type="button" class="btn  btn-primary" onclick="selectCompanyWorkAreaOrSite('5')"><i class="fa fa-search"></i></button>
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                &nbsp;&nbsp; &nbsp;
+                            </td>*@
+                        <td>
+                            <div class="input-group">
+                                <input id="OrderCode" name="OrderCode" type="text" placeholder="订单编号" class="form-control input-wdatepicker" onfocus="WdatePicker()" style="width: 140px; margin-left: 5px;">
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp; &nbsp;
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="TypeCode" name="TypeCode" type="text" placeholder="类型编号" class="form-control input-wdatepicker" onfocus="WdatePicker()" style="width: 140px; margin-left: 5px;">
+                            </div>
+                        </td>
+                        <td>
+                            &nbsp;&nbsp; &nbsp;
+                        </td>
+                        <td>
+                            <div class="input-group">
+                                <input id="CarCph" name="CarCph" type="text" class="form-control" placeholder="车牌号" style="width: 140px; margin-left: 5px;">
+                            </div>
+                        </td>
+                        @*<td>
+                                &nbsp; &nbsp;&nbsp;
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <select id="DischargeType" name="DischargeType" class="form-control" style="width: 120px;">
+                                        <option value="">请选择卸货状态</option>
+                                    </select>
+                                </div>
+                            </td>*@
+                        <td>
+                            &nbsp; &nbsp;&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a id="btn_search" class="btn btn-primary">查询</a>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridList"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+</div>
+
